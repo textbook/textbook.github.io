@@ -9,7 +9,7 @@ action "Checkout submodules" {
 }
 
 action "Publish to gh-pages" {
-  uses = "nelsonjchen/gh-pages-pelican-action@0.1.1"
+  uses = "nelsonjchen/gh-pages-pelican-action@adad1db8a5a48fe1c9ffd88ce96e2225af8fa860"
   needs = ["Checkout submodules"]
   secrets = ["GIT_DEPLOY_KEY"]
   env = {
