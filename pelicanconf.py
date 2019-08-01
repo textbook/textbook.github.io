@@ -44,7 +44,7 @@ SOCIAL = (
 )
 
 # Other settings
-GITHUB_URL = 'https://github.com/textbook/textbook.github.io-source'
+GITHUB_URL = 'https://github.com/textbook/textbook.github.io'
 TWITTER_USERNAME = 'jonrsharpe'
 MAILCHIMP = dict(
     domain='jonrshar.us15.list-manage.com',
