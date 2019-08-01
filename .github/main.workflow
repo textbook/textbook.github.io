@@ -9,10 +9,11 @@ action "Checkout submodules" {
 }
 
 action "Publish to gh-pages" {
-  uses = "nelsonjchen/gh-pages-pelican-action@adad1db8a5a48fe1c9ffd88ce96e2225af8fa860"
+  uses = "textbook/gh-pages-pelican-action@80a1c7f05872b7485651d3d937b71119430ffc70"
   needs = ["Checkout submodules"]
   secrets = ["GIT_DEPLOY_KEY"]
   env = {
     GH_PAGES_BRANCH = "master"
+    PELICAN_CONFIG_FILE = "publishconf.py"
   }
 }
