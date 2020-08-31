@@ -1,5 +1,6 @@
 Title: JS TDD FTW
 Date: 2020-08-31 16:00
+Modified: 2020-08-31 20:30
 Tags: javascript, tdd, xp
 Authors: Jonathan Sharpe
 Summary: Test-driven JavaScript development done right - part 1
@@ -831,7 +832,7 @@ Practices makes perfect! Here are some additional exercises you can run through:
 
  2. Extend your implementation for [additional weapons] (e.g. Rock Paper Scissors Lizard Spock). How easy or hard is this?
 
-     - **Advanced** - read about the _"open-closed principle"_, [OCP]. Can you refactor your code such that adding more outcomes doesn't mean a change to the `rcp` function?
+     - **Advanced** - read about the _"open-closed principle"_, [OCP]. Can you refactor your code such that adding more outcomes doesn't mean a change to the `rps` function?
 
  3. Test-drive out some validation - what should your code do if either or both of the inputs aren't recognised shapes? If you decide to throw an error, note that per [the Jest docs] you need to pass a function to defer execution: 
 
