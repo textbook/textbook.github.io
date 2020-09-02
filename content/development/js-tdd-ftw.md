@@ -1,6 +1,6 @@
 Title: JS TDD FTW
 Date: 2020-08-31 16:00
-Modified: 2020-08-31 20:30
+Modified: 2020-09-02 16:00
 Tags: javascript, tdd, xp
 Authors: Jonathan Sharpe
 Summary: Test-driven JavaScript development done right - part 1
@@ -13,17 +13,21 @@ One of the key Extreme Programming ([XP]) engineering practices is test-driven d
 
 I was recently asked if I knew of a good TDD intro for people who were comfortable with JavaScript but hadn't done much testing, so I did some research. There are lots of examples of testing and TDD out there, but often: tied to specific frameworks (e.g. React); with unclear prerequisites; and even showing poor testing practices. So below I'm going to give a proper example of vanilla JavaScript TDD done _"the right way"_, sprinkling some bonus command line and git practice throughout.
 
-We need something to implement. [Rock Paper Scissors] \(or just RPS) is a simple playground game that takes two inputs (the shapes that the two players present) and gives a single output (the outcome), which makes it a good fit for a simple function to test drive. If you're not familiar with the rules, read the linked Wikipedia article before continuing. Before we get into the TDD process, think about what the code for an implementation of RPS might look like.
+### Requirements
 
-**Requirements**:
+I've aimed this content at more junior developers, so there are more explanations than all readers will need, but anyone new to testing and TDD should find something to take from it. We'll need:
 
 - *nix command line: already provided on macOS and Linux; if you're using Windows try [WSL] or [Git BASH];
 - [Node] \(10+ recommended, run `node -v` to check) and NPM; and
 - Familiarity with ES6 JavaScript syntax (specifically arrow functions).
 
-As we go through, please carefully _read everything_, and I'd recommend _typing the code_ rather than copy-pasting, it's good practice to build your muscle memory.
+We also need something to implement. [Rock Paper Scissors] \(or just RPS) is a simple playground game that takes some inputs (the shapes that the players present) and gives a single output (the outcome), which makes it a good fit for a simple function to test drive. If you're not familiar with the rules, read the linked Wikipedia article before continuing.
 
-### Setup
+Before we get into the TDD process, think about what the code for an implementation of RPS might look like. Don't write any code yet (we don't have the failing tests to make us do that!) but imagine a function - what parameters would it accept? What would it return? We're expecting different outputs for different inputs, which implies some conditional logic - what conditions do you think would be involved? Note your ideas down, we'll revisit them later.
+
+As we go through, please carefully _read everything_. I'd recommend _typing the code_ rather than copy-pasting, especially if you're a new developer; it's good practice to build your muscle memory.
+
+## Setup [1/10]
 
 Let's get up and running. Starting in your working directory (e.g. I use `~/workspace`), run the following:
 
@@ -125,7 +129,7 @@ $ echo 'node_modules/' > .gitignore && git add . && git commit -m 'Install Jest'
  create mode 100644 package-lock.json
 ```
 
-### Running Jest
+## Running Jest [2/10]
 
 Now we can update `package.json` to set Jest to be our test command. By default, NPM creates a test script that will throw an error, as we saw above:
 
@@ -258,7 +262,7 @@ npm ERR! Test failed.  See above for more details.
 
 So, we're happy things are working so far.
 
-### A failing test
+## A failing test [3/10]
 
 Let's start some actual TDD, and write our first failing test. Replace the content of `index.test.js` with:
 
@@ -277,13 +281,11 @@ describe("rock, paper, scissors", () => {
 
 Note I've introduced another Jest function, `describe`. This registers a _group_ of tests, usually referred to as a _"suite"_. Like `it`/`test` it takes a name and a function, then our individual tests are registered inside that function.
 
-Our first test is that when `left` is `"rock"` and `right` is `"scissors"`, because rock blunts scissors, the winner should be `"left"`. 
+Our first test is that, given that `left` is `"rock"` and `right` is `"scissors"` (_"Arrange"_), when the shapes are compared (_"Act"_) , then the winner should be `"left"` (_"Assert"_) because rock blunts scissors.
 
 **Note** one key benefit of TDD here - we can try out how we should interact with our code (its _"interface"_) before we've even written any. Maybe it should return something other than a string, for example? We can have that discussion now, while it's just a matter of changing our minds rather than the code.
 
-> **Protip**: _"call the shot"_ now, before running the test. What do you the output will be? Pass? Fail? _Why?_
-
-Now let's run our first test:
+Before we run the first test, _"call the shot"_ - make a prediction of what the test result will be, pass or fail. If you think the test will fail, **why**; will the `expect`ation be unmet (and what value do you think you'll get instead) or will something else go wrong? This is really good practice for _"playing computer"_ (modelling the behaviour of the code in your head) and you can write your guess down (or say it out loud if you're pairing) to keep yourself honest. Now let's run it:
 
 ```
 $ npm t
@@ -317,7 +319,9 @@ Ran all test suites.
 npm ERR! Test failed.  See above for more details.
 ```
 
-### The simplest possible change
+...were you right?
+
+## The simplest possible change [4/10]
 
 As you may have guessed, this fails because `rps` _doesn't exist yet_. Let's make the simplest possible change that will at least change the error we're receiving; define the function. At this stage we could `import`/`require` the function from another file, but let's keep things simple for now; add the following to the top of `index.test.js`:
 
@@ -400,7 +404,7 @@ $ git add . && git commit -m 'First test - rock vs. scissors'
 
 **Note** another key benefit of TDD here - it tells you when you're done. Once the tests are passing, the implementation meets the current requirements.
 
-### The difficult second test
+## The difficult second test [5/10]
 
 _"But wait"_, you might be thinking, _"that's pointless, it doesn't **do** anything!"_ And to an extent, that's true; our function just returns a hard-coded string. But let's think about what else has happened:
 
@@ -408,7 +412,7 @@ _"But wait"_, you might be thinking, _"that's pointless, it doesn't **do** anyth
 - We've proved out a test setup that lets us make assertions on the behaviour of that function; and
 - We've created the simplest possible implementation for the requirements we've expressed through tests so far, making our code very robust.
 
-So let's build on that foundation, flip the shapes around to change the output so we can expect the test to fail. Add the following into the `describe` callback in `index.test.js`:
+So let's build on that foundation; flip the shapes around to change the output so we can expect the test to fail. Add the following into the `describe` callback in `index.test.js`:
 
 ```js
 it("should say right wins for scissors vs. rock", () => {
@@ -421,7 +425,7 @@ it("should say right wins for scissors vs. rock", () => {
 });
 ```
 
-Call the shot, then run the test again to see if you were correct:
+Note that the _"Act"_ is the same, but the _"Arrange"_ and _"Assert"_ have changed. Call the shot, then run the test again to see if you were correct:
 
 ```bash
 $ npm t
@@ -504,7 +508,7 @@ $ git commit -a -m 'Second test - scissors vs. rock'
 
 We haven't created any new files since the last commit, so we can use the `-a`/`--all` flag to `git commit` to include changes to all files, instead of needing to `git add` anything.
 
-### Third time's the charm
+## Third time's the charm [6/10]
 
 We've handled both of the cases involving rock and scissors, so let's try this one, scissors cut paper:
 
@@ -629,7 +633,7 @@ $ git commit -a -m 'Third test - scissors vs. paper'
  1 file changed, 13 insertions(+), 2 deletions(-)
 ```
 
-### Are there any puns about four?
+## Are there any puns about four? [7/10]
 
 Let's flip the last condition to cover the other case involving paper and scissors:
 
@@ -674,7 +678,7 @@ $ git commit -a -m 'Fourth test - paper vs. scissors'
  1 file changed, 9 insertions(+)
 ```
 
-### Gift-wrapped rock
+## Gift-wrapped rock [8/10]
 
 At this point you can probably see what's coming next; paper wraps rock:
 
@@ -783,7 +787,7 @@ $ git commit -a -m 'Sixth test - rock vs. paper'
  1 file changed, 14 insertions(+), 1 deletion(-)
 ```
 
-### Draw!
+## Draw! [9/10]
 
 So far we've assumed the two participants choose different values. If you've played RPS, you'll know that's not always the case in real life - sometimes it's a draw.
 
@@ -822,9 +826,11 @@ $ git commit -a -m 'Handle the draw cases'
  1 file changed, 9 insertions(+)
 ```
 
-That's it! We've just test-driven an implementation of RPS, the right way. You can see my copy of this exercise at https://github.com/textbook/rps-tdd.
+That's it! We've just test-driven an implementation of RPS, the right way. Reflect on the exercise - how does the implementation compare to what you'd initially imagined? What felt good or bad about the process?
 
-### Exercises
+You can see my copy of this exercise at [https://github.com/textbook/rps-tdd][github].
+
+## Exercises [10/10]
 
 Practices makes perfect! Here are some additional exercises you can run through:
 
@@ -832,7 +838,7 @@ Practices makes perfect! Here are some additional exercises you can run through:
 
  2. Extend your implementation for [additional weapons] (e.g. Rock Paper Scissors Lizard Spock). How easy or hard is this?
 
-     - **Advanced** - read about the _"open-closed principle"_, [OCP]. Can you refactor your code such that adding more outcomes doesn't mean a change to the `rps` function?
+     - **Advanced** - read about the _"open-closed principle"_, [OCP]. Can you refactor your code such that adding more weapons doesn't mean a change to the `rps` function?
 
  3. Test-drive out some validation - what should your code do if either or both of the inputs aren't recognised shapes? If you decide to throw an error, note that per [the Jest docs] you need to pass a function to defer execution: 
 
@@ -846,7 +852,7 @@ Practices makes perfect! Here are some additional exercises you can run through:
 
      - **Advanced** - use Jest's [`each`][each] method, either with an array or a template literal.
 
-### Installation explained
+## Installation explained [Bonus]
 
 As promised above, here's an explanation of everything you were told during the `npm install`.
 
@@ -896,6 +902,7 @@ NPM checks whether there are any known vulnerabilities in the packages in your `
   [each]: https://jestjs.io/docs/en/api#testeachtablename-fn-timeout
   [fund]: https://docs.npmjs.com/cli-commands/fund.html
   [Git BASH]: https://gitforwindows.org/
+  [github]: https://github.com/textbook/rps-tdd
   [Jasmine]: https://jasmine.github.io/
   [Jest]: https://jestjs.io/
   [matcher methods]: https://jestjs.io/docs/en/expect
