@@ -1,5 +1,6 @@
 Title: Runtime configuration for single-page apps
 Date: 2020-09-19 15:15
+Modified: 2020-09-21 15:30
 Tags: xp, ci, angular, react
 Authors: Jonathan Sharpe
 Summary: Tips and tricks for deploying JavaScript SPAs with runtime configuration
@@ -208,7 +209,10 @@ I've created simple examples in various frameworks to show how these ideas can b
 
 If you're using a managed deployment platform that handles routing for you, or can set up routing using something like [Spring Cloud Gateway][17], you can send traffic to different apps depending on the path. This means you don't need to configure the client the different service APIs at all (or need to configure CORS on the server), because the requests get automagically routed for you.
 
-For example, I've used this in TAS to set up an Angular frontend served by NGINX on `host.domain.ext`, with a Spring Boot backend on `host.domain.ext/api` so that the frontend can make relative requests (i.e. to `"/api/endpoint"` rather than `"host.domain.ext/api/endpoint"`), even though they're still _two separate apps_. You can even set this up from a single manifest file, if you're working in a monorepo:
+For example, I've used this in TAS to set up an Angular frontend served by NGINX on `host.domain.ext`, with a Spring Boot backend on `host.domain.ext/api` so that the frontend can make relative requests (i.e. to `"/api/endpoint"` rather than `"host.domain.ext/api/endpoint"`), even though they're still _two separate apps_. The TAS router is smart enough to allow push-state routing, too - a request to `host.domain.ext/foo` will go to the frontend app unless you explicitly mount another app at `/foo`.
+
+
+You can even set this up from a single manifest file, if you're working in a monorepo:
 
 ```yaml
 ---
@@ -225,9 +229,9 @@ applications:
   ...
 ```
 
-The TAS router is smart enough to allow push-state routing, too - a request to `host.domain.ext/foo` will go to the frontend app unless you explicitly mount another app at `/foo`. The configuration for this is covered [here][3]. **Note** that the `path` key in the manifest file is the directory within your repo that the app is in, _not_ the network path to host the app at.
+The configuration for this is covered [here][3]. **Note** that the `path` key in the manifest file is the directory within your repo that the app is in, _not_ the network path to host the app at.
 
-Note that the path routing approach is that this _only_ removes the configuration issue for API URLs; if you have other configuration that varies by environment you'll need to manage that using the methods above. However, if you can make a relative request and have that routed to a dynamic application, the JSON approach can be used and the request fulfilled based on environment variables, so you don't need to swap out files between environments.
+One limitation of the path routing approach is that this _only_ removes the configuration issue for API URLs; if you have other configuration that varies by environment you'll need to manage that using the methods above. However, if you can make a relative request and have that routed to a dynamic application, the JSON approach can be used and the request fulfilled based on environment variables, so you don't need to swap out files between environments.
 
   [1]: https://create-react-app.dev/docs/adding-custom-environment-variables/
   [2]: https://angular.io/guide/build#configuring-application-environments
