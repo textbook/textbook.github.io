@@ -1,6 +1,6 @@
 Title: Runtime configuration for single-page apps
 Date: 2020-09-19 15:15
-Modified: 2020-09-21 15:30
+Modified: 2020-10-07 11:00
 Tags: xp, ci, angular, react
 Authors: Jonathan Sharpe
 Summary: Tips and tricks for deploying JavaScript SPAs with runtime configuration
@@ -209,10 +209,7 @@ I've created simple examples in various frameworks to show how these ideas can b
 
 If you're using a managed deployment platform that handles routing for you, or can set up routing using something like [Spring Cloud Gateway][17], you can send traffic to different apps depending on the path. This means you don't need to configure the client the different service APIs at all (or need to configure CORS on the server), because the requests get automagically routed for you.
 
-For example, I've used this in TAS to set up an Angular frontend served by NGINX on `host.domain.ext`, with a Spring Boot backend on `host.domain.ext/api` so that the frontend can make relative requests (i.e. to `"/api/endpoint"` rather than `"host.domain.ext/api/endpoint"`), even though they're still _two separate apps_. The TAS router is smart enough to allow push-state routing, too - a request to `host.domain.ext/foo` will go to the frontend app unless you explicitly mount another app at `/foo`.
-
-
-You can even set this up from a single manifest file, if you're working in a monorepo:
+For example, I've used this in TAS to set up an Angular frontend served by NGINX on `host.domain.ext`, with a Spring Boot backend on `host.domain.ext/api` so that the frontend can make relative requests (i.e. to `"/api/endpoint"` rather than `"host.domain.ext/api/endpoint"`), even though they're still _two separate apps_. You can even set this up from a single manifest file, if you're working in a monorepo:
 
 ```yaml
 ---
@@ -230,6 +227,8 @@ applications:
 ```
 
 The configuration for this is covered [here][3]. **Note** that the `path` key in the manifest file is the directory within your repo that the app is in, _not_ the network path to host the app at.
+
+The TAS router is smart enough to allow push-state routing, too; a request to `host.domain.ext/foo` will go to the frontend app unless you explicitly mount another app at `/foo`. Between that and the ability to simply set `pushstate: enabled` in the `Staticfile`, this is a really easy way to handle client-side routing with something like [React Router][18] or the built-in [Angular router][19], taking full advantage of the [HTML5 history API][20]. The buildpack will configure NGINX to handle serving the `index.html` for any missing requests and your SPA can take over from there.
 
 One limitation of the path routing approach is that this _only_ removes the configuration issue for API URLs; if you have other configuration that varies by environment you'll need to manage that using the methods above. However, if you can make a relative request and have that routed to a dynamic application, the JSON approach can be used and the request fulfilled based on environment variables, so you don't need to swap out files between environments.
 
@@ -250,3 +249,6 @@ One limitation of the path routing approach is that this _only_ removes the conf
   [15]: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Proxy
   [16]: https://webpack.js.org/plugins/define-plugin/
   [17]: https://spring.io/projects/spring-cloud-gateway
+  [18]: https://github.com/ReactTraining/react-router
+  [19]: https://angular.io/guide/router
+  [20]: https://developer.mozilla.org/en-US/docs/Web/API/History
