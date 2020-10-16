@@ -1,6 +1,6 @@
 Title: JS TDD FTW
 Date: 2020-08-31 16:00
-Modified: 2020-09-02 16:00
+Modified: 2020-10-16 19:30
 Tags: javascript, tdd, xp
 Authors: Jonathan Sharpe
 Summary: Test-driven JavaScript development done right - part 1
@@ -832,7 +832,7 @@ You can see my copy of this exercise at [https://github.com/textbook/rps-tdd][gi
 
 ## Exercises [10/10]
 
-Practices makes perfect! Here are some additional exercises you can run through:
+Practice makes perfect! Here are some additional exercises you can run through:
 
  1. Repeat the process, but tackle the pairs in a different order. What impact does the order have on how and when your implementation gains complexity? Do you end up with a different implementation?
 
@@ -851,6 +851,10 @@ Practices makes perfect! Here are some additional exercises you can run through:
  4. Refactor the tests to group the test cases into three parameterised tests: one for `"left"`; one for `"right"`; and one for `"draw"`.
 
      - **Advanced** - use Jest's [`each`][each] method, either with an array or a template literal.
+
+ 5. Run through the exercise from the beginning, but using `npm t -- --watch` instead of just `npm t` (note the extra `--`, otherwise the `--watch` argument gets passed to NPM rather than Jest).
+
+    This will set up Jest to watch your files and re-run the tests if anything changes. Arrange your screen so you can see these outputs while you're writing your code, and leave it running the whole time (if this means you can't make commits, don't worry about it). What impact does that immediate and continuous feedback have on your experience of working on the code?
 
 ## Installation explained [Bonus]
 
