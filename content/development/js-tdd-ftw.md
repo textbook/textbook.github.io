@@ -1,6 +1,6 @@
 Title: JS TDD FTW
 Date: 2020-08-31 16:00
-Modified: 2020-10-16 19:30
+Modified: 2020-10-20 19:20
 Tags: javascript, tdd, xp
 Authors: Jonathan Sharpe
 Summary: Test-driven JavaScript development done right - part 1
@@ -18,7 +18,7 @@ I was recently asked if I knew of a good TDD intro for people who were comfortab
 I've aimed this content at more junior developers, so there are more explanations than all readers will need, but anyone new to testing and TDD should find something to take from it. We'll need:
 
 - *nix command line: already provided on macOS and Linux; if you're using Windows try [WSL] or [Git BASH];
-- [Node] \(10+ recommended, run `node -v` to check) and NPM; and
+- [Node] \(10+ recommended, Jest 26 [dropped support] for Node 8; run `node -v` to check) and NPM; and
 - Familiarity with ES6 JavaScript syntax (specifically arrow functions).
 
 We also need something to implement. [Rock Paper Scissors] \(or just RPS) is a simple playground game that takes some inputs (the shapes that the players present) and gives a single output (the outcome), which makes it a good fit for a simple function to test drive. If you're not familiar with the rules, read the linked Wikipedia article before continuing.
@@ -904,6 +904,7 @@ NPM checks whether there are any known vulnerabilities in the packages in your `
   [additional weapons]: https://en.wikipedia.org/wiki/Rock_paper_scissors#Additional_weapons
   [audit]: https://docs.npmjs.com/cli-commands/audit.html
   [each]: https://jestjs.io/docs/en/api#testeachtablename-fn-timeout
+  [dropped support]: https://jestjs.io/blog/2020/05/05/jest-26#other-breaking-changes-in-jest-26
   [fund]: https://docs.npmjs.com/cli-commands/fund.html
   [Git BASH]: https://gitforwindows.org/
   [github]: https://github.com/textbook/rps-tdd
