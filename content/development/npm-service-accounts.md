@@ -1,8 +1,15 @@
 Title: Publishing npm packages with service accounts 
 Date: 2019-01-14 19:40
+Modified: 2020-11-01 12:30
 Tags: code, javascript, ci, npm 
 Authors: Jonathan Sharpe
 Summary: 2FA adds security to your npm account but complicates the process of publishing from CI; here's one way around that
+
+> **Update**: In [October 2020][5] NPM added the option to generate Automation
+> tokens, which bypass 2FA even for accounts that have it enabled for
+> publication. Using service accounts still improves security by reducing the
+> number of packages a successful attacker gets access to, so the below
+> information may still be useful to you.
 
 Since October 2017, npm has supported [2-factor authentication][1] (2FA). This
 is good for security, and I've enabled it for both authorisation and publication
@@ -61,3 +68,4 @@ they _are_ using full 2FA on their main accounts.
 [2]: https://medium.com/@sgyio/how-to-deploy-npm-package-with-2fa-enabled-on-write-49843bf493a8
 [3]: https://docs.travis-ci.com/user/deployment/npm/
 [4]: https://www.vaultproject.io/
+[5]: https://github.blog/changelog/2020-10-02-npm-automation-tokens/
