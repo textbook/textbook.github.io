@@ -66,20 +66,84 @@ The prerequisites here are the same as the previous post:
 
 In addition, given the domain for this post, you'll need:
 
-- Familiarity with React development.
+- Familiarity with React development - I'm going to assume you know how to write function-based components with hooks.
 
 We're going to expand on the previous article and add a web UI for our Rock Paper Scissors implementation. This article moves quite quickly; the libraries involved ([Cypress], [Jest], [Testing Library]) have quite large APIs, so it's best to read the details in their documentation.
 
 Again please carefully _read everything_, and for newer developers I'd recommend _typing the code_ rather than copy-pasting.
 
-## Setup [1/6]
+## Setup [1/7]
 
 To begin, let's create a new React app in our workspace using [Create React App][cra] (CRA):
 
 ```bash
 $ npx create-react-app@latest --use-npm rps-e2e
+npx: installed 92 in 12.05s
 
-# ...
+Creating a new React app in path/to/rps-e2e.
+
+Installing packages. This might take a couple of minutes.
+Installing react, react-dom, and react-scripts with cra-template...
+
+...
+
++ cra-template@1.1.0
++ react-scripts@4.0.0
++ react@17.0.1
++ react-dom@17.0.1
+added 1929 packages from 748 contributors and audited 1929 packages in 142.186s
+
+118 packages are looking for funding
+  run `npm fund` for details
+
+found 0 vulnerabilities
+
+
+Initialized a git repository.
+
+Installing template dependencies using npm...
+npm WARN tsutils@3.17.1 requires a peer of typescript@>=2.8.0 || >= 3.2.0-dev || >= 3.3.0-dev || >= 3.4.0-dev || >= 3.5.0-dev || >= 3.6.0-dev || >= 3.6.0-beta || >= 3.7.0-dev || >= 3.7.0-beta but none is installed. You must install peer dependencies yourself.
+
++ web-vitals@0.2.4
++ @testing-library/react@11.1.2
++ @testing-library/user-event@12.2.2
++ @testing-library/jest-dom@5.11.6
+added 29 packages from 77 contributors and audited 1958 packages in 15.605s
+
+118 packages are looking for funding
+  run `npm fund` for details
+
+found 0 vulnerabilities
+
+Removing template package using npm...
+
+npm WARN tsutils@3.17.1 requires a peer of typescript@>=2.8.0 || >= 3.2.0-dev || >= 3.3.0-dev || >= 3.4.0-dev || >= 3.5.0-dev || >= 3.6.0-dev || >= 3.6.0-beta || >= 3.7.0-dev || >= 3.7.0-beta but none is installed. You must install peer dependencies yourself.
+
+removed 1 package and audited 1957 packages in 10.859s
+
+118 packages are looking for funding
+  run `npm fund` for details
+
+found 0 vulnerabilities
+
+
+Created git commit.
+
+Success! Created rps-e2e at /Users/jonrsharpe/workspace/tdd-examples/rps-e2e
+Inside that directory, you can run several commands:
+
+  npm start
+    Starts the development server.
+
+  npm run build
+    Bundles the app into static files for production.
+
+  npm test
+    Starts the test runner.
+
+  npm run eject
+    Removes this tool and copies build dependencies, configuration files
+    and scripts into the app directory. If you do this, you can’t go back!
 
 We suggest that you begin by typing:
 
@@ -89,37 +153,39 @@ We suggest that you begin by typing:
 Happy hacking!
 ```
 
-There's a _lot_ of output here, so I've skipped most of it. This takes care of the initial steps like creating a directory, a git repository (with `node_modules/` already ignored for us) and an NPM package, as well as installing the appropriate dependencies.
+There's a _lot_ of output here, so I've skipped some of it, but you should see four main stages:
 
-This time, before getting to the unit test level with Jest (which CRA has already set up for us), let's enter that directory and install Cypress for our end-to-end tests:
+ 1. Install `create-react-app` using `npx`;
+ 2. Install the specified template (we're using the default, `cra-template`) and the main React and `react-scripts` dependencies;
+ 3. Install the dependencies the template defines (mostly `@testing-library` utilities in this case); and finally
+ 4. Uninstall the template.
+
+This also takes care of the initial steps like creating a directory, a git repository (with `node_modules/` already ignored for us) and an NPM package. This time, before getting to the unit test level with Jest (which CRA has already set up for us), let's enter the project directory and install Cypress for our end-to-end tests:
 
 ```bash
 $ cd rps-e2e/
 
 $ npm install cypress
-npm WARN deprecated har-validator@5.1.5: this library is no longer supported
 
-> cypress@5.4.0 postinstall path/to/rps-e2e/node_modules/cypress
+> cypress@5.6.0 postinstall path/to/rps-e2e/node_modules/cypress
 > node index.js --exec install
 
-Installing Cypress (version: 5.4.0)
+Installing Cypress (version: 5.6.0)
 
   ✔  Downloaded Cypress
   ✔  Unzipped Cypress
-  ✔  Finished Installation path/to/Cypress/5.4.0
+  ✔  Finished Installation path/to/Cypress/5.6.0
 
 You can now open Cypress by running: node_modules/.bin/cypress open
 
 https://on.cypress.io/installing-cypress
 
-npm notice created a lockfile as package-lock.json. You should commit this file.
-npm WARN rps-e2e@1.0.0 No description
-npm WARN rps-e2e@1.0.0 No repository field.
+npm WARN tsutils@3.17.1 requires a peer of typescript@>=2.8.0 || >= 3.2.0-dev || >= 3.3.0-dev || >= 3.4.0-dev || >= 3.5.0-dev || >= 3.6.0-dev || >= 3.6.0-beta || >= 3.7.0-dev || >= 3.7.0-beta but none is installed. You must install peer dependencies yourself.
 
-+ cypress@5.4.0
-added 215 packages from 147 contributors and audited 215 packages in 207.262s
++ cypress@5.6.0
+added 121 packages from 76 contributors and audited 2078 packages in 190.365s
 
-12 packages are looking for funding
+120 packages are looking for funding
   run `npm fund` for details
 
 found 0 vulnerabilities
@@ -127,14 +193,29 @@ found 0 vulnerabilities
 
 Cypress is slightly more complex than the other packages we've used; it downloads and installs the main application as a post-install step. This is installed globally, so if you have another package somewhere that's using Cypress you may see `Cypress <version> is installed in path/to/Cypress/<version>` instead. That's fine, the rest should still work. Note also that CRA installs everything as a regular dependency rather than a development dependency, so I didn't use `--save-dev`.
 
-Let's follow the suggestion in that output and use `cypress open` to open up the Cypress UI. `./node_modules/.bin/` is where NPM puts all of the executables that your installed packages define (for example, if you look in that directory for the `rps-tdd/` project, you'll see `jest` in there). You can use these executables in the scripts in your package file, as we've done with `"test": "jest"`, but you can also run them directly. In this case we only need to run `open` once, so let's do it like this:
+## Create E2E suite [2/7]
+
+Now we need to set up the basic Cypress configuration. Let's follow the suggestion in that output and open up the Cypress UI.
+
+`./node_modules/.bin/` is where NPM puts all of the _executables_ that your installed packages define. For example, if you look in that directory for this project or the previous `rps-tdd/` project, you'll see `jest` in there; that's what gets called when we `npm run test` if the script is `"test": "jest"`. Most often you'll be running these via scripts defined in your package file, but you can also run them directly if needed.
+
+In this case we only need to run `cypress open` once, so let's do it like this:
 
 ```bash
 $ ./node_modules/.bin/cypress open
+It looks like this is your first time using Cypress: 5.6.0
+
+  ✔  Verified Cypress! path/to/Cypress/5.6.0/Cypress.app
+
+Opening Cypress...
 
 ```
 
-This should open the Cypress UI, but also create a `cypress.json` configuration file (initally just an empty object, you can see the configuration options [in the docs][cypress config]) and a `cypress/` directory containing, among other things, a bunch of example tests.
+This should open the Cypress GUI:
+
+![Screenshot of the Cypress GUI]({static}/images/cypress-gui.png)
+
+but also create a `cypress.json` configuration file (initally just an empty object, you can see the configuration options [in the docs][cypress config]) and a `cypress/` directory containing, among other things, a bunch of example tests.
 
 You can take a look at the examples if you like. Once you're ready to move on, though, let's quit the UI then get rid of the examples:
 
@@ -142,8 +223,8 @@ You can take a look at the examples if you like. Once you're ready to move on, t
 $ rm -rf ./cypress/integration/examples/ ./cypress/fixtures/example.json
 ```
 
-Add a script to run those tests (note we're now using `run`, rather than `open` - you can read more about the commands [in the docs][cypress cli]) into the package file:
-
+add a script to run those tests (note we're now using `run`, rather than `open` - you can read more about the commands [in the docs][cypress cli]) into the package file:
+    
 ```json
   "scripts": {
     "e2e": "cypress run",
@@ -158,14 +239,14 @@ and run our (missing!) tests:
 
 ```bash
 $ npm run e2e
-
+    
 > rps-e2e@0.1.0 e2e path/to/rps-e2e
 > cypress run
-
+    
 Can't run because no spec files were found.
-
+    
 We searched for any files inside of this folder:
-
+    
 path/to/rps-e2e/cypress/integration
 npm ERR! code ELIFECYCLE
 npm ERR! errno 1
@@ -174,12 +255,12 @@ npm ERR! Exit status 1
 npm ERR! 
 npm ERR! Failed at the rps-e2e@0.1.0 e2e script.
 npm ERR! This is probably not a problem with npm. There is likely additional logging output above.
-
+    
 npm ERR! A complete log of this run can be found in:
-npm ERR!     path/to/.npm/_logs/2020-11-03T20_39_39_337Z-debug.log
+npm ERR!     path/to/.npm/_logs/2020-11-16T22_23_48_697Z-debug.log
 ```
 
-Cypress refuses to run at all if it can't find any test files, so let's create an empty test file and re-run our now-present (but still empty) test suite:
+Cypress refuses to run at all if it can't find any test files, so let's create an empty test file using `touch` and re-run our now-present (but still empty) test suite:
 
 ```bash
 $ touch ./cypress/integration/e2e.test.js
@@ -195,7 +276,7 @@ $ npm run e2e
   (Run Starting)
 
   ┌────────────────────────────────────────────────────────────────────────────────────────────────┐
-  │ Cypress:    5.4.0                                                                              │
+  │ Cypress:    5.6.0                                                                              │
   │ Browser:    Electron 85 (headless)                                                             │
   │ Specs:      1 found (e2e.test.js)                                                              │
   └────────────────────────────────────────────────────────────────────────────────────────────────┘
@@ -255,9 +336,22 @@ Before we write our first test, let's make a commit:
 ```
 $ git add .
 
-$ git commit -m 'Install Cypress'
-[master fca7904] Install Cypress
- 8 files changed, 1018 insertions(+)
+$ git status
+On branch master
+Changes to be committed:
+  (use "git restore --staged <file>..." to unstage)
+	modified:   .gitignore
+	new file:   cypress.json
+	new file:   cypress/integration/e2e.test.js
+	new file:   cypress/plugins/index.js
+	new file:   cypress/support/commands.js
+	new file:   cypress/support/index.js
+	modified:   package-lock.json
+	modified:   package.json
+
+$ git commit -m 'Install and configure Cypress'
+[master 9ced9b4] Install and configure Cypress
+ 8 files changed, 1023 insertions(+)
  create mode 100644 cypress.json
  create mode 100644 cypress/integration/e2e.test.js
  create mode 100644 cypress/plugins/index.js
@@ -265,7 +359,7 @@ $ git commit -m 'Install Cypress'
  create mode 100644 cypress/support/index.js
 ```
 
-## Writing the E2E test [2/6]
+## Writing the E2E test [3/7]
 
 For consistency with the unit tests, which use [Testing Library] by default in CRA, let's install their Cypress utilities via NPM:
 
@@ -274,13 +368,14 @@ $ npm install @testing-library/cypress
 npm WARN tsutils@3.17.1 requires a peer of typescript@>=2.8.0 || >= 3.2.0-dev || >= 3.3.0-dev || >= 3.4.0-dev || >= 3.5.0-dev || >= 3.6.0-dev || >= 3.6.0-beta || >= 3.7.0-dev || >= 3.7.0-beta but none is installed. You must install peer dependencies yourself.
 
 + @testing-library/cypress@7.0.1
-added 1 package from 1 contributor and audited 2094 packages in 19.571s
+added 1 package from 1 contributor and audited 2079 packages in 16.615s
 
-115 packages are looking for funding
+120 packages are looking for funding
   run `npm fund` for details
 
 found 0 vulnerabilities
 ```
+
 and load it for the tests by adding the following import to `cypress/support/commands.js`:
 
 ```javascript
@@ -300,29 +395,42 @@ Just like with Jest, Cypress provides an `it` function for registering a test, a
 
 ```javascript
 it("should say left wins for rock vs. scissors", () => {
+  // Arrange
   cy.visit("/");
+
+  // Act
   cy.findByLabelText("Left").select("rock");
   cy.findByLabelText("Right").select("scissors");
-
   cy.findByText("Throw").click();
 
+  // Assert
   cy.findByTestId("outcome").should("contain.text", "Left wins!");
 });
 ```
 
 _(If your IDE seems unhappy with `cy`, just ignore it for now, but check out the bonus section on Linting at the end of the article.)_
 
-This is basically the same expectation as the first unit test case we wrote last time, but at the end-to-end level. `cy` is a global object that provides access to various Cypress methods; this is a pretty big API (and we've added more things to it from Testing Library!) so for now note that:
+This is basically the same expectation as the first unit test case we wrote last time, but at the end-to-end level. `cy` is a global object that provides access to various Cypress methods; this is a pretty big API (and we've added more things to it from Testing Library!) so to translate:
 
-- we're `visit`ing the root path based on the base URL we already set. This should take us to the home page of our site;
-- we're selecting the `rock` option in an element with the label `Left`;
-- we're selecting the `scissors` option in an element with the label `Right`;
-- we're clicking the `Throw` button; and
-- we're checking that the outcome being being displayed, in the element with the appropriate test ID (using stable attribute selectors is another [Cypress best practice][cypress selectors] and Testing Library gives us functions to easily access elements, assuming the attribute is named `data-testid`), is the expected `Left wins!`
+- `cy.visit("/");` - visit the root path, based on the base URL we already set. This should take us to the home page of our site;
+- `cy.findByLabelText("Left").select("rock");` - find a control with the label "Left" and select the "rock" option;
+- `cy.findByLabelText("Right").select("scissors");` - find a control with the label "Right" and select the "scissors" option;
+- `cy.findByText("Throw").click(); ` - find a button that says "Throw" and click it; and
+- `cy.findByTestId("outcome").should("contain.text", "Left wins!"); ` - check that the outcome being being displayed contains the expected text `Left wins!`.
 
-As before, _none of this exists yet_, so we can easily talk about how this user interface should work without the friction of having to implement it. Maybe the user should enter free text instead of selecting from a list? Maybe it should automatically show the outcome when the second input is provided, rather than requiring a button click? Maybe there should be names for the users instead of left and right? This is making us think in concrete terms about how the users should interact with the system.
+**Note** that we look for the outcome in an element with the appropriate _test ID_; using stable attribute selectors is another [Cypress best practice][cypress selectors] and Testing Library gives us functions to easily access such elements, assuming the attribute is named `data-testid`. In this case, we'd expect an element like:
 
-For now, we'll use the proposed interface. Just like with Jest, call the shot then run the tests:
+```html
+<div data-testid="outcome">Hello, world!</div>
+```
+
+As before, _none of this exists yet_, so we can easily talk about how this user interface should work without the friction of having to implement it. Maybe the user should enter free text instead of selecting from a list? Maybe it should automatically show the outcome when the second input is provided, rather than requiring a button click? Maybe there should be names for the users instead of left and right? This is making us think in concrete terms about how the users should interact with the system, early in the process. In this case, we're describing something like: 
+
+![Wireframe of the proposed RPS UI]({static}/images/rps-ui.png)
+
+<small>_Created with [https://www.lofiwireframekit.com/](https://www.lofiwireframekit.com/)._</small>
+
+Just like with Jest, call the shot then run the tests:
 
 ```bash
 $ npm run e2e
@@ -357,7 +465,7 @@ npm ERR! A complete log of this run can be found in:
 npm ERR!     path/to/.npm/_logs/2020-11-03T21_01_26_636Z-debug.log
 ```
 
-Cypress is unhappy because we're _not actually running the app_. As a simple fix, open an extra command line, navigate to the working directory and run `npm start`. Once the default CRA home screen shows up in your browser, call the shot then run the E2E tests again in your first command line:
+Cypress is unhappy because we're _not actually running the app_, so it can't find the specified base URL. As a simple fix, open an extra command line, navigate to the working directory and run `npm start`. Once the default CRA home screen shows up in your browser, call the shot then run the E2E tests again in your first command line:
 
 ```bash
 $ npm run e2e
@@ -366,33 +474,33 @@ $ npm run e2e
 > cypress run
 
 
-====================================================================================================
+==========================================================================================
 
   (Run Starting)
 
   ┌────────────────────────────────────────────────────────────────────────────────────────────────┐
-  │ Cypress:    5.4.0                                                                              │
+  │ Cypress:    5.6.0                                                                              │
   │ Browser:    Electron 85 (headless)                                                             │
   │ Specs:      1 found (e2e.test.js)                                                              │
   └────────────────────────────────────────────────────────────────────────────────────────────────┘
 
 
 ────────────────────────────────────────────────────────────────────────────────────────────────────
-                                                                                                    
+
   Running:  e2e.test.js                                                                     (1 of 1)
 
 
   1) should say left wins for rock vs. scissors
 
-  0 passing (5s)
+  0 passing (6s)
   1 failing
 
   1) should say left wins for rock vs. scissors:
      TestingLibraryElementError: Timed out retrying: Unable to find a label with the text of: Left
-      at Object.getElementError (http://localhost:3000/__cypress/tests?p=cypress/support/index.js:1688:17)
-      at getAllByLabelText (http://localhost:3000/__cypress/tests?p=cypress/support/index.js:2816:25)
-      at eval (http://localhost:3000/__cypress/tests?p=cypress/support/index.js:2560:24)
-      at eval (http://localhost:3000/__cypress/tests?p=cypress/support/index.js:2611:25)
+      at Object.getElementError (http://localhost:3000/__cypress/tests?p=cypress/support/index.js:1690:17)
+      at getAllByLabelText (http://localhost:3000/__cypress/tests?p=cypress/support/index.js:2820:25)
+      at eval (http://localhost:3000/__cypress/tests?p=cypress/support/index.js:2564:24)
+      at eval (http://localhost:3000/__cypress/tests?p=cypress/support/index.js:2615:25)
       at baseCommandImpl (http://localhost:3000/__cypress/tests?p=cypress/support/index.js:1148:16)
       at commandImpl (http://localhost:3000/__cypress/tests?p=cypress/support/index.js:1151:40)
       at getValue (http://localhost:3000/__cypress/tests?p=cypress/support/index.js:1175:23)
@@ -419,31 +527,31 @@ $ npm run e2e
   (Screenshots)
 
   -  path/to/rps-e2e/cypress/screenshots/e2e.test.js/should say left wins for rock vs     (1280x720)
-     . scissors (failed).png                                       
+     . scissors (failed).png
 
-====================================================================================================
+==========================================================================================
 
   (Run Finished)
 
 
-       Spec                                              Tests  Passing  Failing  Pending  Skipped  
+       Spec                                              Tests  Passing  Failing  Pending  Skipped
   ┌────────────────────────────────────────────────────────────────────────────────────────────────┐
   │ ✖  e2e.test.js                              00:05        1        -        1        -        - │
   └────────────────────────────────────────────────────────────────────────────────────────────────┘
-    ✖  1 of 1 failed (100%)                     00:05        1        -        1        -        -  
+    ✖  1 of 1 failed (100%)                     00:05        1        -        1        -        -
 
 npm ERR! code ELIFECYCLE
 npm ERR! errno 1
 npm ERR! rps-e2e@0.1.0 e2e: `cypress run`
 npm ERR! Exit status 1
-npm ERR! 
+npm ERR!
 npm ERR! Failed at the rps-e2e@0.1.0 e2e script.
 npm ERR! This is probably not a problem with npm. There is likely additional logging output above.
 
 npm ERR! A complete log of this run can be found in:
-npm ERR!     path/to/.npm/_logs/2020-11-03T21_04_24_496Z-debug.log
+npm ERR!     path/to/.npm/_logs/2020-11-16T23_01_32_468Z-debug.log
 ```
-OK, we've moved on a step - the test is now failing because it can't find the element on the page. So far we haven't actually added anything to the page, so that makes sense, it's just showing the default CRA info (you can see this in the screenshot, check it out!)
+OK, we've moved on a step - the test is now failing because it can't find the element on the page. So far we haven't actually added anything to the page, so that makes sense, it's just showing the default CRA info (you can see this in the screenshot Cypress took, check it out!)
 
 This is going to be our guiding star for the rest of the exercise, so let's make a commit to store this state:
 
@@ -454,19 +562,19 @@ $ git status
 On branch master
 Changes to be committed:
   (use "git restore --staged <file>..." to unstage)
-        modified:   cypress.json
-        modified:   cypress/integration/e2e.test.js
-        modified:   cypress/support/commands.js
-        modified:   package-lock.json
-        modified:   package.json
+	modified:   cypress.json
+	modified:   cypress/integration/e2e.test.js
+	modified:   cypress/support/commands.js
+	modified:   package-lock.json
+	modified:   package.json
 
 
 $ git commit -m 'Implement E2E test'
-[master c89108b] Implement E2E test
- 5 files changed, 25 insertions(+), 1 deletion(-)
+[master d08217b] Implement E2E test
+ 5 files changed, 27 insertions(+), 1 deletion(-)
 ```
 
-## Moving to the unit level [3/6]
+## Moving to the unit level [4/7]
 
 Let's think about the structure of our app. We know that broadly we're going to have two `<select>` inputs (left and right), one `<button>` and some kind of output element. We also know we're going to have some business logic, independent of that UI; the `rps` implementation we built previously.
 
@@ -646,7 +754,7 @@ const Form = ({ onSubmit }) => {
 export default Form;
 ```
 
-## At your service [4/6]
+## At your service [5/7]
 
 We already have this! You should still have a function named `rps` from the previous article, along with a suite of tests. Place the function in a file named `rpsService.js` and export it:
 
@@ -668,7 +776,7 @@ describe('rock, paper, scissors', () => {
 
 All of the same tests should pass happily in the new context.
 
-## Putting it all back together [5/6]
+## Putting it all back together [6/7]
 
 For the `App` component itself, which coordinates the `Form` and `rpsService`, the only logic needed is the display of the outcome. We have four cases:
 
@@ -831,7 +939,7 @@ $ git commit -m 'Implement RPS UI'
  create mode 100644 src/rpsService.test.js
 ```
 
-## Exercises [6/6]
+## Exercises [7/7]
 
 Here are some additional exercises you can run through:
 
