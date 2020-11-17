@@ -1,5 +1,5 @@
 Title: JS TDD E2E
-Date: 2020-11-03 23:30
+Date: 2020-11-17 22:45
 Tags: javascript, tdd, xp
 Authors: Jonathan Sharpe
 Summary: Test-driven JavaScript development done right - part 2
@@ -54,7 +54,7 @@ describe("rock, paper, scissors", () => {
 
 Along the way I threw in some *nix CLI commands and practice with using Git. If you haven't read it yet, or any of the above seems unfamiliar, go and check it out!
 
-One thing that seems to frustrate people new to TDD is that many of the examples are, like my previous post, pretty trivial. They're useful for teaching the flow, but don't actually show you how to test most real applications. So to address that I thought for round two I'd meet a pretty common need - end-to-end (E2E, sometimes known as acceptance or functional) testing a web app. This will still use the TDD flow, but add an extra layer with some [Cypress] browser tests.
+One thing that seems to frustrate people new to TDD is that many of the examples are, like my previous post, pretty trivial. They're useful for teaching the flow, but don't actually show you how to test most real applications. So to address that I thought for round two I'd meet a pretty common need - end-to-end (E2E, sometimes known as acceptance or functional) testing a React web app built with [Create React App][cra] (CRA). This will still use the TDD flow, but add an extra layer with some [Cypress] browser tests. We'll work our way from the outside in, starting the E2E tests, moving through integration tests back to the unit tests we saw before.
 
 ### Requirements
 
@@ -62,11 +62,11 @@ The prerequisites here are the same as the previous post:
 
 - *nix command line: already provided on macOS and Linux; if you're using Windows try [WSL] or [Git BASH];
 - [Node] \(10+ recommended, Jest 26 [dropped support] for Node 8; run `node -v` to check) and NPM; and
-- Familiarity with ES6 JavaScript syntax (specifically arrow functions).
+- Familiarity with ES6 JavaScript syntax.
 
 In addition, given the domain for this post, you'll need:
 
-- Familiarity with React development - I'm going to assume you know how to write function-based components with hooks.
+- Familiarity with React development - I'm going to assume you know how to write a basic implementation, guiding you with test cases and a few function component examples.
 
 We're going to expand on the previous article and add a web UI for our Rock Paper Scissors implementation. This article moves quite quickly; the libraries involved ([Cypress], [Jest], [Testing Library]) have quite large APIs, so it's best to read the details in their documentation.
 
@@ -74,7 +74,7 @@ Again please carefully _read everything_, and for newer developers I'd recommend
 
 ## Setup [1/7]
 
-To begin, let's create a new React app in our workspace using [Create React App][cra] (CRA):
+To begin, let's create a new React app in our workspace using CRA:
 
 ```bash
 $ npx create-react-app@latest --use-npm rps-e2e
@@ -428,7 +428,9 @@ As before, _none of this exists yet_, so we can easily talk about how this user 
 
 ![Wireframe of the proposed RPS UI]({static}/images/rps-ui.png)
 
-<small>_Created with [https://www.lofiwireframekit.com/](https://www.lofiwireframekit.com/)._</small>
+<small>_Created with [lofiwireframekit.com](https://www.lofiwireframekit.com/)._</small>
+
+Before we continue, think about how you might actually implement that UI in React - what components would you have, how would they interact, where would the state live? Note your ideas down, we'll revisit them later.
 
 Just like with Jest, call the shot then run the tests:
 
@@ -574,189 +576,154 @@ $ git commit -m 'Implement E2E test'
  5 files changed, 27 insertions(+), 1 deletion(-)
 ```
 
-## Moving to the unit level [4/7]
+## Moving to the integration level [4/7]
 
-Let's think about the structure of our app. We know that broadly we're going to have two `<select>` inputs (left and right), one `<button>` and some kind of output element. We also know we're going to have some business logic, independent of that UI; the `rps` implementation we built previously.
+We're working our way from the outside in, and we have a failing E2E test, so let's write an _integration_ test in Jest. Replace the content of `./src/App.test.js` with the following:
 
-So let's assume the main `App` component is just going to have a coordinating role. It will render a `Form` component, which deals with the user input, and communicate with an `rpsService` where the business logic lives:
-
-```
-App -- rpsService
- |
-Form
-```
-
-As we've already worked a lot on the core service logic, let's start with the form. Create a new directory named `Form` inside `src`, and add an `index.test.js` file into it with the following content:
-
-```javascript
+```jsx
 import { render } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
-describe('Form component', () => {
-  it('emits a pair of selections when the form is submitted', async () => {
-    const left = 'rock';
-    const right = 'scissors';
-    const onSubmit = jest.fn();
-    const { getByLabelText, getByText } = render(<Form onSubmit={onSubmit} />);
-    
-    userEvent.selectOptions(getByLabelText('Left'), left);
-    userEvent.selectOptions(getByLabelText('Right'), right);
+import App from './App';
+
+describe("App component", () => {
+  it("displays right wins when appropriate", () => {
+    // Arrange
+    const { getByLabelText, getByTestId, getByText } = render(<App />);
+
+    // Act
+    userEvent.selectOptions(getByLabelText('Left'), 'paper');
+    userEvent.selectOptions(getByLabelText('Right'), 'scissors');
     userEvent.click(getByText('Throw'));
 
-    expect(onSubmit).toHaveBeenCalledWith([left, right]);
+    // Assert
+    expect(getByTestId('outcome')).toHaveTextContent('Right wins!');
   });
 });
 ```
 
-You can read about the details in the Jest and Testing Library documentation, but at a high level we:
-
-- Create a Jest _"mock function"_, a [test double] we can pass to the `Form` component in place of a real function;
-- Render the form, passing the test double as a prop, and _destructure_ the element selection methods we'll need;
-- Make two selections and click the button; and
-- Assert that the test double was called with the expected values.
-
-This looks quite a lot like the end-to-end test, but with a slightly more limited scope - we only care that the user input is taken correctly, not that the appropriate winner is determined. This is part of the process of _decomposing_ the problem into smaller (and easier-to-solve) pieces, which is the reason I think starting with the end-to-end tests makes sense.
-
-Again this gives us an opportunity to talk about the API details of the component before it even exists. Perhaps it should return an object `{ left, right }` instead of an array `[left, right]`? Is `onSubmit` the best name for the prop? It's easier to have these discussions when changing the API is a matter of changing your mind rather than changing the code.
-
-Call the shot, run the test:
+The syntax might be slightly different, but note that the _logic_ is exactly the same as we tested at the end-to-end level: render the component (equivalent to visiting the page); make the inputs; and check the result. Call the shot and run the test (note I'm using the environment variable `CI=true` to run the tests once and exit; you can use the default `npm test` to enter watch mode if you'd prefer):
 
 ```
- FAIL  src/Form/index.test.js
-  Form component
-    ✕ emits a pair of selections when the form is submitted (2 ms)
+$ CI=true npm test
 
-  ● Form component › emits a pair of selections when the form is submitted
+> rps-e2e@0.1.0 test path/to/rps-e2e
+> react-scripts test
 
-    ReferenceError: Form is not defined
+FAIL src/App.test.js
+  App component
+    ✕ displays right wins when appropriate (54 ms)
 
-       7 |     const right = 'scissors';
-       8 |     const onSubmit = jest.fn();
-    >  9 |     const { getByLabelText, getByText } = render(<Form onSubmit={onSubmit} />);
-         |                                                   ^
-      10 |     
-      11 |     userEvent.selectOptions(getByLabelText('Left'), left);
-      12 |     userEvent.selectOptions(getByLabelText('Right'), right);
-
-      at Object.<anonymous> (src/Form/index.test.js:9:51)
-```
-
-Right, we don't actually have the component yet! Create a new file `index.js` containing a minimal component:
-
-```javascript
-const Form = () => null;
-
-export default Form;
-```
-
-and import that at the top of `index.test.js`:
-
-```javascript
-import Form from '.';
-```
-
-Call the shot, run the test:
-
-```
- FAIL  src/Form/index.test.js
-  Form component
-    ✕ emits a pair of selections when the form is submitted (29 ms)
-
-  ● Form component › emits a pair of selections when the form is submitted
+  ● App component › displays right wins when appropriate
 
     TestingLibraryElementError: Unable to find a label with the text of: Left
 
     <body>
-      <div />
+      <div>
+        <div
+          class="App"
+        >
+          <header
+            class="App-header"
+          >
+            <img
+              alt="logo"
+              class="App-logo"
+              src="logo.svg"
+            />
+            <p>
+              Edit
+              <code>
+                src/App.js
+              </code>
+               and save to reload.
+            </p>
+            <a
+              class="App-link"
+              href="https://reactjs.org"
+              rel="noopener noreferrer"
+              target="_blank"
+            >
+              Learn React
+            </a>
+          </header>
+        </div>
+      </div>
     </body>
 
-      11 |     const { getByLabelText, getByText } = render(<Form onSubmit={onSubmit} />);
-      12 |     
-    > 13 |     userEvent.selectOptions(getByLabelText('Left'), left);
+      10 |
+      11 |     // Act
+    > 12 |     userEvent.selectOptions(getByLabelText('Left'), 'paper');
          |                             ^
-      14 |     userEvent.selectOptions(getByLabelText('Right'), right);
-      15 |     userEvent.click(getByText('Throw'));
-      16 | 
+      13 |     userEvent.selectOptions(getByLabelText('Right'), 'scissors');
+      14 |     userEvent.click(getByText('Throw'));
+      15 |
 
       at Object.getElementError (node_modules/@testing-library/dom/dist/config.js:37:19)
       at getAllByLabelText (node_modules/@testing-library/dom/dist/queries/label-text.js:115:38)
       at node_modules/@testing-library/dom/dist/query-helpers.js:62:17
       at getByLabelText (node_modules/@testing-library/dom/dist/query-helpers.js:106:19)
-      at Object.<anonymous> (src/Form/index.test.js:13:29)
+      at Object.<anonymous> (src/App.test.js:12:29)
+
+Test Suites: 1 failed, 1 total
+Tests:       1 failed, 1 total
+Snapshots:   0 total
+Time:        1.91 s, estimated 4 s
+Ran all test suites.
+npm ERR! Test failed.  See above for more details.
 ```
 
-We're a bit further, now there's no component with the specified label. Note that the actual element is displayed - so far it's just an empty `<div/>`. Now we can dive into the details of the component. 
+Compare the error messages; they're failing on the same problem:
 
-Covering the details of how to implement something like this in React are a bit beyond the scope of this article, but one way we can create a [controlled component] that passes the test is as follows:
+- **E2E**: `TestingLibraryElementError: Timed out retrying: Unable to find a label with the text of: Left`
+- **Integration**: `TestingLibraryElementError: Unable to find a label with the text of: Left`
 
-```jsx
-import { useState } from 'react';
+Instead of a screenshot we get the rendered HTML, but it shows a similar thing - the default CRA content is still being shown. You should also see that running this test was **much faster** than starting up the app and running Cypress. Lower level tests tend to:
 
-const Form = ({ onSubmit }) => {
-  const [left, setLeft] = useState('rock');
-  const [right, setRight] = useState('rock');
+ 1. be _more coupled to the implementation_ (this one knows our app is using React, which Cypress had no idea about); but
+ 2. have a _shorter feedback loop_ (by orders of magnitude, the integration test itself took 54ms vs. 4s for the E2E).
 
-  return (
-    <div>
-      <label>
-        Left
-        <select value={left} onChange={({ target: { value }}) => setLeft(value)}>
-          <option value="rock">Rock</option>
-          <option value="paper">Paper</option>
-          <option value="scissors">Scissors</option>
-        </select>
-      </label>
-      <label>
-        Right
-        <select value={right} onChange={({ target: { value }}) => setRight(value)}>
-          <option value="rock">Rock</option>
-          <option value="paper">Paper</option>
-          <option value="scissors">Scissors</option>
-        </select>
-      </label>
-      <button onClick={() => onSubmit([left, right])}>Throw</button>
-    </div>
-  );
-};
+Let's save this new state:
 
-export default Form;
+```bash
+$ git add .
+
+$ git status
+On branch master
+Changes to be committed:
+  (use "git restore --staged <file>..." to unstage)
+	modified:   src/App.test.js
+
+$ git commit -m 'Implement integration test'
+[master 8a6217f] Implement integration test
+ 1 file changed, 19 insertions(+), 8 deletions(-)
+ rewrite src/App.test.js (89%)
 ```
 
-You might think the `<select>` part is a bit repetitive, and that's fair, so let's use the fact that the test gives us confidence that our implementation continues to work to refactor a bit:
+Before we move in one last level, to the unit tests, let's think about how our app might be structured. Again note that we can have this discussion before actually writing anything, because the need to identify our test boundaries is driving us to think about the architecture. We have two main concerns here:
 
-```jsx
-import { useState } from 'react';
+ 1. the _business logic_, determining a winner given two weapons (we tested and implemented this in the previous article) - this can be implemented as a _service_; and
+ 2. the _user interface_, taking user input and showing the winner - this can be implemented as _components_.
 
-const Select = ({ label, onChange, value }) => (
-  <label>
-    {label}
-    <select value={value} onChange={({ target: { value }}) => onChange(value)}>
-      <option value="rock">Rock</option>
-      <option value="paper">Paper</option>
-      <option value="scissors">Scissors</option>
-    </select>
-  </label>
-);
+React apps tend to have a root `App` component, which we could use as a coordinator here. It will:
 
-const Form = ({ onSubmit }) => {
-  const [left, setLeft] = useState('rock');
-  const [right, setRight] = useState('rock');
+- render a form with our input controls (two `<select>`s and a `<button>`);
+- communicate with the service (RPS logic we already have); and
+- display the outcome.
 
-  return (
-    <div>
-      <Select label="Left" onChange={setLeft} value={left} />
-      <Select label="Right" onChange={setRight} value={right} />
-      <button onClick={() => onSubmit([left, right])}>Throw</button>
-    </div>
-  );
-};
+We can model this as follows:
 
-export default Form;
 ```
+   App <--> Service
+  /   \
+Form  Outcome
+```
+
+We already have an integration test covering these parts working together, but we can create unit tests for the service and the low-level components.
 
 ## At your service [5/7]
 
-We already have this! You should still have a function named `rps` from the previous article, along with a suite of tests. Place the function in a file named `rpsService.js` and export it:
+We already have this! You should still have a function named `rps` from the previous article, along with a suite of tests. Place the function in a file named `./src/rpsService.js` and export it:
 
 ```javascript
 export function rps(left, right) {
@@ -764,7 +731,7 @@ export function rps(left, right) {
 }
 ```
 
-then place the test suite in a file named `rpsService.test.js` along with an import:
+then place the test suite in a file named `./src/rpsService.test.js` along with an import:
 
 ```javascript
 import { rps } from './rpsService';
@@ -774,90 +741,146 @@ describe('rock, paper, scissors', () => {
 });
 ```
 
-All of the same tests should pass happily in the new context.
+All of the same tests should pass happily in the new context. Once all of the service tests are passing (although `./src/App.test.js` will still fail), commit it:
 
-## Putting it all back together [6/7]
+```bash
+$ git add .
 
-For the `App` component itself, which coordinates the `Form` and `rpsService`, the only logic needed is the display of the outcome. We have four cases:
+$ git status
+On branch master
+Changes to be committed:
+  (use "git restore --staged <file>..." to unstage)
+	new file:   src/rpsService.js
+	new file:   src/rpsService.test.js
 
- 1. Before any selection is made, no outcome is shown;
- 2. If the left throw wins, display `Left wins!`;
- 3. If the right throw wins, display `Right wins!`; or
- 4. If neither throw wins, display `Draw!`.
 
-We could test this component in isolation, e.g. mocking out the service, but given how simple the other parts of this system are we can just write a more integration-level test, making sure the three parts work together. To match the above cases, replace the content of `App.test.js` with the following:
+$ git commit -m 'Migrate tested service logic'
+[master b03135e] Migrate tested service logic
+ 2 files changed, 75 insertions(+)
+ create mode 100644 src/rpsService.js
+ create mode 100644 src/rpsService.test.js
+```
+
+## Component unit tests [6/7]
+
+The `Outcome` component is going to be very simple, as it only has to display the text we want given a result, so let's start with that. Add the following to `./src/Outcome.test.js`:
 
 ```jsx
 import { render } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
 
-import App from './App';
+import Outcome from './Outcome';
 
 describe("App component", () => {
-  it("doesn't display an outcome at first", () => {
-    const { queryByTestId } = render(<App />);
-
-    expect(queryByTestId('outcome')).toBeNull();
-  });
-
-  it.skip("displays left wins when appropriate", () => {
-    const { getByLabelText, getByTestId, getByText } = render(<App />);
-
-    userEvent.selectOptions(getByLabelText('Left'), 'paper');
-    userEvent.selectOptions(getByLabelText('Right'), 'rock');
-    userEvent.click(getByText('Throw'));
-
-    expect(getByTestId('outcome')).toHaveTextContent('Left wins!');
-  });
-
-  it.skip("displays right wins when appropriate", () => {
-    const { getByLabelText, getByTestId, getByText } = render(<App />);
-
-    userEvent.selectOptions(getByLabelText('Left'), 'paper');
-    userEvent.selectOptions(getByLabelText('Right'), 'scissors');
-    userEvent.click(getByText('Throw'));
-
+  it("displays 'Right wins!' when right wins", () => {
+    const { getByTestId } = render(<Outcome result="right" />);
     expect(getByTestId('outcome')).toHaveTextContent('Right wins!');
-  });
-
-  it.skip("displays draw when appropriate", () => {
-    const { getByLabelText, getByTestId, getByText } = render(<App />);
-
-    userEvent.selectOptions(getByLabelText('Left'), 'paper');
-    userEvent.selectOptions(getByLabelText('Right'), 'paper');
-    userEvent.click(getByText('Throw'));
-
-    expect(getByTestId('outcome')).toHaveTextContent('Draw!');
   });
 });
 ```
 
-These seem pretty close to the format of the end-to-end tests, and that should make sense - we're integrating the client app parts together. Note the use of `it.skip`, which prevents the test case from actually running; only the first test is currently active. This is to encourage the same kind of test-driven development as we used in the previously article. Get each test passing in turn, then **delete the `.skip` from the next one** to activate it. By the end all four tests should be passing, and you may have something like:
- 
+Once again we can talk about the interface before we're tied to an implementation. In this case, I've assumed the component will have a single prop named `result`, that matches the value returned from the service, and will render an element with `data-testid="outcome"`, to match our higher-level tests, with the expected text.
+
+Call the shot and run the test. Initially it will fail because Jest `Cannot find module './Outcome' from 'src/Outcome.test.js'` - makes sense, we haven't created that file yet. Go through the process of making small changes and re-running the test until it passes, with the _simplest possible implementation_.
+
+At this point, you should have something like:
 
 ```jsx
-import { useState } from 'react';
+function Outcome() {
+  return <div data-testid="outcome">Right wins!</div>;
+}
 
-import Form from './Form';
-import { rps } from './rpsService';
+export default Outcome;
+```
 
-const outcomes = {
-  draw: 'Draw!',
-  left: 'Left wins!',
-  right: 'Right wins!',
-};
+If you have any logic in your component, go back! It's too complicated, remember to write the simplest code that passes the tests and let additional test cases force you to add complexity.
 
-const App = () => {
-  const [winner, setWinner] = useState(undefined);
+Make a commit to save your progress, with a message like _"Implement Outcome for right winning"_. Now repeat the process for each of the following tests, one at a time: add the test case; call the shot; get it passing; refactor as desired; make a commit with a sensible message.
 
-  const handleThrows = ([left, right]) => {
-    setWinner(rps(left, right));
-  };
+```jsx
+it("displays 'Left wins!' when left wins", () => {
+  const { getByTestId } = render(<Outcome result="left" />);
+  expect(getByTestId('outcome')).toHaveTextContent('Left wins!');
+});
+```
+```jsx
+it("displays 'Draw!' when there's a draw", () => {
+  const { getByTestId } = render(<Outcome result="draw" />);
+  expect(getByTestId('outcome')).toHaveTextContent('Draw!');
+});
+```
 
+Once all three tests are passing, we can move on to the next component. Add the following to `./src/Form.test.js`:
+
+```jsx
+import { render } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+
+import Form from "./Form";
+
+describe('Form component', () => {
+  it('emits a pair of selections when the form is submitted', async () => {
+    const left = "scissors";
+    const right = "paper";
+    const onSubmit = jest.fn();
+    const { getByLabelText, getByText } = render(<Form onSubmit={onSubmit} />);
+    
+    userEvent.selectOptions(getByLabelText("Left"), left);
+    userEvent.selectOptions(getByLabelText("Right"), right);
+    userEvent.click(getByText("Throw"));
+
+    expect(onSubmit).toHaveBeenCalledWith([left, right]);
+  });
+});
+```
+
+This looks quite a lot like the end-to-end and integration tests, but with a more limited scope - we only care that the user input is taken correctly, not that the appropriate winner is determined. This is part of the process of _decomposing_ the problem into smaller (and easier-to-solve) pieces, which is the reason I think starting with the end-to-end tests makes sense.
+
+It also introduces a Jest _"mock function"_, a [test double] we can pass to the `Form` component in place of a real function. The expectation here is that this mock function gets called with the appropriate values, as this is how the data will be passed up to the `App` component.
+
+Again this gives us an opportunity to talk about the API details of the component before it even exists. Perhaps it should return an object `{ left, right }` instead of an array `[left, right]`? Is `onSubmit` the best name for the prop? It's easier to have these discussions when changing the API is a matter of changing your mind rather than changing the code.
+
+Repeat the usual process until you get this test passing. Covering the details of how to implement something like this in React are a bit beyond the scope of this article, but one way is to create some [controlled components] that update the component's state. Once it passes, make another commit:
+
+```bash
+$ git add .
+
+$ git status
+On branch master
+Changes to be committed:
+  (use "git restore --staged <file>..." to unstage)
+	new file:   src/Form.js
+	new file:   src/Form.test.js
+
+
+$ git commit -m 'Implement Form component'
+[master eca31d7] Implement Form component
+ 2 files changed, 46 insertions(+)
+ create mode 100644 src/Form.js
+ create mode 100644 src/Form.test.js
+```
+
+## Putting it all back together [6/7]
+
+Now we have a bunch of well-tested components and a service, but our integration and E2E tests are still failing, so it's time to bring everything together. Given that we already have two layers of testing for `./src/App.js` and most of the work is done elsewhere let's not add unit tests too; something like the following should be enough to get everything passing:
+
+```jsx
+import { useState } from "react";
+
+import Form from "./Form";
+import Outcome from "./Outcome";
+import { rps } from "./rpsService";
+
+function App() {
+  const [result, setResult] = useState();
+  
+  const onThrow = ([left, right]) => {
+    setResult(rps(left, right));
+  }
+  
   return (
-    <div className="App">
-      <Form onSubmit={handleThrows} />
-      {winner && <div data-testid="outcome">{outcomes[winner]}</div>}
+    <div>
+      <Form onSubmit={onThrow} />
+      {result && <Outcome result={result} />}
     </div>
   );
 }
@@ -865,32 +888,52 @@ const App = () => {
 export default App;
 ```
 
+Call the shot and run the whole suite:
+
+```bash
+$ CI=true npm test
+
+> rps-e2e@0.1.0 test path/to/rps-e2e
+> react-scripts test
+
+PASS src/Outcome.test.js
+PASS src/App.test.js
+PASS src/Form.test.js
+PASS src/rpsService.test.js
+
+Test Suites: 4 passed, 4 total
+Tests:       14 passed, 14 total
+Snapshots:   0 total
+Time:        6.826 s
+Ran all test suites.
+```
+
 All of the unit tests should now be passing, so call the final shot and run the end-to-end test:
 
 ```bash
 $ npm run e2e
 
-> rps-e2e@0.1.0 e2e path/to/rps-e2e
+> rps-e2e@0.1.0 e2e /Users/jonrsharpe/workspace/tdd-examples/rps-e2e
 > cypress run
 
 
-====================================================================================================
+==========================================================================================
 
   (Run Starting)
 
   ┌────────────────────────────────────────────────────────────────────────────────────────────────┐
-  │ Cypress:    5.4.0                                                                              │
+  │ Cypress:    5.6.0                                                                              │
   │ Browser:    Electron 85 (headless)                                                             │
   │ Specs:      1 found (e2e.test.js)                                                              │
   └────────────────────────────────────────────────────────────────────────────────────────────────┘
 
 
 ────────────────────────────────────────────────────────────────────────────────────────────────────
-                                                                                                    
+
   Running:  e2e.test.js                                                                     (1 of 1)
 
 
-  ✓ should say left wins for rock vs. scissors (1329ms)
+  ✓ should say left wins for rock vs. scissors (1116ms)
 
   1 passing (1s)
 
@@ -908,18 +951,19 @@ $ npm run e2e
   │ Duration:     1 second                                                                         │
   │ Spec Ran:     e2e.test.js                                                                      │
   └────────────────────────────────────────────────────────────────────────────────────────────────┘
+{
 
 
-====================================================================================================
+==========================================================================================
 
   (Run Finished)
 
 
-       Spec                                              Tests  Passing  Failing  Pending  Skipped  
+       Spec                                              Tests  Passing  Failing  Pending  Skipped
   ┌────────────────────────────────────────────────────────────────────────────────────────────────┐
   │ ✔  e2e.test.js                              00:01        1        1        -        -        - │
   └────────────────────────────────────────────────────────────────────────────────────────────────┘
-    ✔  All specs passed!                        00:01        1        1        -        -        -  
+    ✔  All specs passed!                        00:01        1        1        -        -        -
 
 ```
 
@@ -928,28 +972,36 @@ That's it! We've created a simple UI for our RPS implementation, test-driving it
 ```bash
 $ git add .
 
-$ git commit -m 'Implement RPS UI'
-[master be3db46] Implement RPS UI
- 6 files changed, 190 insertions(+), 33 deletions(-)
- rewrite src/App.js (85%)
- rewrite src/App.test.js (87%)
- create mode 100644 src/Form/index.js
- create mode 100644 src/Form/index.test.js
- create mode 100644 src/rpsService.js
- create mode 100644 src/rpsService.test.js
+$ git status
+On branch master
+Changes to be committed:
+  (use "git restore --staged <file>..." to unstage)
+	modified:   src/App.js
+
+
+$ git commit -m 'Complete RPS UI implementation'
+[master c6cd9a8] Complete RPS UI implementation
+ 1 file changed, 22 insertions(+), 25 deletions(-)
+ rewrite src/App.js (90%)
 ```
+
+Now reflect on the exercise - how does the implementation compare to what you'd initially imagined? What felt good or bad about the process?
+
+You can see my copy of this exercise at [https://github.com/textbook/rps-e2e][github].
 
 ## Exercises [7/7]
 
 Here are some additional exercises you can run through:
 
- 1. Repeat the process from the beginning and try to come up with a different implementation (including running through the `rps` part, if you like). Was your new route easier or harder?
+ 1. Repeat the process from the beginning and try to come up with a different implementation (including running through the core service logic, rather than copying it over). Was your new route easier or harder?
 
  1. I mentioned various alternatives to the user interface we implemented, e.g. allowing free text input. Pick one of my suggestions (or come up with your own) and implement it from the outside in.
 
  1. If you implemented additional weapons in your `rps` implementation, extend the UI to support them. If not, maybe this is a good time to revisit it!
- 
- 1. Rather than `useState('rock')` in the `Form` component, we should start with `useState()`, which gives an initial value of `undefined`. How should this appear in the `<select>` components? Can `onSubmit` still be called with undefined values - which part of the system should deal with that? Write tests based on these decisions, then implement it.
+
+ 1. The UI is pretty basic - we've tested the _functionality_ but said nothing about how it should look. Improve the styling while keeping the tests passing.
+
+ 1. Repeat the exercise without writing _any_ unit-level tests; use the same end-to-end test then drive everything else from the integration level. What does this make easier and harder?
 
 I'd recommend creating a new git branch for each one you try (e.g. use `git checkout -b <name>`) and making commits as appropriate.
 
@@ -1005,9 +1057,9 @@ $ npm install eslint-plugin-cypress
 npm WARN tsutils@3.17.1 requires a peer of typescript@>=2.8.0 || >= 3.2.0-dev || >= 3.3.0-dev || >= 3.4.0-dev || >= 3.5.0-dev || >= 3.6.0-dev || >= 3.6.0-beta || >= 3.7.0-dev || >= 3.7.0-beta but none is installed. You must install peer dependencies yourself.
 
 + eslint-plugin-cypress@2.11.2
-added 1 package from 1 contributor and audited 2092 packages in 18.002s
+added 1 package from 1 contributor and audited 2080 packages in 15.918s
 
-119 packages are looking for funding
+120 packages are looking for funding
   run `npm fund` for details
 
 found 0 vulnerabilities
@@ -1036,7 +1088,7 @@ We could just add this plugin at the top level, but it's better to be specific -
 
 Now `npm run lint` should be fine.
 
-  [controlled component]: https://reactjs.org/docs/forms.html#controlled-components
+  [controlled components]: https://reactjs.org/docs/forms.html#controlled-components
   [cra]: https://create-react-app.dev/docs/getting-started
   [Cypress]: https://cypress.io
   [cypress base url]: https://docs.cypress.io/guides/references/best-practices.html#Setting-a-global-baseUrl
@@ -1045,6 +1097,7 @@ Now `npm run lint` should be fine.
   [cypress selectors]: https://docs.cypress.io/guides/references/best-practices.html#Selecting-Elements
   [dropped support]: https://jestjs.io/blog/2020/05/05/jest-26#other-breaking-changes-in-jest-26
   [Git BASH]: https://gitforwindows.org/
+  [github]: https://github.com/textbook/rps-e2e
   [Jest]: https://jestjs.io/
   [Node]: https://nodejs.org/
   [Testing Library]: https://testing-library.com
