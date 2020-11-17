@@ -7,9 +7,7 @@ jobs:
     steps:
     - uses: actions/checkout@master
     - name: Checkout submodules
-      uses: srt32/git-actions@v0.0.3
-      with:
-        args: git submodule update --init --recursive
+      run: git submodule update --init --recursive
     - name: Publish to GitHub Pages
       uses: nelsonjchen/gh-pages-pelican-action@0.1.4
       env:
