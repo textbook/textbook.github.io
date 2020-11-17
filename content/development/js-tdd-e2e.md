@@ -1043,7 +1043,11 @@ Now `npm run lint` should be fine.
   [cypress cli]: https://docs.cypress.io/guides/guides/command-line.html
   [cypress config]: https://docs.cypress.io/guides/references/configuration.html
   [cypress selectors]: https://docs.cypress.io/guides/references/best-practices.html#Selecting-Elements
+  [dropped support]: https://jestjs.io/blog/2020/05/05/jest-26#other-breaking-changes-in-jest-26
+  [Git BASH]: https://gitforwindows.org/
   [Jest]: https://jestjs.io/
+  [Node]: https://nodejs.org/
   [Testing Library]: https://testing-library.com
   [test double]: https://engineering.pivotal.io/post/the-test-double-rule-of-thumb/
   [the previous post]: {filename}/development/js-tdd-ftw.md
+  [WSL]: https://docs.microsoft.com/en-us/windows/wsl/about
