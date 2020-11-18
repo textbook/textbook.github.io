@@ -1,6 +1,6 @@
 Title: JS TDD FTW
 Date: 2020-08-31 16:00
-Modified: 2020-10-20 19:20
+Modified: 2020-11-18 11:50
 Tags: javascript, tdd, xp
 Authors: Jonathan Sharpe
 Summary: Test-driven JavaScript development done right - part 1
@@ -285,7 +285,7 @@ Our first test is that, given that `left` is `"rock"` and `right` is `"scissors"
 
 **Note** one key benefit of TDD here - we can try out how we should interact with our code (its _"interface"_) before we've even written any. Maybe it should return something other than a string, for example? We can have that discussion now, while it's just a matter of changing our minds rather than the code.
 
-Before we run the first test, _"call the shot"_ - make a prediction of what the test result will be, pass or fail. If you think the test will fail, **why**; will the `expect`ation be unmet (and what value do you think you'll get instead) or will something else go wrong? This is really good practice for _"playing computer"_ (modelling the behaviour of the code in your head) and you can write your guess down (or say it out loud if you're pairing) to keep yourself honest. Now let's run it:
+Before we run the first test, [_"call the shot"_][call the shot] - make a prediction of what the test result will be, pass or fail. If you think the test will fail, **why**; will the `expect`ation be unmet (and what value do you think you'll get instead) or will something else go wrong? This is really good practice for _"playing computer"_ (modelling the behaviour of the code in your head) and you can write your guess down (or say it out loud if you're pairing) to keep yourself honest. Now let's run it:
 
 ```
 $ npm t
@@ -903,6 +903,7 @@ NPM checks whether there are any known vulnerabilities in the packages in your `
 
   [additional weapons]: https://en.wikipedia.org/wiki/Rock_paper_scissors#Additional_weapons
   [audit]: https://docs.npmjs.com/cli-commands/audit.html
+  [call the shot]: https://markhneedham.com/blog/2010/07/28/tdd-call-your-shots/
   [each]: https://jestjs.io/docs/en/api#testeachtablename-fn-timeout
   [dropped support]: https://jestjs.io/blog/2020/05/05/jest-26#other-breaking-changes-in-jest-26
   [fund]: https://docs.npmjs.com/cli-commands/fund.html
