@@ -1,6 +1,6 @@
 Title: JS TDD FTW
 Date: 2020-08-31 16:00
-Modified: 2020-11-18 11:50
+Modified: 2020-11-22 15:30
 Tags: javascript, tdd, xp
 Authors: Jonathan Sharpe
 Summary: Test-driven JavaScript development done right - part 1
@@ -856,6 +856,8 @@ Practice makes perfect! Here are some additional exercises you can run through:
 
     This will set up Jest to watch your files and re-run the tests if anything changes. Arrange your screen so you can see these outputs while you're writing your code, and leave it running the whole time (if this means you can't make commits, don't worry about it). What impact does that immediate and continuous feedback have on your experience of working on the code?
 
+> **Once you're ready to move on**, check out [the next article] in this series where we'll use _end-to-end_ and _integration_ testing to build out a React UI for this RPS logic.
+
 ## Installation explained [Bonus]
 
 As promised above, here's an explanation of everything you were told during the `npm install`.
@@ -920,6 +922,7 @@ NPM checks whether there are any known vulnerabilities in the packages in your `
   [Stryker]: https://stryker-mutator.io/
   [tape]: https://www.npmjs.com/package/tape
   [the Jest docs]: https://jestjs.io/docs/en/expect#tothrowerror
+  [the next article]: {filename}/development/js-tdd-e2e.md
   [the NPM docs]: https://docs.npmjs.com/files/package.json
   [the semver calculator]: https://semver.npmjs.com/
   [WSL]: https://docs.microsoft.com/en-us/windows/wsl/about

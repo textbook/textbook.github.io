@@ -1,11 +1,10 @@
 Title: JS TDD E2E
-Date: 2020-11-17 22:45
+Date: 2020-11-22 15:30
 Tags: javascript, tdd, xp
 Authors: Jonathan Sharpe
 Summary: Test-driven JavaScript development done right - part 2
-Status: draft
 
-In [the previous post] in this series, I introduced some of the basics of test-driven development (TDD):
+In [the previous article] in this series, I introduced some of the basics of test-driven development (TDD):
 
 - the process:
 
@@ -54,11 +53,17 @@ describe("rock, paper, scissors", () => {
 
 Along the way I threw in some *nix CLI commands and practice with using Git. If you haven't read it yet, or any of the above seems unfamiliar, go and check it out!
 
-One thing that seems to frustrate people new to TDD is that many of the examples are, like my previous post, pretty trivial. They're useful for teaching the flow, but don't actually show you how to test most real applications. So to address that I thought for round two I'd meet a pretty common need - end-to-end (E2E, sometimes known as acceptance or functional) testing a React web app built with [Create React App][cra] (CRA). This will still use the TDD flow, but add an extra layer with some [Cypress] browser tests. We'll work our way from the outside in, starting the E2E tests, moving through integration tests back to the unit tests we saw before.
+One thing that seems to frustrate people new to TDD is that many of the examples are, like my previous post, pretty trivial. They're useful for teaching the flow, but don't actually show you how to test most real applications. So to address that I thought for round two I'd meet a pretty common need - end-to-end (E2E, sometimes known as acceptance or functional) testing a React web app built with [Create React App][cra] (CRA). This will still use the TDD flow, but add an extra layer with some [Cypress] browser tests. We'll work our way from the _outside in_, starting with the E2E tests then moving to lower levels.
+
+Note that I'll use the following names to refer to the different levels:
+
+- **End-to-end**: exercises the whole application from the user's point of view;
+- **Integration**: exercises multiple components of the application, collaborating to provide some functionality; and
+- **Unit**: exercises a single component, with any collaborating components replaced by [test doubles][test double].
 
 ### Requirements
 
-The prerequisites here are the same as the previous post:
+The prerequisites here are the same as the previous article:
 
 - *nix command line: already provided on macOS and Linux; if you're using Windows try [WSL] or [Git BASH];
 - [Node] \(10+ recommended, Jest 26 [dropped support] for Node 8; run `node -v` to check) and NPM; and
@@ -129,7 +134,7 @@ found 0 vulnerabilities
 
 Created git commit.
 
-Success! Created rps-e2e at /Users/jonrsharpe/workspace/tdd-examples/rps-e2e
+Success! Created rps-e2e at path/to/rps-e2e
 Inside that directory, you can run several commands:
 
   npm start
@@ -215,7 +220,7 @@ This should open the Cypress GUI:
 
 ![Screenshot of the Cypress GUI]({static}/images/cypress-gui.png)
 
-but also create a `cypress.json` configuration file (initally just an empty object, you can see the configuration options [in the docs][cypress config]) and a `cypress/` directory containing, among other things, a bunch of example tests.
+It will also create a `cypress.json` configuration file (initally just an empty object, you can see the configuration options [in the docs][cypress config]) and a `cypress/` directory containing, among other things, a bunch of example tests.
 
 You can take a look at the examples if you like. Once you're ready to move on, though, let's quit the UI then get rid of the examples:
 
@@ -361,7 +366,7 @@ $ git commit -m 'Install and configure Cypress'
 
 ## Writing the E2E test [3/7]
 
-For consistency with the unit tests, which use [Testing Library] by default in CRA, let's install their Cypress utilities via NPM:
+For consistency with the unit tests, which use Testing Library by default in CRA, let's install [their Cypress utilities][Cypress Testing Library] via NPM:
 
 ```bash
 $ npm install @testing-library/cypress
@@ -415,10 +420,10 @@ This is basically the same expectation as the first unit test case we wrote last
 - `cy.visit("/");` - visit the root path, based on the base URL we already set. This should take us to the home page of our site;
 - `cy.findByLabelText("Left").select("rock");` - find a control with the label "Left" and select the "rock" option;
 - `cy.findByLabelText("Right").select("scissors");` - find a control with the label "Right" and select the "scissors" option;
-- `cy.findByText("Throw").click(); ` - find a button that says "Throw" and click it; and
-- `cy.findByTestId("outcome").should("contain.text", "Left wins!"); ` - check that the outcome being being displayed contains the expected text `Left wins!`.
+- `cy.findByText("Throw").click();` - find a button that says "Throw" and click it; and
+- `cy.findByTestId("outcome").should("contain.text", "Left wins!");` - check that the outcome being being displayed contains the expected text `Left wins!`, using a Chai DOM assertion [exposed by Cypress][cypress assertions].
 
-**Note** that we look for the outcome in an element with the appropriate _test ID_; using stable attribute selectors is another [Cypress best practice][cypress selectors] and Testing Library gives us functions to easily access such elements, assuming the attribute is named `data-testid`. In this case, we'd expect an element like:
+**Note** that we look for the outcome in an element with the appropriate _test ID_; using stable attribute selectors is another [Cypress best practice][cypress selectors] and Testing Library gives us functions to easily access such elements, assuming the attribute is named `data-testid` (although this is configurable). In this case, we'd expect an element like:
 
 ```html
 <div data-testid="outcome">Hello, world!</div>
@@ -581,10 +586,10 @@ $ git commit -m 'Implement E2E test'
 We're working our way from the outside in, and we have a failing E2E test, so let's write an _integration_ test in Jest. Replace the content of `./src/App.test.js` with the following:
 
 ```jsx
-import { render } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
+import { render } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 
-import App from './App';
+import App from "./App";
 
 describe("App component", () => {
   it("displays right wins when appropriate", () => {
@@ -592,17 +597,25 @@ describe("App component", () => {
     const { getByLabelText, getByTestId, getByText } = render(<App />);
 
     // Act
-    userEvent.selectOptions(getByLabelText('Left'), 'paper');
-    userEvent.selectOptions(getByLabelText('Right'), 'scissors');
-    userEvent.click(getByText('Throw'));
+    userEvent.selectOptions(getByLabelText("Left"), "paper");
+    userEvent.selectOptions(getByLabelText("Right"), "scissors");
+    userEvent.click(getByText("Throw"));
 
     // Assert
-    expect(getByTestId('outcome')).toHaveTextContent('Right wins!');
+    expect(getByTestId("outcome")).toHaveTextContent("Right wins!");
   });
 });
 ```
 
-The syntax might be slightly different, but note that the _logic_ is exactly the same as we tested at the end-to-end level: render the component (equivalent to visiting the page); make the inputs; and check the result. Call the shot and run the test (note I'm using the environment variable `CI=true` to run the tests once and exit; you can use the default `npm test` to enter watch mode if you'd prefer):
+The way we express the steps might be slightly different, but note that the _logic_ is exactly the same as we tested at the end-to-end level:
+
+- `const { getByLabelText, getByTestId, getByText } = render(<App />);` - render the `App` component, equivalent to visiting the page, and _destructure_ the methods we need from the returned object;
+- `userEvent.selectOptions(getByLabelText("Left"), "paper");` - find a control with the label "Left" and select the "rock" option;
+- `userEvent.selectOptions(getByLabelText("Right"), "scissors");` - find a control with the label "Right" and select the "scissors" option;
+- `userEvent.click(getByText("Throw"));` - find a button that says "Throw" and click it; and
+- `expect(getByTestId("outcome")).toHaveTextContent("Right wins!");` - check that the outcome being being displayed contains the expected text `Left wins!`.
+
+Call the shot and run the test (note I'm using the environment variable `CI=true` to run the tests once and exit; you can use the default `npm test` to enter watch mode if you'd prefer):
 
 ```
 $ CI=true npm test
@@ -653,10 +666,10 @@ FAIL src/App.test.js
 
       10 |
       11 |     // Act
-    > 12 |     userEvent.selectOptions(getByLabelText('Left'), 'paper');
+    > 12 |     userEvent.selectOptions(getByLabelText("Left"), "paper");
          |                             ^
-      13 |     userEvent.selectOptions(getByLabelText('Right'), 'scissors');
-      14 |     userEvent.click(getByText('Throw'));
+      13 |     userEvent.selectOptions(getByLabelText("Right"), "scissors");
+      14 |     userEvent.click(getByText("Throw"));
       15 |
 
       at Object.getElementError (node_modules/@testing-library/dom/dist/config.js:37:19)
@@ -734,9 +747,9 @@ export function rps(left, right) {
 then place the test suite in a file named `./src/rpsService.test.js` along with an import:
 
 ```javascript
-import { rps } from './rpsService';
+import { rps } from "./rpsService";
 
-describe('rock, paper, scissors', () => {
+describe("rock, paper, scissors", () => {
   // ...
 });
 ```
@@ -766,21 +779,21 @@ $ git commit -m 'Migrate tested service logic'
 The `Outcome` component is going to be very simple, as it only has to display the text we want given a result, so let's start with that. Add the following to `./src/Outcome.test.js`:
 
 ```jsx
-import { render } from '@testing-library/react';
+import { render } from "@testing-library/react";
 
-import Outcome from './Outcome';
+import Outcome from "./Outcome";
 
 describe("App component", () => {
   it("displays 'Right wins!' when right wins", () => {
     const { getByTestId } = render(<Outcome result="right" />);
-    expect(getByTestId('outcome')).toHaveTextContent('Right wins!');
+    expect(getByTestId("outcome")).toHaveTextContent("Right wins!");
   });
 });
 ```
 
 Once again we can talk about the interface before we're tied to an implementation. In this case, I've assumed the component will have a single prop named `result`, that matches the value returned from the service, and will render an element with `data-testid="outcome"`, to match our higher-level tests, with the expected text.
 
-Call the shot and run the test. Initially it will fail because Jest `Cannot find module './Outcome' from 'src/Outcome.test.js'` - makes sense, we haven't created that file yet. Go through the process of making small changes and re-running the test until it passes, with the _simplest possible implementation_.
+Call the shot and run the test. Initially it will fail because Jest `Cannot find module './Outcome' from 'src/Outcome.test.js'` - that should make sense, we haven't created that file yet. Go through the process of making small changes and re-running the test until it passes, with the _simplest possible implementation_. Remember to call the shot before each test run, and aim to change the error you get step by step rather than just jumping to the passing test.
 
 At this point, you should have something like:
 
@@ -799,13 +812,14 @@ Make a commit to save your progress, with a message like _"Implement Outcome for
 ```jsx
 it("displays 'Left wins!' when left wins", () => {
   const { getByTestId } = render(<Outcome result="left" />);
-  expect(getByTestId('outcome')).toHaveTextContent('Left wins!');
+  expect(getByTestId("outcome")).toHaveTextContent("Left wins!");
 });
 ```
+
 ```jsx
 it("displays 'Draw!' when there's a draw", () => {
   const { getByTestId } = render(<Outcome result="draw" />);
-  expect(getByTestId('outcome')).toHaveTextContent('Draw!');
+  expect(getByTestId("outcome")).toHaveTextContent("Draw!");
 });
 ```
 
@@ -817,8 +831,8 @@ import userEvent from "@testing-library/user-event";
 
 import Form from "./Form";
 
-describe('Form component', () => {
-  it('emits a pair of selections when the form is submitted', async () => {
+describe("Form component", () => {
+  it("emits a pair of selections when the form is submitted", async () => {
     const left = "scissors";
     const right = "paper";
     const onSubmit = jest.fn();
@@ -835,7 +849,7 @@ describe('Form component', () => {
 
 This looks quite a lot like the end-to-end and integration tests, but with a more limited scope - we only care that the user input is taken correctly, not that the appropriate winner is determined. This is part of the process of _decomposing_ the problem into smaller (and easier-to-solve) pieces, which is the reason I think starting with the end-to-end tests makes sense.
 
-It also introduces a Jest _"mock function"_, a [test double] we can pass to the `Form` component in place of a real function. The expectation here is that this mock function gets called with the appropriate values, as this is how the data will be passed up to the `App` component.
+It also introduces a Jest _"mock function"_, a [test double] we can pass to the `Form` component in place of a real function prop. The expectation here is that this mock function gets called with the appropriate values, as this is how the data will be passed up to the `App` component.
 
 Again this gives us an opportunity to talk about the API details of the component before it even exists. Perhaps it should return an object `{ left, right }` instead of an array `[left, right]`? Is `onSubmit` the best name for the prop? It's easier to have these discussions when changing the API is a matter of changing your mind rather than changing the code.
 
@@ -913,7 +927,7 @@ All of the unit tests should now be passing, so call the final shot and run the 
 ```bash
 $ npm run e2e
 
-> rps-e2e@0.1.0 e2e /Users/jonrsharpe/workspace/tdd-examples/rps-e2e
+> rps-e2e@0.1.0 e2e path/to/rps-e2e
 > cypress run
 
 
@@ -1002,6 +1016,18 @@ Here are some additional exercises you can run through:
  1. The UI is pretty basic - we've tested the _functionality_ but said nothing about how it should look. Improve the styling while keeping the tests passing.
 
  1. Repeat the exercise without writing _any_ unit-level tests; use the same end-to-end test then drive everything else from the integration level. What does this make easier and harder?
+ 
+ 1. There are a bunch of unhappy paths and un-/under-specified/edge cases in this implementation. For example:
+
+    - Which weapons should be selected by default? If "none", what should happen when the Throw button is clicked and one or both weapons are still unselected?
+
+    - What should happen if one of the weapons is changed after the Throw button is clicked?
+
+    - What should happen when the page is refreshed?
+
+    Pick one or more of these. Which part(s) of the React app (currently `App`, `Form`, `Outcome` or `rpsService`) should be responsible for dealing with it? Write an E2E test case for the scenario, then use integration and/or unit tests to test drive the implementation in whichever part you choose.
+
+ 1. Pick another simple TDD task (e.g. FizzBuzz, BMI calculator, ...) and use these techniques to test drive a React UI for it.
 
 I'd recommend creating a new git branch for each one you try (e.g. use `git checkout -b <name>`) and making commits as appropriate.
 
@@ -1091,10 +1117,12 @@ Now `npm run lint` should be fine.
   [controlled components]: https://reactjs.org/docs/forms.html#controlled-components
   [cra]: https://create-react-app.dev/docs/getting-started
   [Cypress]: https://cypress.io
+  [cypress assertions]: https://docs.cypress.io/guides/references/assertions.html
   [cypress base url]: https://docs.cypress.io/guides/references/best-practices.html#Setting-a-global-baseUrl
   [cypress cli]: https://docs.cypress.io/guides/guides/command-line.html
   [cypress config]: https://docs.cypress.io/guides/references/configuration.html
   [cypress selectors]: https://docs.cypress.io/guides/references/best-practices.html#Selecting-Elements
+  [Cypress Testing Library]: https://testing-library.com/docs/cypress-testing-library/intro/
   [dropped support]: https://jestjs.io/blog/2020/05/05/jest-26#other-breaking-changes-in-jest-26
   [Git BASH]: https://gitforwindows.org/
   [github]: https://github.com/textbook/rps-e2e
@@ -1102,5 +1130,5 @@ Now `npm run lint` should be fine.
   [Node]: https://nodejs.org/
   [Testing Library]: https://testing-library.com
   [test double]: https://engineering.pivotal.io/post/the-test-double-rule-of-thumb/
-  [the previous post]: {filename}/development/js-tdd-ftw.md
+  [the previous article]: {filename}/development/js-tdd-ftw.md
   [WSL]: https://docs.microsoft.com/en-us/windows/wsl/about
