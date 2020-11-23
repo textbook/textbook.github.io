@@ -19,6 +19,7 @@ PLUGIN_PATHS = ['pelican-plugins']
 PLUGINS = ['assets']
 JINJA_ENVIRONMENT = bulrush.ENVIRONMENT
 JINJA_FILTERS = bulrush.FILTERS
+BULRUSH_SHOW_SUMMARY = True
 
 # Feed generation is usually not desired when developing
 FEED_ALL_ATOM = None
