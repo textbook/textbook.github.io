@@ -10,8 +10,8 @@ jobs:
       with:
         submodules: recursive
     - name: Publish to GitHub Pages
-      uses: nelsonjchen/gh-pages-pelican-action@0.1.4
+      uses: nelsonjchen/gh-pages-pelican-action@0.1.6
       env:
         GH_PAGES_BRANCH: master
-        GIT_DEPLOY_KEY: ${{ secrets.GIT_DEPLOY_KEY }}
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         PELICAN_CONFIG_FILE: publishconf.py
