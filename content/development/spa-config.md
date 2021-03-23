@@ -1,6 +1,6 @@
 Title: Runtime configuration for single-page apps
 Date: 2020-09-19 15:15
-Modified: 2020-10-07 11:00
+Modified: 2021-03-21 20:00
 Tags: xp, ci, angular, react
 Authors: Jonathan Sharpe
 Summary: Tips and tricks for deploying JavaScript SPAs with runtime configuration
@@ -16,7 +16,7 @@ Let's imagine the following scenario: you are working on a single-page app (SPA)
 
 This is quite a common problem, but it has tripped up a few teams I've worked with. The typical approach to per-environment configuration, setting environment variables that the app can access, isn't effective here. Because the assets are static files and the deployment environment is just a basic web server, it's not clear how to get the content from those environment variables into the assets. The SPA itself is actually running in your client's browser, which doesn't have access to the server-side environment at all.
 
-**Note**: because I work for [VMware Pivotal Labs][4] and this is the technology I'm most familiar with using for these apps, the practical examples will be based around deployment to the [staticfile buildpack][5] on [Tanzu Application Service][6] (TAS). However, the patterns can be applied to whatever deployment environment you're using.
+**Note**: because I work for [VMware Tanzu Labs][4] and this is the technology I'm most familiar with using for these apps, the practical examples will be based around deployment to the [staticfile buildpack][5] on [Tanzu Application Service][6] (TAS). However, the patterns can be applied to whatever deployment environment you're using.
 
 ## Build-time configuration
 
