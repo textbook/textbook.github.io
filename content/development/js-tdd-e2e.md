@@ -1,5 +1,6 @@
 Title: JS TDD E2E
 Date: 2020-11-22 15:30
+Modified: 2021-03-31 15:05
 Tags: javascript, tdd, xp
 Authors: Jonathan Sharpe
 Summary: Test-driven JavaScript development done right - part 2
@@ -1129,6 +1130,6 @@ Now `npm run lint` should be fine.
   [Jest]: https://jestjs.io/
   [Node]: https://nodejs.org/
   [Testing Library]: https://testing-library.com
-  [test double]: https://engineering.pivotal.io/post/the-test-double-rule-of-thumb/
+  [test double]: https://tanzu.vmware.com/content/pivotal-engineering-journal/the-test-double-rule-of-thumb-2
   [the previous article]: {filename}/development/js-tdd-ftw.md
   [WSL]: https://docs.microsoft.com/en-us/windows/wsl/about
