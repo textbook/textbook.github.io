@@ -1,6 +1,6 @@
 Title: JS TDD E2E
 Date: 2020-11-22 15:30
-Modified: 2021-03-31 15:05
+Modified: 2021-04-10 20:30
 Tags: javascript, tdd, xp
 Authors: Jonathan Sharpe
 Summary: Test-driven JavaScript development done right - part 2
@@ -810,19 +810,21 @@ If you have any logic in your component, go back! It's too complicated, remember
 
 Make a commit to save your progress, with a message like _"Implement Outcome for right winning"_. Now repeat the process for each of the following tests, one at a time: add the test case; call the shot; get it passing; refactor as desired; make a commit with a sensible message.
 
-```jsx
-it("displays 'Left wins!' when left wins", () => {
-  const { getByTestId } = render(<Outcome result="left" />);
-  expect(getByTestId("outcome")).toHaveTextContent("Left wins!");
-});
-```
+ 1. Left wins:
 
-```jsx
-it("displays 'Draw!' when there's a draw", () => {
-  const { getByTestId } = render(<Outcome result="draw" />);
-  expect(getByTestId("outcome")).toHaveTextContent("Draw!");
-});
-```
+        :::jsx
+        it("displays 'Left wins!' when left wins", () => {
+          const { getByTestId } = render(<Outcome result="left" />);
+          expect(getByTestId("outcome")).toHaveTextContent("Left wins!");
+        });
+
+ 2. Draw:
+        
+        :::jsx
+        it("displays 'Draw!' when there's a draw", () => {
+          const { getByTestId } = render(<Outcome result="draw" />);
+          expect(getByTestId("outcome")).toHaveTextContent("Draw!");
+        });
 
 Once all three tests are passing, we can move on to the next component. Add the following to `./src/Form.test.js`:
 
@@ -1032,6 +1034,8 @@ Here are some additional exercises you can run through:
 
 I'd recommend creating a new git branch for each one you try (e.g. use `git checkout -b <name>`) and making commits as appropriate.
 
+> **Once you're ready to move on**, check out [the next article] in this series where we'll learn about more about how to deal with sources of data outside of our control.
+
 ## Linting [Bonus]
 
 Depending on your setup, you may have noticed that your IDE was warning that `cy` is undefined; the default CRA linting settings include the `no-undef` rule and there's nothing to tell ESLint that `cy` is going to be defined. To be able to easily run the linter, add another script to the package file:
@@ -1131,5 +1135,6 @@ Now `npm run lint` should be fine.
   [Node]: https://nodejs.org/
   [Testing Library]: https://testing-library.com
   [test double]: https://tanzu.vmware.com/content/pivotal-engineering-journal/the-test-double-rule-of-thumb-2
+  [the next article]: {filename}/development/js-tdd-api.md
   [the previous article]: {filename}/development/js-tdd-ftw.md
   [WSL]: https://docs.microsoft.com/en-us/windows/wsl/about
