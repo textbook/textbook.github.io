@@ -1,5 +1,6 @@
 Title: JS TDD API
 Date: 2021-04-10 20:30
+Modified: 2021-04-11 08:45
 Tags: javascript, tdd, xp
 Authors: Jonathan Sharpe
 Summary: Test-driven JavaScript development done right - part 3
@@ -914,7 +915,19 @@ We can be pretty confident that if we call this function a large number of times
 [ "tails", "heads", "heads", "tails", "tails", "tails", "heads", "heads", "tails", "tails" ]
 ```
 
-but for a given call we can't be sure which it will be. So how can we write a test for that? We could reach for the facade pattern again, extract `const random = () => Math.random()` and replace that with a test double, but there are other options. One alternative is to write tests based on the _properties_ of the implementation we want. For example, although we don't know the specific values, we do know:
+but for a given call we can't be sure which it will be. So how can we write a test for that? We could reach for the facade pattern again, extract `const random = () => Math.random()` and replace that with a test double. This would work fine, but be very tightly coupled to the implementation:
+
+```javascript
+describe("flipCoin", () => {
+  it("returns 'heads' when the random number is less than 0.5", () => {
+    random.mockReturnValue = 0.3;
+
+    expect(flipCoin()).toEqual("heads");
+  });
+});
+```
+
+One alternative is to write tests based on the _properties_ of the implementation we want. For example, although we don't know the specific values, we do know:
 
 - It should always give one of the expected outcomes; and
 - It shouldn't always give the same outcome (otherwise `() => "heads"` would be a valid implementation).
@@ -924,13 +937,13 @@ We can express these properties through a pair of tests as follows:
 ```javascript
 describe("flipCoin", () => {
   const expectedOutcomes = ["heads", "tails"];
-  
+
   it("always gives one of the expected outcomes", () => {
     const outcomes = Array(100).fill(null).map(() => flipCoin());
-    
+
     expect(outcomes.every((outcome) => expectedOutcomes.includes(outcome))).toBe(true);
   });
-  
+
   it("doesn't always give the same outcome", () => {
     const outcomes = Array(100).fill(null).map(() => flipCoin());
 
@@ -938,6 +951,8 @@ describe("flipCoin", () => {
   });
 });
 ```
+
+This is less coupled because it describes the **what**, the _behaviour_ we want from the function, not the **how**, the details of the implementation. That allows us to refactor with confidence if we think of a better way to do it later.
 
 We could also try to test for the property that it's roughly 50:50 `"heads"` to `"tails"`, but then questions like _"what do you mean by 'roughly'?"_ come up. If you try to be too specific, the tests will often fail due to the randomness in the real data. Note that the second test above could already occasionally fail; it's not impossible to get 100 heads in a row, just extremely unlikely.
 
@@ -1027,7 +1042,7 @@ $ git commit -m 'Show the outcome'
 
 Now reflect on the exercise - how does the implementation compare to what you'd initially imagined? What felt good or bad about the process?
 
-You can see my copy of this exercise at https://github.com/textbook/rps-api.
+You can see my copy of this exercise at [https://github.com/textbook/rps-api][github].
 
 ## Exercises [8/8]
 
@@ -1201,6 +1216,7 @@ $ npm run e2e:ci
   [cypress closures]: https://docs.cypress.io/guides/core-concepts/variables-and-aliases.html#Closures
   [dropped support]: https://jestjs.io/blog/2020/05/05/jest-26#other-breaking-changes-in-jest-26
   [Git BASH]: https://gitforwindows.org/
+  [github]: https://github.com/textbook/rps-api
   [Jest]: https://jestjs.io/
   [msw]: https://mswjs.io/
   [msw get started]: https://mswjs.io/docs/getting-started
