@@ -1216,6 +1216,15 @@ $ npm run e2e:ci
 [e2e:ci:app] npm run e2e:ci:app exited with code 1
 ```
 
+You can go even further and run the end-to-end tests against the build output, rather than the development server, which lets you check that the app compiles correctly.Run `npm install serve` to add a simple web server package, then replace the `"e2e:ci:app"` script with:
+
+```json
+    "pree2e:ci:app": "npm run build",
+    "e2e:ci:app": "serve -l 4321 build/",
+```
+
+As above the `pre` script runs first, to build the app, then if that's successful the main script starts to serve on the appropriate port (`-l 4321`) from the output directory (`build/`).
+
   [article on automation]: {filename}/development/automation-for-the-people.md
   [axios]: https://www.npmjs.com/package/axios
   [cra]: https://create-react-app.dev/docs/getting-started
