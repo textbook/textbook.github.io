@@ -1,6 +1,6 @@
 Title: JS TDD API
 Date: 2021-04-10 20:30
-Modified: 2021-04-12 18:10
+Modified: 2021-04-12 18:15
 Tags: javascript, tdd, xp
 Authors: Jonathan Sharpe
 Summary: Test-driven JavaScript development done right - part 3
@@ -1077,7 +1077,7 @@ Here are some additional exercises you can run through:
 
 1. Refactor the components (`Form`, `Opponent`, `Outcome`- don't include `App`) into a new directory `src/components/` and the services (`randomUserService` plus `api`, `rpsService`) into another directory `src/services/`. Did the tests make this easier? Harder?
 
-1. Find another free API (see e.g. https://apilist.fun/) and test-drive some kind of UI for it. Include tests that use the real API as well as those that provide test doubles at various levels.
+1. Find another free API (see e.g. [https://apilist.fun/][api list]) and test-drive some kind of UI for it. Include tests that use the real API as well as those that provide test doubles at various levels.
 
 1. If you've implemented additional weapons (e.g. Rock Paper Scissors Lizard Spock) in the previous implementations, extend the UI to support them. If not, maybe now's the time!
 
@@ -1225,6 +1225,7 @@ You can go even further and run the end-to-end tests against the build output, r
 
 As above the `pre` script runs first, to build the app, then if that's successful the main script starts to serve on the appropriate port (`-l 4321`) from the output directory (`build/`).
 
+  [api list]: https://apilist.fun/
   [article on automation]: {filename}/development/automation-for-the-people.md
   [axios]: https://www.npmjs.com/package/axios
   [cra]: https://create-react-app.dev/docs/getting-started
