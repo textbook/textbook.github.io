@@ -1,6 +1,6 @@
 Title: JS TDD API
 Date: 2021-04-10 20:30
-Modified: 2021-04-11 08:45
+Modified: 2021-04-12 18:10
 Tags: javascript, tdd, xp
 Authors: Jonathan Sharpe
 Summary: Test-driven JavaScript development done right - part 3
@@ -207,6 +207,14 @@ Immediately we can see a problem - if the opponent and their throw are random, w
         });
     
     If you're unfamiliar with the regular expression (_"regex"_) syntax used in `match`, you can paste those patterns into e.g. [Regex 101] to get an explanation, but basically this says that the name should be two words, each starting with a capital letter, and the avatar's source should start like a URL. This means we don't have to know exactly what data we'll get back from the API to make an assertion on it.
+
+    **Note** that this isn't a very thorough regex, and people's names take [a lot of forms][names] not considered by it. While writing this article I got one assertion error due to it failing to match an entirely valid name:
+
+    ```
+    AssertionError: Timed out retrying after 4000ms: expected 'Maïwenn Gaillard' to match /[A-Z][a-z]+ [A-Z][a-z]+/
+    ```
+
+    I'm using it here as an example to show how you can provide a "fuzzier" match for uncontrolled data, it shouldn't be used for e.g. input validation in a real system.
 
 2. **Fake data** - for sources of unknown data _outside_ of our application, that we're getting from APIs, we can provide known fake data. Cypress 6 [introduced][cypress blog] _"next generation network stubbing"_, so I thought it would be interesting to show how we can use that, but note there are lots of other ways to do this (see e.g. [this post][spa config] on how to configure single-page apps, letting you fetch data from a different API for testing).
     
@@ -1220,6 +1228,7 @@ $ npm run e2e:ci
   [Jest]: https://jestjs.io/
   [msw]: https://mswjs.io/
   [msw get started]: https://mswjs.io/docs/getting-started
+  [names]: https://www.kalzumeus.com/2010/06/17/falsehoods-programmers-believe-about-names/
   [Node]: https://nodejs.org/
   [Part 1]: {filename}/development/js-tdd-ftw.md
   [Part 2]: {filename}/development/js-tdd-e2e.md
