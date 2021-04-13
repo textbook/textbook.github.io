@@ -1,6 +1,6 @@
 Title: JS TDD API
 Date: 2021-04-10 20:30
-Modified: 2021-04-12 18:15
+Modified: 2021-04-13 17:30
 Tags: javascript, tdd, xp
 Authors: Jonathan Sharpe
 Summary: Test-driven JavaScript development done right - part 3
@@ -1216,7 +1216,7 @@ $ npm run e2e:ci
 [e2e:ci:app] npm run e2e:ci:app exited with code 1
 ```
 
-You can go even further and run the end-to-end tests against the build output, rather than the development server, which lets you check that the app compiles correctly.Run `npm install serve` to add a simple web server package, then replace the `"e2e:ci:app"` script with:
+You can go even further and run the end-to-end tests against the build output, rather than the development server, which lets you check that the app compiles correctly. Run `npm install serve` to add a simple web server package, then replace the `"e2e:ci:app"` script with:
 
 ```json
     "pree2e:ci:app": "npm run build",
