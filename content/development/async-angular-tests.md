@@ -1,6 +1,6 @@
 Title: Testing async data in Angular
 Date: 2017-04-16 15:00
-Modified: 2017-07-15 20:30
+Modified: 2021-09-11 10:30
 Tags: code, angular, typescript, rxjs, tdd
 Authors: Jonathan Sharpe
 Summary: Using the Angular TestBed to test asynchronous API data manipulation.
@@ -158,7 +158,7 @@ The nice things about the `TestBed` and `ComponentFixture` model are that it
 allows us to:
 
  1. *Be very specific about the dependencies of our components*: its hooks into
-    dependency injection system allow use to provide test doubles as required, 
+    dependency injection system allow us to provide test doubles as required, 
     and either:
     
      - explicitly provide required sub-components (real or fake) to test 
