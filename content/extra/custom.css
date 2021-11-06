@@ -72,3 +72,7 @@ article a:hover > code {
 #mc_embed_signup_scroll .response.is-success {
     color: #00d1b2;
 }
+
+article .section table thead tr th, article .section table tbody tr td {
+  border: 1px solid #4c4c4c;
+}
