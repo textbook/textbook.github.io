@@ -1,6 +1,6 @@
 Title: Introduction to Pair Programming
 Date: 2017-10-13 10:20
-Modified: 2017-10-16 10:20
+Modified: 2021-11-06 16:30
 Tags: pivotal, pairing, xp
 Authors: Jonathan Sharpe
 Summary: Why do we pair program at Pivotal, and could you be doing it too?
@@ -301,7 +301,7 @@ with your pair.
  [2]: https://pivotal.io/labs
  [3]: http://agilemanifesto.org
  [4]: https://www.wired.com/2013/11/pivotal-one/
- [5]: http://parrit.cfapps.io
+ [5]: https://parrit.io/
  [6]: https://github.com/pivotal/workstation-setup
  [7]: https://www.ansible.com/
  [8]: https://twitter.com/amesimmons
