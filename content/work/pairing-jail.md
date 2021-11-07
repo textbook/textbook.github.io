@@ -1,8 +1,9 @@
 Title: Go directly to (pairing) jail
 Date: 2021-11-06 19:00
+Modified: 2021-11-07 23:15
 Tags: pairing, xp
 Authors: Jonathan Sharpe
-Summary: Planning pair rotations to maximise context, shared ownership, and team relationships.
+Summary: Planning pair rotations to maximise context, diverse ideas, shared ownership, and team relationships.
 
 In my [introduction to pairing] I wrote:
 
@@ -10,6 +11,7 @@ In my [introduction to pairing] I wrote:
 
 Context is certainly important here, we want to have a degree of consistency on a given track, so we minimise time spent re-learning information we already had within the team. However there are a few other things we're trying to maximise when choosing when and how to rotate the pairs in the team, including:
 
+- **Diverse ideas** - different people's cultural and technical backgrounds mean they solve problems in different ways, the more different ideas we bring in the more likely it is we'll find the best one;
 - **Shared ownership** - we want everyone to feel a collective responsibility for the whole codebase, so they're comfortable to refactor towards higher quality; and
 - **Team relationships** - we want to give everyone in the team the chance to work with and get to know everyone else, especially if they're new.
 
@@ -106,7 +108,7 @@ and as Farah was soloing yesterday we want to make sure they have a pair today:
 
 <hr>
 
-Despite some planned and unplanned absences, we've got to the end of the week without anyone ending up in "jail"! Every day we've had at least a person stay in each track, to bring a consistent context. Every track has had at least three different people work on it during, encourage shared ownership of the whole codebase. And in terms of building relationships, if we think about who has paired with whom, we've achieved a good balance throughout the team; the only pairings that _haven't_ been made during the week are:
+Despite some planned and unplanned absences, we've got to the end of the week without anyone ending up in "jail"! Every day we've had at least one person stay in each track, to bring a consistent context. Every track has had at least three different people working on it during the week, encouraging shared ownership of the whole codebase and ensuring lots of different ideas are brought into each track. And in terms of building relationships, if we think about who has paired with whom, we've achieved a good balance throughout the team; the only pairings that _haven't_ been made during the week are:
 
 - Albert and Carol;
 - Basti and Ethel;
