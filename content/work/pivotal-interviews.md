@@ -1,5 +1,6 @@
 Title: Interviewing and hiring at Pivotal
 Date: 2016-12-05 21:11
+Modified: 2021-11-24 11:12
 Tags: pivotal, hiring
 Authors: Jonathan Sharpe
 Summary: My experiences of the hiring process at Pivotal, from both sides.
@@ -93,12 +94,8 @@ a specific programming language are often less important than the ability to
 pick up the one best suited to the task. In my view, it's a truly empathetic
 way to hire people.
 
- > **Like the sound of that?** Pivotal is hiring at the moment, [click here][3] 
- > for more information about the open jobs.
-
   [1]: http://fourhourworkweek.com/2011/06/07/whats-your-start-up-bus-count-7-myths-of-entrepreneurship-and-programming/
   [2]: https://blog.pivotal.io/pivotal-labs/tech-talks/balanced-team-janice-fraser
-  [3]: http://grnh.se/a2m7pv
   [4]: https://pivotal.io/platform
   [5]: https://pivotal.io/labs
   [6]: https://blog.pivotal.io/pivotal/features/pivots-are-what-set-pivotal-apart
