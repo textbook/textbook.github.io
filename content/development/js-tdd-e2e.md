@@ -78,7 +78,7 @@ We're going to expand on the previous article and add a web UI for our Rock Pape
 
 Again please carefully _read everything_, and for newer developers I'd recommend _typing the code_ rather than copy-pasting.
 
-## Setup [1/7]
+## Setup [1/8]
 
 To begin, let's create a new React app in our workspace using CRA:
 
@@ -199,7 +199,7 @@ found 0 vulnerabilities
 
 Cypress is slightly more complex than the other packages we've used; it downloads and installs the main application as a post-install step. This is installed globally, so if you have another package somewhere that's using Cypress you may see `Cypress <version> is installed in path/to/Cypress/<version>` instead. That's fine, the rest should still work. Note also that CRA installs everything as a regular dependency rather than a development dependency, so I didn't use `--save-dev`.
 
-## Create E2E suite [2/7]
+## Create E2E suite [2/8]
 
 Now we need to set up the basic Cypress configuration. Let's follow the suggestion in that output and open up the Cypress UI.
 
@@ -365,7 +365,7 @@ $ git commit -m 'Install and configure Cypress'
  create mode 100644 cypress/support/index.js
 ```
 
-## Writing the E2E test [3/7]
+## Writing the E2E test [3/8]
 
 For consistency with the unit tests, which use Testing Library by default in CRA, let's install [their Cypress utilities][Cypress Testing Library] via NPM:
 
@@ -582,7 +582,7 @@ $ git commit -m 'Implement E2E test'
  5 files changed, 27 insertions(+), 1 deletion(-)
 ```
 
-## Moving to the integration level [4/7]
+## Moving to the integration level [4/8]
 
 We're working our way from the outside in, and we have a failing E2E test, so let's write an _integration_ test in Jest. Replace the content of `./src/App.test.js` with the following:
 
@@ -735,7 +735,7 @@ Form  Outcome
 
 We already have an integration test covering these parts working together, but we can create unit tests for the service and the low-level components.
 
-## At your service [5/7]
+## At your service [5/8]
 
 We already have this! You should still have a function named `rps` from the previous article, along with a suite of tests. Place the function in a file named `./src/rpsService.js` and export it:
 
@@ -775,7 +775,7 @@ $ git commit -m 'Migrate tested service logic'
  create mode 100644 src/rpsService.test.js
 ```
 
-## Component unit tests [6/7]
+## Component unit tests [6/8]
 
 The `Outcome` component is going to be very simple, as it only has to display the text we want given a result, so let's start with that. Add the following to `./src/Outcome.test.js`:
 
@@ -876,7 +876,7 @@ $ git commit -m 'Implement Form component'
  create mode 100644 src/Form.test.js
 ```
 
-## Putting it all back together [6/7]
+## Putting it all back together [7/8]
 
 Now we have a bunch of well-tested components and a service, but our integration and E2E tests are still failing, so it's time to bring everything together. Given that we already have two layers of testing for `./src/App.js` and most of the work is done elsewhere let's not add unit tests too; something like the following should be enough to get everything passing:
 
@@ -1006,7 +1006,7 @@ Now reflect on the exercise - how does the implementation compare to what you'd 
 
 You can see my copy of this exercise at [https://github.com/textbook/rps-e2e][github].
 
-## Exercises [7/7]
+## Exercises [8/8]
 
 Here are some additional exercises you can run through:
 
