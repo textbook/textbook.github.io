@@ -1,6 +1,6 @@
 Title: Automation for the people
 Date: 2019-02-10 15:30
-Modified: 2019-02-11 10:15
+Modified: 2022-02-08 15:27
 Tags: code, javascript, npm
 Authors: Jonathan Sharpe
 Summary: Making developers' lives easier and more productive with package file automation
@@ -67,7 +67,12 @@ delivering the things that matter to your users.
 I also don't think you should have any warnings when you run linters; things
 you actually care about get lost in the noise. Every rule should either be an
 error or ignored completely, so it's unambiguous what's important, and any
-error should fail the build.
+error should fail the build. If you're using ESLint, you can get a list of
+active warnings using the following command:
+
+```bash
+npx eslint --print-config path/to/file.js | grep warn -B 1
+```
 
 ## Hints and tips
 
@@ -211,6 +216,7 @@ Here are some useful articles and references:
 [cross-env]: https://www.npmjs.com/package/cross-env
 [corgibytes]: https://corgibytes.com/
 [dev setup]: https://github.com/textbook/cyf-app-starter/blob/7ed846f0cfea766b7136368ef78f9f1d1650ead4/package.json#L16
+[ESLint]: https://eslint.org/
 [fauxauth]: https://www.npmjs.com/package/fauxauth
 [fauxauth package]: https://github.com/textbook/fauxauth/commit/135376876aca5c16f9fbe2d89a3389f3ddf9f2d8#diff-b9cfc7f2cdf78a7f4b91a753d10865a2
 [git hooks]: https://git-scm.com/book/en/v2/Customizing-Git-Git-Hooks
