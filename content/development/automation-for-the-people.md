@@ -1,6 +1,6 @@
 Title: Automation for the people
 Date: 2019-02-10 15:30
-Modified: 2022-02-08 15:27
+Modified: 2022-02-08 15:28
 Tags: code, javascript, npm
 Authors: Jonathan Sharpe
 Summary: Making developers' lives easier and more productive with package file automation
@@ -70,9 +70,8 @@ error or ignored completely, so it's unambiguous what's important, and any
 error should fail the build. If you're using ESLint, you can get a list of
 active warnings using the following command:
 
-```bash
-npx eslint --print-config path/to/file.js | grep warn -B 1
-```
+    ::: bash
+    $ npx eslint --print-config path/to/file.js | grep warn -B 1
 
 ## Hints and tips
 
