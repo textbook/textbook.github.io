@@ -1,0 +1,748 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom"><title>textbook - work</title><link href="https://blog.jonrshar.pe/" rel="alternate"></link><link href="https://blog.jonrshar.pe/feeds/work.atom.xml" rel="self"></link><id>https://blog.jonrshar.pe/</id><updated>2021-11-24T11:12:00+00:00</updated><subtitle>These are my opinions - if you don't like them, I have others</subtitle><entry><title>Go directly to (pairing) jail</title><link href="https://blog.jonrshar.pe/2021/Nov/06/pairing-jail.html" rel="alternate"></link><published>2021-11-06T19:00:00+00:00</published><updated>2021-11-07T23:15:00+00:00</updated><author><name>Jonathan Sharpe</name></author><id>tag:blog.jonrshar.pe,2021-11-06:/2021/Nov/06/pairing-jail.html</id><summary type="html">&lt;p&gt;Planning pair rotations to maximise context, diverse ideas, shared ownership, and team relationships.&lt;/p&gt;</summary><content type="html">&lt;p&gt;In my &lt;a href="https://blog.jonrshar.pe/2017/Oct/13/ada-college-pairing.html"&gt;introduction to pairing&lt;/a&gt; I wrote:&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;Generally we rotate [pairs] on a daily basis, using tools like &lt;a href="https://parrit.io/"&gt;Parrit&lt;/a&gt; to make sure that every possible combination is occurring. If a story is still in flight from the previous day we &lt;em&gt;"stick and twist"&lt;/em&gt;, with one person staying with the story to pass along the context and the other moving on to something else. This has the natural side effect that the more complex stories, the ones that take multiple days, get more people's input.&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;Context is certainly important here, we want to have a degree of consistency on a given track, so we minimise time spent re-learning information we already had within the team. However there are a few other things we're trying to maximise when choosing when and how to rotate the pairs in the team, including:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;Diverse ideas&lt;/strong&gt; - different people's cultural and technical backgrounds mean they solve problems in different ways, the more different ideas we bring in the more likely it is we'll find the best one;&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Shared ownership&lt;/strong&gt; - we want everyone to feel a collective responsibility for the whole codebase, so they're comfortable to refactor towards higher quality; and&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Team relationships&lt;/strong&gt; - we want to give everyone in the team the chance to work with and get to know everyone else, especially if they're new.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;You could maximise context retained by keeping one person working on the same track of work (this might be a single complex story, and epic comprising multiple stories, or work that's grouped due to e.g. domain) indefinitely, but that would risk missing these other objectives. Therefore we want to strike a balance between building up the context and actively sharing it around the team, which we can do through mindful pair rotations.&lt;/p&gt;
+&lt;p&gt;To support these rotations, some teams I've worked on have found it useful to maintain a &lt;em&gt;pairing table&lt;/em&gt;, visualising how long people have remained on the same track. Each track has a row and there are columns for the number of consecutive days spent working on that track (usually up to five). The last space on each track is "jail" (and you don't want to end up in &lt;a href="https://en.wikipedia.org/wiki/Monopoly_(game)#Jail"&gt;jail&lt;/a&gt;, you don't pass Go or collect £200!)&lt;/p&gt;
+&lt;p&gt;In line with the Extreme Programming (XP) practice of the &lt;em&gt;Informative Workspace&lt;/em&gt;, this would usually be posted up somewhere in the team's working area, e.g. a grid of painter's tape on a whiteboard with each developer on the team represented by an Instax photograph of them (these tend to be a bit more durable than just using stickies, and make it easier for visitors to identify the people they need to speak to about a given track). In these pandemic-influenced days you can achieve a similar effect in e.g. a Miro board (&lt;strong&gt;pro-tip&lt;/strong&gt;: use the &lt;a href="https://help.miro.com/hc/en-us/articles/360011986519-Tables"&gt;table widget&lt;/a&gt; to generate the structure easily):&lt;/p&gt;
+&lt;p&gt;&lt;img alt="Illustration of a pairing table created in Miro" src="https://blog.jonrshar.pe/images/pairing-table.png"&gt;&lt;/p&gt;
+&lt;p&gt;&lt;small&gt;Created in &lt;a href="https://miro.com/"&gt;Miro&lt;/a&gt;. (Almost-)too-cute-to-eat dim sum by &lt;a href="https://deniseyu.io/"&gt;Denise Yu&lt;/a&gt;, released under &lt;a href="https://creativecommons.org/licenses/by-sa/4.0/"&gt;CC BY-SA 4.0&lt;/a&gt;.&lt;/small&gt;&lt;/p&gt;
+&lt;hr&gt;
+
+&lt;p&gt;To see how this can be used in practice, let's run through a week on a 3-pair project. We'd wrapped up everything that had been in flight at the end of the last iteration, so everyone's starting on day 1 of their respective tracks:&lt;/p&gt;
+&lt;table style="table-layout: fixed; width: 100%"&gt;
+    &lt;thead&gt;
+        &lt;tr&gt;&lt;th&gt;Track&lt;/th&gt;&lt;th&gt;🟢 Day 1&lt;/th&gt;&lt;th&gt;🟡 Day 2&lt;/th&gt;&lt;th&gt;🟠 Day 3&lt;/th&gt;&lt;th&gt;🔴 Day 4&lt;/th&gt;&lt;th&gt;🔥 Day 5&lt;/th&gt;&lt;/tr&gt;
+    &lt;/thead&gt;
+    &lt;tbody&gt;
+        &lt;tr&gt;&lt;td&gt;&lt;strong&gt;Alpha&lt;/strong&gt;&lt;/td&gt;&lt;td&gt;Albert / Basti&lt;/td&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;&lt;/td&gt;&lt;/tr&gt;
+        &lt;tr&gt;&lt;td&gt;&lt;strong&gt;Bravo&lt;/strong&gt;&lt;/td&gt;&lt;td&gt;Carol / Daniel&lt;/td&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;&lt;/td&gt;&lt;/tr&gt;
+        &lt;tr&gt;&lt;td&gt;&lt;strong&gt;Charlie&lt;/strong&gt;&lt;/td&gt;&lt;td&gt;Ethel / Farah&lt;/td&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;&lt;/td&gt;&lt;/tr&gt;
+    &lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;hr&gt;
+
+&lt;p&gt;When pairing up on Tuesday, we want to ensure that any context from Monday is kept in each track, so we &lt;em&gt;"stick"&lt;/em&gt; one person and &lt;em&gt;"twist"&lt;/em&gt; the other on each track:&lt;/p&gt;
+&lt;table style="table-layout: fixed; width: 100%"&gt;
+    &lt;thead&gt;
+        &lt;tr&gt;&lt;th&gt;Track&lt;/th&gt;&lt;th&gt;🟢 Day 1&lt;/th&gt;&lt;th&gt;🟡 Day 2&lt;/th&gt;&lt;th&gt;🟠 Day 3&lt;/th&gt;&lt;th&gt;🔴 Day 4&lt;/th&gt;&lt;th&gt;🔥 Day 5&lt;/th&gt;&lt;/tr&gt;
+    &lt;/thead&gt;
+    &lt;tbody&gt;
+        &lt;tr&gt;&lt;td&gt;&lt;strong&gt;Alpha&lt;/strong&gt;&lt;/td&gt;&lt;td&gt;Ethel&lt;/td&gt;&lt;td&gt;Albert&lt;/td&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;&lt;/td&gt;&lt;/tr&gt;
+        &lt;tr&gt;&lt;td&gt;&lt;strong&gt;Bravo&lt;/strong&gt;&lt;/td&gt;&lt;td&gt;Basti&lt;/td&gt;&lt;td&gt;Daniel&lt;/td&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;&lt;/td&gt;&lt;/tr&gt;
+        &lt;tr&gt;&lt;td&gt;&lt;strong&gt;Charlie&lt;/strong&gt;&lt;/td&gt;&lt;td&gt;Carol&lt;/td&gt;&lt;td&gt;Farah&lt;/td&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;&lt;/td&gt;&lt;/tr&gt;
+    &lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;hr&gt;
+
+&lt;p&gt;On Wednesday, Ethel's out doing some training, so Albert continues on track Alpha to keep context there. We decide that Carol can solo on track Charlie, and rotate everyone else accordingly:&lt;/p&gt;
+&lt;table style="table-layout: fixed; width: 100%"&gt;
+    &lt;thead&gt;
+        &lt;tr&gt;&lt;th&gt;Track&lt;/th&gt;&lt;th&gt;🟢 Day 1&lt;/th&gt;&lt;th&gt;🟡 Day 2&lt;/th&gt;&lt;th&gt;🟠 Day 3&lt;/th&gt;&lt;th&gt;🔴 Day 4&lt;/th&gt;&lt;th&gt;🔥 Day 5&lt;/th&gt;&lt;/tr&gt;
+    &lt;/thead&gt;
+    &lt;tbody&gt;
+        &lt;tr&gt;&lt;td&gt;&lt;strong&gt;Alpha&lt;/strong&gt;&lt;/td&gt;&lt;td&gt;Daniel&lt;/td&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;Albert&lt;td&gt;&lt;td&gt;&lt;/td&gt;&lt;/tr&gt;
+        &lt;tr&gt;&lt;td&gt;&lt;strong&gt;Bravo&lt;/strong&gt;&lt;/td&gt;&lt;td&gt;Farah&lt;/td&gt;&lt;td&gt;Basti&lt;/td&gt;&lt;td&gt;&lt;/td &gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;&lt;/td&gt;&lt;/tr&gt;
+        &lt;tr&gt;&lt;td&gt;&lt;strong&gt;Charlie&lt;/strong&gt;&lt;/td&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;Carol&lt;/td&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;&lt;/td&gt;&lt;/tr&gt;
+    &lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;hr&gt;
+
+&lt;p&gt;On Thursday, although Ethel's back, Daniel's sadly feeling under the weather.
+That means Albert moves to day 4 of the track, so we definitely need to give
+him a pair to let him rotate out before reaching day 5. We don't want to let
+Carol continue soloing otherwise she'll end up on day 4 too, so Farah
+solos on track Bravo.&lt;/p&gt;
+&lt;table style="table-layout: fixed; width: 100%"&gt;
+    &lt;thead&gt;
+        &lt;tr&gt;&lt;th&gt;Track&lt;/th&gt;&lt;th&gt;🟢 Day 1&lt;/th&gt;&lt;th&gt;🟡 Day 2&lt;/th&gt;&lt;th&gt;🟠 Day 3&lt;/th&gt;&lt;th&gt;🔴 Day 4&lt;/th&gt;&lt;th&gt;🔥 Day 5&lt;/th&gt;&lt;/tr&gt;
+    &lt;/thead&gt;
+    &lt;tbody&gt;
+        &lt;tr&gt;&lt;td&gt;&lt;strong&gt;Alpha&lt;/strong&gt;&lt;/td&gt;&lt;td&gt;Basti&lt;/td&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;Albert&lt;/td&gt;&lt;td&gt;&lt;/td&gt;&lt;/tr&gt;
+        &lt;tr&gt;&lt;td&gt;&lt;strong&gt;Bravo&lt;/strong&gt;&lt;/td&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;Farah&lt;/td&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;&lt;/td&gt;&lt;/tr&gt;
+        &lt;tr&gt;&lt;td&gt;&lt;strong&gt;Charlie&lt;/strong&gt;&lt;/td&gt;&lt;td&gt;Ethel&lt;/td&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;Carol&lt;/td&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;&lt;/td&gt;&lt;/tr&gt;
+    &lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;hr&gt;
+
+&lt;p&gt;Daniel's still out on Friday. Albert rotates out of track Alpha as planned,
+and as Farah was soloing yesterday we want to make sure they have a pair today:&lt;/p&gt;
+&lt;table style="table-layout: fixed; width: 100%"&gt;
+    &lt;thead&gt;
+        &lt;tr&gt;&lt;th&gt;Track&lt;/th&gt;&lt;th&gt;🟢 Day 1&lt;/th&gt;&lt;th&gt;🟡 Day 2&lt;/th&gt;&lt;th&gt;🟠 Day 3&lt;/th&gt;&lt;th&gt;🔴 Day 4&lt;/th&gt;&lt;th&gt;🔥 Day 5&lt;/th&gt;&lt;/tr&gt;
+    &lt;/thead&gt;
+    &lt;tbody&gt;
+        &lt;tr&gt;&lt;td&gt;&lt;strong&gt;Alpha&lt;/strong&gt;&lt;/td&gt;&lt;td&gt;Carol&lt;/td&gt;&lt;td&gt;Basti&lt;/td&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;&lt;/td&gt;&lt;/tr&gt;
+        &lt;tr&gt;&lt;td&gt;&lt;strong&gt;Bravo&lt;/strong&gt;&lt;/td&gt;&lt;td&gt;Albert&lt;/td&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;Farah&lt;/td
+&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;&lt;/td&gt;&lt;/tr&gt;
+        &lt;tr&gt;&lt;td&gt;&lt;strong&gt;Charlie&lt;/strong&gt;&lt;/td&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;Ethel&lt;/td&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;&lt;/td&gt;&lt;/tr&gt;
+    &lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;hr&gt;
+
+&lt;p&gt;Despite some planned and unplanned absences, we've got to the end of the week without anyone ending up in "jail"! Every day we've had at least one person stay in each track, to bring a consistent context. Every track has had at least three different people working on it during the week, encouraging shared ownership of the whole codebase and ensuring lots of different ideas are brought into each track. And in terms of building relationships, if we think about who has paired with whom, we've achieved a good balance throughout the team; the only pairings that &lt;em&gt;haven't&lt;/em&gt; been made during the week are:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Albert and Carol;&lt;/li&gt;
+&lt;li&gt;Basti and Ethel;&lt;/li&gt;
+&lt;li&gt;Daniel and Ethel; and&lt;/li&gt;
+&lt;li&gt;Daniel and Farah.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;This isn't to say that there will never be times when you want someone to stay on one track of work for five or more days, but that should really be the exception rather than the rule; you can use this heuristic to be intentful about whether or not that should be happening in your current context.&lt;/p&gt;
+&lt;p&gt;We also use other practices that support working in this way, for example:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href="https://www.pivotaltracker.com/blog/how-to-invest-in-your-user-stories"&gt;INVEST&lt;/a&gt; user stories encourage small steps with clear acceptance criteria;&lt;/li&gt;
+&lt;li&gt;Test-driven development (TDD) means that any work in flight has some tests to guide you towards the planned implementation; and&lt;/li&gt;
+&lt;li&gt;Trunk-based development pushes you towards small commits and frequent integration  (branches are generally only used to store our progress on the remote overnight, so we're not reliant on any single hard drive continuing to work).&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;This way, even if there was work in flight on a given track yesterday and there's nobody in today who worked on it, you have a high quality user story, failing test(s) to start from and small diff to understand. This keeps the team resilient and able to make progress.&lt;/p&gt;</content><category term="work"></category><category term="pairing"></category><category term="xp"></category></entry><entry><title>({=}) Coed:Ethics 2018</title><link href="https://blog.jonrshar.pe/2018/Jul/17/coed-ethics-2018.html" rel="alternate"></link><published>2018-07-17T12:30:00+01:00</published><updated>2018-07-17T12:30:00+01:00</updated><author><name>Jonathan Sharpe</name></author><id>tag:blog.jonrshar.pe,2018-07-17:/2018/Jul/17/coed-ethics-2018.html</id><summary type="html">&lt;p&gt;My experience of the inaugural Coed:Ethics conference on ethical issues in the tech industry&lt;/p&gt;</summary><content type="html">&lt;p&gt;Last Friday I travelled (all the way!) to the &lt;a href="https://developer.microsoft.com/en-us/reactor/"&gt;Microsoft Reactor&lt;/a&gt; community
+hub in Shoreditch to attend the first ever &lt;a href="https://www.coedethics.org/"&gt;Coed:Ethics conference&lt;/a&gt;, the
+first event of its kind dedicated to exploring the ethical issues that face
+software developers and other technologists. The conference consisted of eight
+talks, followed by a panel and open discussion.&lt;/p&gt;
+&lt;h2&gt;Talks&lt;/h2&gt;
+&lt;p&gt;Eight half-hour talks made up the bulk of the day, from a range of speakers
+across numerous topics around ethics in technology. The videos should be
+available in the near future, but I've written my summary of each talk below.&lt;/p&gt;
+&lt;h3&gt;When Data Kills&lt;/h3&gt;
+&lt;p&gt;The first ever Coed:Ethics talk was given by &lt;a href="https://www.coricrider.com/"&gt;Cori Crider&lt;/a&gt;, a human rights
+lawyer. Her talk focused on tech companies' involvement with the military,
+covering topics like machine learning for drone strike targeting. She also
+talked about the efforts to draw up principles governing the development and
+use of AI, for example prohibiting its usage in weapons systems.&lt;/p&gt;
+&lt;p&gt;One event she talked about was Google's involvement in Project Maven, a
+research program aimed at improving object recognition in miltary drones.
+Following an open letter signed by thousands of employees and at least a
+dozen resignations, Google announced that it would not be renewing the contract.
+This illustrates the power that employees in technology have to affect the
+decisions their companies are making, especially if they are willing to stand
+up in public for what they believe in. The people who are building these
+technologies need to have a say in how it is being used.&lt;/p&gt;
+&lt;p&gt;For me, a key question from her talk was: &lt;em&gt;"what is the line between lethal
+and non-lethal help?"&lt;/em&gt; My employer &lt;a href="https://www.fastcompany.com/40588729/the-air-force-learned-to-code-and-saved-the-pentagon-millions"&gt;recently worked&lt;/a&gt; with the US Air Force
+on a project to improve the efficiency of scheduling aircraft refuelling
+flights. Is that far enough removed for comfort?&lt;/p&gt;
+&lt;h3&gt;What is a Data Citizen?&lt;/h3&gt;
+&lt;p&gt;Next up was &lt;a href="https://inamerryhour.com/"&gt;Caitlin McDonald&lt;/a&gt;, talking about what data citizenship looks
+like by drawing parallels between our civic lives in relation to law
+and the government and our relationship with data science.&lt;/p&gt;
+&lt;p&gt;She cited &lt;a href="https://weaponsofmathdestructionbook.com/"&gt;&lt;em&gt;"Weapons of Math Destruction"&lt;/em&gt;&lt;/a&gt; by Cathy O’Neil, which makes
+argues that there are particular &lt;em&gt;kinds&lt;/em&gt; of application that cause problems;
+those that lack feedback cycles for improvement, for example. Caitlin
+suggested that we as "data citizens" deserve to know what the rules we are
+being evaluated by &lt;em&gt;are&lt;/em&gt; and have a structure to &lt;em&gt;challenge&lt;/em&gt; them (just as we
+can read the law and appeal a legal decision in civic society).&lt;/p&gt;
+&lt;p&gt;She introduced several existing tools to support ethical decision making,
+including the Open Data Institute's &lt;a href="https://theodi.org/article/data-ethics-canvas/"&gt;Data Ethics Canvas&lt;/a&gt;, but made the
+point that you also need a &lt;em&gt;culture of ethics&lt;/em&gt; in a company. It's not enough
+to apply the toolkit, you also need people willing to listen to the results
+and act on them.&lt;/p&gt;
+&lt;h3&gt;Data Science in Action&lt;/h3&gt;
+&lt;p&gt;The third talk was by Emma Prest and Clare Kitching from &lt;a href="http://www.datakind.org/"&gt;DataKind&lt;/a&gt;, a
+group that &lt;em&gt;"[brings] together top data scientists with leading social change
+organizations to collaborate on cutting-edge analytics and advanced algorithms
+to maximize social impact"&lt;/em&gt;. In particular, they talked about the need to
+embed ethics throughout the data science process, illustrating their points
+with an example of working with a food bank to identify individuals in need
+of further counselling.&lt;/p&gt;
+&lt;p&gt;They suggested building ethical concerns into the project right from the
+scoping and kick-off stages, beginning by considering what the high-level
+risks around worse-case outcomes and data could be. Then, as the project
+continues, building bias assessments into the data and algorithm checking.
+They highlighted the importance of involving a diverse range of people in the
+process; not just the clients and the data scientists, but also the
+developers, the users and other stakeholders.&lt;/p&gt;
+&lt;p&gt;One particularly interesting point they made was the need to consider whether
+the model being developed is appropriate for the &lt;em&gt;"data maturity"&lt;/em&gt; of the
+organisation in question. In case study there was a board member with
+experience in maths and data science, but what if the model continues to be
+applied after they have left? How do you ensure ongoing governance of the
+model and embed understandability and transparency into the process, so that
+it doesn't end up getting misused or misapplied in the future?&lt;/p&gt;
+&lt;p&gt;Another was the impact of open sourcing tools and models; their open question
+was whether it is better to make these things open source so that the broader
+community can gain maximum benefit, or whether it's actually preferable
+overall to keep a higher level of control and governance by keeping them
+proprietary? Thinking about the context and the value is important here, are
+we making things &lt;em&gt;better enough&lt;/em&gt;?&lt;/p&gt;
+&lt;h3&gt;Psychology of Ethics 101&lt;/h3&gt;
+&lt;p&gt;The final talk of the morning was by &lt;a href="https://twitter.com/andrea_kock"&gt;Andrea Dobson&lt;/a&gt;, a psychologist
+interested in what makes good people make bad decisions. She talked about
+Milgram's work on obedience, highlighting the result that around 75% of people
+will conform to something that they know is wrong, and that conformance is
+actually &lt;em&gt;more&lt;/em&gt; likely in more ambiguous circumstances. Given that we are
+generally taught to defer to figures of authority, how can individual
+contributors effectively raise the concerns to management?&lt;/p&gt;
+&lt;p&gt;This applies to technology, too; Andrea related the results of the &lt;a href="https://insights.stackoverflow.com/survey/2018/"&gt;Stack
+Overflow survey&lt;/a&gt;, where nearly 60% of respondents said that upper
+management was ultimately most responsible for code that accomplishes something
+unethical.&lt;/p&gt;
+&lt;p&gt;She advised listening to your emotions: do you feel guilty about what you're
+doing? Why are you doing it? What matters to you personally?&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;Companies become ethical one person and one decision at a time.&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;One thing that can help this is providing an environment of psychological
+safety, where individuals feel comfortable speaking up and voicing their
+concerns. If you don't feel you have that, she suggested speaking to other
+people (HR, regulatory bodies, friends, family, ...) who can help you figure
+it out.&lt;/p&gt;
+&lt;h3&gt;Thinking Ethically at Scale&lt;/h3&gt;
+&lt;p&gt;After lunch &lt;a href="https://twitter.com/YanqingCheng"&gt;Yanqing Cheng&lt;/a&gt; talked about how and why we might care about
+ethics, and how we can manage to both make the world a better place &lt;em&gt;and&lt;/em&gt;
+feel like we're doing so.&lt;/p&gt;
+&lt;p&gt;She highlighted the issue of human intuition and its failure to scale - for
+example, people would donate roughly $80 dollars to help birds in oil slicks
+whether they were told it affected 2,000, 20,000 or 200,000 birds. Part of the
+problem is simply being bad at imagining large numbers; when she reframed
+worldwide road traffic deaths as being more than every British Airways flight
+from London to New York for a year crashing into the sea, that really brought
+home the magnitude in a way the number alone didn't. The key lesson in that the
+most effective actions are not always the most intuitive.&lt;/p&gt;
+&lt;p&gt;She talked about the Effective Altruism movement, trying to measure the
+impact of different charities so that individuals can maximise the impact of
+their personal donations. The &lt;strong&gt;Who&lt;/strong&gt; (can have an impact on your goal),
+&lt;strong&gt;How&lt;/strong&gt; (can they help or obstruct), &lt;strong&gt;What&lt;/strong&gt; (can I do to affect their
+behaviour) model, a useful brainstorming technique, can be used to try to
+identify the actions that give the biggest payoff for the largest number of
+people and focus on what you can achieve as an individual.&lt;/p&gt;
+&lt;p&gt;&lt;em&gt;(Bonus points for being the only conference talk I've ever seen that included
+lessons from Harry Potter fan fiction.)&lt;/em&gt;&lt;/p&gt;
+&lt;h3&gt;Ethical Design&lt;/h3&gt;
+&lt;p&gt;&lt;a href="http://www.harrytrimble.co.uk/"&gt;Harry Trimble&lt;/a&gt; was next, talking about the power that designers hold in
+a world where software is everywhere, and their responsibility to give power
+to those without it. He commented that ethical decisions are unavoidable,
+even if the only option you may have is refusing to do the work or quitting
+entirely. In particular, he talked about the issues around authentication and
+consent in data management.&lt;/p&gt;
+&lt;p&gt;Two topics stood out for me:&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;
+&lt;p&gt;Informed, shared and delegated consent, allowing groups and communities to
+    participate effectively in decision making or involve other parties that
+    might have more appropriate information; and&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;Accountability and transparency in automated decision making, for example
+    providing a "snapshot" that identifies the version of the system and its
+    state so that you can review and appeal the decision.&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;One interesting tool he talked about was the &lt;a href="https://catalogue.projectsbyif.com/"&gt;Data Permissions Catalogue&lt;/a&gt;,
+a collection of design patterns for sharing data. The idea of tools like this
+is to bring a shared language to ethical issues, making them easier to
+describe and discuss. This reminded me of one of the core ideas of
+domain-driven design (DDD), the importance of having a shared, consistent
+vocabulary (the &lt;em&gt;"ubiquitous language"&lt;/em&gt;) within teams and projects.&lt;/p&gt;
+&lt;h3&gt;A Responsible Dev Process?&lt;/h3&gt;
+&lt;p&gt;This was a two-part talk, starting with &lt;a href="https://twitter.com/adamsand0r"&gt;Adam Sándor&lt;/a&gt; talking about how
+the idea of breaking down silos within companies and giving responsibility
+and autonomy to teams can help people move from the idea that they're just a
+small cog in a large machine to actually having ownership of what they are
+building. These multi-disciplinary teams are more inclusive and having the
+responsibility means you're more likely to make the right ethical decisions.&lt;/p&gt;
+&lt;p&gt;Next &lt;a href="https://twitter.com/samcatbrown"&gt;Sam Brown&lt;/a&gt; from Doteveryone talked about their work in &lt;a href="https://medium.com/doteveryone/introducing-the-three-cs-of-responsible-technology-5e1d7fae558"&gt;Responsible
+Technology&lt;/a&gt;, defined as technologies that:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;Do not knowingly create or deepen existing inequalities;&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;Recognise and respect everyone’s rights and dignity; and&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;Give people confidence and trust in their use.&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;She talked about the power that technologists have as people with the skills
+to turn ideas into reality and introduced the "3C model", framing ethical
+conversations around Context, Consequence and Contribution. Doteveryone are
+working on assessments and tools to support the discussion, providing a model
+for responsible practice and making responsibility the new normal, a key
+business driver for growth and innovation rather than a side concern.&lt;/p&gt;
+&lt;p&gt;One question from the audience was whether adding more regulation and
+associated cost to conform with security and other standards would entrench the
+positions of larger companies and discourage smaller companies and startups.
+One suggestion in response was being open about products' status, giving users
+information about what has been done and what is planned. But as a company or
+group and as individuals it's important to know your limits; if you're a
+bridge-building startup, your bridges still have to &lt;em&gt;work&lt;/em&gt;.&lt;/p&gt;
+&lt;h3&gt;How to Build a Good Product&lt;/h3&gt;
+&lt;p&gt;The final talk of the conference was from Steve Worswick, creator of the
+&lt;a href="https://pandorabots.com/mitsuku/"&gt;Mitsuku&lt;/a&gt; chatbot (and possibly the only man to have both three Loebner
+prizes and two tracks on Scottish Clubland 3). He talked about some of the
+ethical decisions he made when developing the bot, which is a general-purpose
+chatbot rather than a virtual assistant like Siri or Alexa.&lt;/p&gt;
+&lt;p&gt;One specific decision was to train Mitsuku using supervised learning, rather
+than allowing unsupervised learning like the infamous &lt;a href="https://www.technologyreview.com/s/601111/why-microsoft-accidentally-unleashed-a-neo-nazi-sexbot/"&gt;Tay chatbot&lt;/a&gt;. This
+is extremely time-consuming, especially when trying to keep up-to-date with
+current affairs so Mitsuku can respond appropriately, but allows him to keep
+the bot family-friendly (despite the revenue temptation from more "romantic"
+users). It can learn from a specific user, but &lt;em&gt;only for that user&lt;/em&gt;, then
+Steve chooses which rules to add to the general set.&lt;/p&gt;
+&lt;p&gt;Another set of interesting decisions was in dealing with the ~30% of users
+who are abusive in some way (50% are "normal" users, the other 20% skeptics
+and academics). Tame responses only seemed to encourage bullies, so the bot
+currently uses a "5 strikes and you're out" system, combined with a flag on
+the user that allows the bot to respond more strongly to abusive users
+(although it never swears back at them).&lt;/p&gt;
+&lt;h2&gt;Discussion&lt;/h2&gt;
+&lt;p&gt;The day finished with a panel and open discussion. A lot of different points
+were talked about, I've summarised a few below:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;Education vs. regulation&lt;/strong&gt; - where do we start? We need to educate
+    politicians in the issues before we can talk sensibly about regulation. But
+    laws are often behind the times, and in a fast-moving industry we have a
+    responsibility to do something.&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;Ethics as a product&lt;/strong&gt; - can companies use ethics as a competitive
+    advantage? Are there any downsides to doing so? People want to engage
+    with ethical companies, but misuse can lead to cynicism if those
+    principles aren't seen to be upheld.&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;Not Invented Here&lt;/strong&gt; - what prior art is there, is this really something
+    we need to figure out outselves? Psychologists and doctors, for example,
+    already have mandatory ethics training and advice panels. We don't
+    currently ask about ethics in interviews, so even where CS students have
+    ethics modules they aren't seeing the benefit when it comes to entering
+    the profession.&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;Is Apple ethical&lt;/strong&gt; - should I get a different phone? The most ethical
+    smartphone available is keeping the one you already have. Issues exist
+    around the supply chain, e.g. conflict minerals, but Apple are doing good
+    work around privacy and federated machine learning. There is a bottom
+    line below which we won't accept a company, but it's hard to have a
+    binary yes or no for most, especially when their products give a lot of
+    utility.&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2&gt;Summary&lt;/h2&gt;
+&lt;p&gt;A few key thoughts:&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;Understanding power&lt;/strong&gt;: it's important for tech workers of all kinds to
+    understand the power they hold. Software is, as we're often reminded,
+    "eating the world", and as the industry grows skilled people will continue
+    to be in high demand and have power as a result.&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;Collective action&lt;/strong&gt;: it would be easy to think that, because the
+    working conditions and benefits in tech companies are already generally
+    good, we have less need of unions and professional bodies, but it was clear
+    from the discussion that there is a role for these groups in driving issues
+    like ethics across the community. For example, the &lt;a href="https://techworkerscoalition.org/"&gt;Tech Workers
+    Coalition&lt;/a&gt; is working toward an inclusive and equitable tech industry,
+    covering all kinds of workers involved in the industry. In a timely
+    fashion, as I write this, the &lt;a href="https://www.acm.org/"&gt;ACM&lt;/a&gt; is about to publish an updated
+    ethical standard for the computing profession.&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;Diverse groups&lt;/strong&gt;: a few of the talks touched on the idea of involving
+    more people, and more diverse groups, in discussions and decision making.
+    This helps make sure we aren't missing simple problems that are just not
+    obvious from our own point of view. Especially when building consumer
+    products it's important to build groups that reflect broader populations
+    and can bring more ideas and ways of solving problems to the table.&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;Finally, I'd like to thank the organisers for their work; the day went very
+smoothly and it was great to see such a diverse group of speakers and
+attendees talking about this important issue. Hopefully this is just the
+start of something much bigger!&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;&lt;strong&gt;Disclosure&lt;/strong&gt;: Pivotal paid for my attendance of this conference as part of
+my professional development budget, and were a Gold level sponsor of the
+conference. However, I have written this article as an individual; it
+reflects my position and opinions, not necessarily those of my employer.&lt;/p&gt;
+&lt;/blockquote&gt;</content><category term="work"></category><category term="ethics"></category><category term="conferences"></category></entry><entry><title>Introduction to Pair Programming</title><link href="https://blog.jonrshar.pe/2017/Oct/13/ada-college-pairing.html" rel="alternate"></link><published>2017-10-13T10:20:00+01:00</published><updated>2021-11-06T16:30:00+00:00</updated><author><name>Jonathan Sharpe</name></author><id>tag:blog.jonrshar.pe,2017-10-13:/2017/Oct/13/ada-college-pairing.html</id><summary type="html">&lt;p&gt;Why do we pair program at Pivotal, and could you be doing it too?&lt;/p&gt;</summary><content type="html">&lt;p&gt;As part of Pivotal London's grassroots diversity and inclusion efforts, a
+colleague and I have recently been talking to the team at &lt;a href="https://ada.ac.uk"&gt;Ada College&lt;/a&gt;,
+the UK's National College for Digital Skills, about their apprenticeship
+program.&lt;/p&gt;
+&lt;p&gt;They invited us to lead an introductory session on pair programming to around
+40 of their higher level digital apprentices. This is the material from that
+session, rewritten as a blog post.&lt;/p&gt;
+&lt;p&gt;&lt;img alt="Pairing Table in San Francisco" src="https://blog.jonrshar.pe/images/Process-Pairing-01.jpg"&gt;&lt;/p&gt;
+&lt;p&gt;&lt;small&gt;&lt;em&gt;"Pairing Table in San Francisco"&lt;/em&gt;, &amp;copy; Pivotal&lt;/small&gt;&lt;/p&gt;
+&lt;h2&gt;Why do you pair?&lt;/h2&gt;
+&lt;p&gt;Pair programming is one of the core practices of Extreme Programming (XP), a
+software development methodology based on the principles laid out in &lt;a href="http://agilemanifesto.org"&gt;the
+agile manifesto&lt;/a&gt;. A major part of XP, and any agile methodology, is feedback:&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;XP teams strive to generate as much feedback as they can handle as quickly
+as possible.&lt;/p&gt;
+&lt;p&gt;&lt;small&gt;from &lt;em&gt;Extreme Programming Explained: Embrace Change&lt;/em&gt; by Kent Beck
+with Cynthia Andres&lt;/small&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;With pair programming, you're getting immediate feedback on your code, as
+you're writing it. This also aligns with the idea of Extreme Programming being
+good practices taken to extremes - it's code review, turned all the way up.
+The specific practice is described as follows:&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;Write all production programs with two people sitting at one machine...
+Pair programmers:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Keep each other on task.&lt;/li&gt;
+&lt;li&gt;Brainstorm refinements to the system.&lt;/li&gt;
+&lt;li&gt;Clarify ideas.&lt;/li&gt;
+&lt;li&gt;Take initiative when their partner is stuck, thus lowering frustration.&lt;/li&gt;
+&lt;li&gt;Hold each other accountable to the team's practices.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;small&gt;from &lt;em&gt;Extreme Programming Explained: Embrace Change&lt;/em&gt; by Kent Beck
+with Cynthia Andres&lt;/small&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;In a similar vein the Pivotal Labs &lt;a href="https://pivotal.io/labs"&gt;website&lt;/a&gt; lists four benefits of
+pairing, for all of the roles in a balanced product team, which I'll address in
+turn in the following sections:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Boost efficiency through collaboration&lt;/li&gt;
+&lt;li&gt;Knowledge share and skill transfer&lt;/li&gt;
+&lt;li&gt;Prevent knowledge silo&lt;/li&gt;
+&lt;li&gt;100% transparency&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;However, perhaps the most succinct response to the question is the following
+quote from Rob Mee, Pivotal Labs founder and current Pivotal CEO:&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;It's more efficient, and it produces better code.&lt;/p&gt;
+&lt;p&gt;&lt;small&gt;from &lt;a href="https://www.wired.com/2013/11/pivotal-one/"&gt;This Company Believes You Should Never Hack Alone&lt;/a&gt;&lt;/small&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;Specifically for new developers, pairing can be an effective way to ramp up
+quickly, avoiding impostor syndrome and the stress of feeling abandoned to fend
+for yourself in an unfamiliar codebase. &lt;a href="https://twitter.com/amesimmons"&gt;Amy Simmons&lt;/a&gt; recently gave at
+talk at Pivotal's public lunch and learn series on &lt;a href="http://amysimmons.github.io/a-guide-to-the-care-and-feeding-of-new-devs/"&gt;the care and feeding of
+new devs&lt;/a&gt;, discussing the results of a survey that found that 81% of
+respondents thought that junior devs could be better supported; one of her
+recommendations was to adopt code reviews and pair programming with senior
+devs, at least on a weekly basis.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;Boost efficiency through collaboration&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;The immediate benefit to pairing is how infrequently you find yourself stuck.
+If there's something you don't know how to do, or you aren't sure where to go
+next, nine times out of ten your pair will be able to get you moving again.
+It's like rubber duck debugging, except that now the rubber duck can provide
+additional ideas!&lt;/p&gt;
+&lt;p&gt;In addition pairing is great for maintaining focus; whereas it's easy to get
+sidetracked when you're working alone (especially with a high-speed
+connection to social networks, news websites and TV Tropes...), having a second
+person looking at your screen keeps you honest about what you're supposed to
+be working on. In my experience the "flow state" of pairing is different to
+the one you get into when working alone; it's easier to get into and more
+resilient to interruptions.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;Knowledge share and skill transfer&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;As an engineer in Pivotal Labs, the majority of my job consists of pair
+programming with our client's engineers, with the aim being to help them
+develop the software they're working on and build an effective team that can
+continue collaborate effectively once the engagement ends and they return to
+their usual offices. I have found pair programming to be a very effective way
+to teach the other practices we follow, like test-driven development (TDD)
+and continuous integration and deployment (CI/CD).&lt;/p&gt;
+&lt;p&gt;It's also a productive way to introduce someone to a new technology or
+codebase. Pairing with someone with less experience helps to identify where
+the code could be clearer or easier to follow, which is easy to overlook when
+you're more comfortable with the language or domain.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;Prevent knowledge silo&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;Have you ever started trying to work on something only to be told &lt;em&gt;"Oh,
+that's so-and-so's part, you should leave it to them"&lt;/em&gt;? Or, even worse, &lt;em&gt;"the
+person who did that left, so we try not to touch it"&lt;/em&gt;? Pairing helps to avoid
+this by ensuring that no single person is the only one with knowledge of any
+specific part of the product.&lt;/p&gt;
+&lt;p&gt;This is especially powerful when you're regularly rotating pairs. Generally
+we rotate on a daily basis, using tools like &lt;a href="https://parrit.io/"&gt;Parrit&lt;/a&gt; to make sure that
+every possible combination is occurring. If a story is still in flight from
+the previous day we &lt;em&gt;"stick and twist"&lt;/em&gt;, with one person staying with the
+story to pass along the context and the other moving on to something else.
+This has the natural side effect that the more complex stories, the ones that
+take multiple days, get more people's input.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;100% transparency&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;On your own you might be tempted to rush, to cut corners; &lt;em&gt;"I'll just skip
+writing this test"&lt;/em&gt;, or &lt;em&gt;"this isn't great but we can refactor it later"&lt;/em&gt;.
+All-too-frequently, later never comes! Your pair can be your conscience,
+keeping the code quality high and suggesting tweaks or possible edge cases as
+you go along. They can also point out when you're overthinking something &lt;a href="https://en.wikipedia.org/wiki/You_aren%27t_gonna_need_it"&gt;you
+aren't gonna need&lt;/a&gt;.&lt;/p&gt;
+&lt;h2&gt;Anatomy of a pairing station&lt;/h2&gt;
+&lt;p&gt;There are a few crucial things you need to pair effectively:&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;Shared desk&lt;/strong&gt;: sit close enough that you can easily talk about what
+    you're working on. If you have access to them, sit-stand desks allow more
+    flexibility to change your position throughout the day. If the two people
+    are different heights, monitor risers can be useful to keep them both
+    comfortable.&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;Separate peripherals&lt;/strong&gt;: while it's possible to pair by passing a single
+    keyboard and mouse back and forth, it isn't ideal. It's much easier to
+    work with a set each, although you have to be careful not to jump in and
+    use them at the same time! Each developer should also have their own
+    mirrored monitor.&lt;/p&gt;
+&lt;p&gt;This is particularly important when the pairing station is a laptop -
+having two people trying to look at the same relatively small screen, in
+close proximity to where one of them is trying to type, is very awkward.
+At the very least have an external monitor, mouse and keyboard, either so
+one can use those while the other uses the laptop, or so you can swap
+back and forth more easily.&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;Pen and paper&lt;/strong&gt;: whether you're discussing potential architectures,
+    explaining a workflow, or just want to take a quick TODO note, nothing is
+    as low friction as simply writing it down. A Post-It note on the bottom
+    edge of a monitor can help record valuable information without
+    interrupting the flow of pairing, and a quick sketch in a notebook is
+    often the easiest way to share a complex idea.&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;Standard config&lt;/strong&gt;: to keep both partners efficient, you need to agree
+    on consistent tooling and settings up-front. The pair should adopt a
+    specific IDE or editor, key bindings, shortcuts, etc. This will likely mean
+    compromise on some preferred tools, but is all part of taking collective
+    ownership of everyone's productivity, as well as of the code. Similarly,
+    agree on styling conventions, and strongly consider making linting part of
+    your continuous integration process to keep everyone honest.&lt;/p&gt;
+&lt;p&gt;If you're working in a team across multiple machines, it can be useful to
+create scripts to set up each machine identically without manual work.
+For example, the standard configuration for a Pivotal workstation is
+provided by a set of Bash scripts, available &lt;a href="https://github.com/pivotal/workstation-setup"&gt;on GitHub&lt;/a&gt;. Another
+useful tool some of my colleagues have been working with recently is
+&lt;a href="https://www.ansible.com/"&gt;Ansible&lt;/a&gt;, which can be used to automate a wide range of tasks
+including workstation setup.&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ol&gt;
+&lt;h2&gt;Pairing roles&lt;/h2&gt;
+&lt;p&gt;Each person in the pair has a specific role. Note that this isn't a permanent
+role; you can (and should!) switch frequently between the two.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;Driver&lt;/strong&gt;: the driver is responsible for actually implementing the ideas
+    being discussed as code. They write out all production and test code,
+    refactor existing code as required and regularly run the tests to get the
+    automated feedback on how it is going.&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;Navigator&lt;/strong&gt;: the navigator is responsible for aligning the driver's
+    progress towards the overall goal. They provide suggestions on possible
+    directions or course corrections. They can also point out any minor typo,
+    but note that they should give the driver a few seconds to spot it
+    themselves first!&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Both people should be continually vocalising their thought processes; how do
+you think the task is going? What should you be trying to do next. It's also
+important to remain patient and kind when working so closely with someone for
+long periods of time.&lt;/p&gt;
+&lt;h2&gt;Different methods of pairing&lt;/h2&gt;
+&lt;p&gt;Within the basic principles outlined above, there are many specific variations.
+Here are a couple you can try out:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;Switch on red&lt;/strong&gt;: named for the Red step of test-driven development's
+    Red-Green-Refactor process. Each person writes the code to pass the
+    current failing test, then the next failing test, so you switch roles
+    when the test status is "red".&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;Blitz&lt;/strong&gt;: this is a time-based exercise, where you set an overall time
+    for a task (e.g. ten minutes) and allot each person half of it. Have a
+    countdown running while each person is driving - once their time is up,
+    they can't drive any more. This is a good way to even up the driving and
+    navigating time, and can be done with a physical chess clock. You can
+    increase the total time as you get more comfortable with it.&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;Evil coder&lt;/strong&gt;: one person writes all of the tests, and the other then
+    tries to make each test pass in an unexpected (or even actively
+    counter-productive) way. This forces the test writer to drive out the actual
+    behaviour they are looking for by constraining the code through
+    additional tests. This can be carried out silently, with the pair
+    communicating their intentations solely through the code they're writing.&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;Mobbing&lt;/strong&gt;: more than two programmers working on the same task is
+    referred to as "mobbing". This can be done with a single big screen and
+    shared peripherals (ideally wireless, to make it easier to pass them
+    around), as it's much harder to make sure no two people are typing at the
+    same time in a larger group. I've found this particularly useful early in a
+    project, where there isn't much surface area for multiple pairs to cover,
+    or when introducing multiple new people to an existing codebase.&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2&gt;Things to avoid&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;Loud noises&lt;/strong&gt;: try not to talk too loudly, and get away from any loud
+    noise sources before starting. There's a hum to a roomful of people
+    pairing, but it shouldn't feel like you need to shout over what's going
+    on around you. Equally you shouldn't be talking over your pair; pairing
+    is about reaching a consensus on the approach to take.&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;Strong smells&lt;/strong&gt;: it should go without saying that personal hygiene is
+    important when you're sitting right next to someone all day. But it's
+    also worth bearing in mind that some people are sensitive to smells that
+    you think are nice; consider unscented toiletries and avoid strong
+    perfume or aftershave.&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;Taking over&lt;/strong&gt;: Don't start using the mouse and keyboard while your pair
+    is trying to, it's very frustrating when the cursor suddenly runs away
+    from you. Ask explicitly or make a clear move when you want to try
+    something out. It can be helpful to push the peripherals away from you,
+    to avoid nudging them accidentally and also give you a clear way to
+    signal that you want to drive.&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;Mobile phones&lt;/strong&gt;: it's just too easy to get distracted by your phone.
+    Consider turning on a do-not-disturb mode, or at the very least ensure
+    it's on silent. Try to take breaks mindfully - use short pauses in your
+    pairing (e.g. running a test suite) to discuss what you've been working
+    on, rather than immediately picking up your phone. It's useful to have a
+    second computer for separate research, but keep it shut - open email is
+    another distraction.&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2&gt;When not to pair&lt;/h2&gt;
+&lt;p&gt;Like many of the practices of XP, pair programming is a good default but
+doesn't fit every situation. For example, you might find it more effective to
+split up and solo when:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;Researching a problem you’re stuck on&lt;/strong&gt;: people read at different rates
+    and absorb new ideas in different ways;&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;Trying out new technology&lt;/strong&gt;: libraries, frameworks, new paradigms; or&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;Taking breaks&lt;/strong&gt;: constant pairing can be tiring, especially when you’re
+    new to it; don’t be afraid to ask for some time alone if you need it.&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;In general, you should agree specific end goals and time limits when you
+split up, so you can both be working towards the same thing, and you should
+bring &lt;em&gt;ideas&lt;/em&gt;, rather than specific code or implementations, back to work on
+with your pair.&lt;/p&gt;
+&lt;h2&gt;Additional resources&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;em&gt;“Pair Programming Illuminated”&lt;/em&gt; by Laurie Williams and Robert Kessler&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;em&gt;“Strengthening the Case for Pair Programming”&lt;/em&gt; by Williams, Kessler,
+    Cunningham and Jeffries [&lt;a href="https://collaboration.csc.ncsu.edu/laurie/Papers/ieeeSoftware.PDF"&gt;PDF&lt;/a&gt;]&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;em&gt;“The Costs and Benefits of Pair Programming”&lt;/em&gt; by Cockburn and Williams
+    [&lt;a href="https://collaboration.csc.ncsu.edu/laurie/Papers/XPSardinia.PDF"&gt;PDF&lt;/a&gt;]&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;em&gt;“Pair Programming Configurations”&lt;/em&gt; by Fred Mastropasqua [&lt;a href="https://www.clearlyagileinc.com/blog/2016/5/20/pair-programming-configurations"&gt;Blog&lt;/a&gt;]&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;em&gt;“Is pair programming worth the trade off in engineering resources?”&lt;/em&gt; by
+    Kent Beck [&lt;a href="https://www.quora.com/Is-pair-programming-worth-the-trade-off-in-engineering-resources/answer/Kent-Beck?srid=uL5a"&gt;Quora&lt;/a&gt;]&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;em&gt;“Pair Programming: When and Why it Works”&lt;/em&gt; by Chong, Plummer, Leifer,
+    Klemmer, Eris and Toye [&lt;a href="http://hci.stanford.edu/publications/2005/pairs/PairProgramming-WhenWhy.pdf"&gt;PDF&lt;/a&gt;]&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;blockquote&gt;
+&lt;p&gt;&lt;strong&gt;Update&lt;/strong&gt;: this post was revised to separate the &lt;em&gt;roles&lt;/em&gt; of pairing (driver
+and navigator) from the &lt;em&gt;methods&lt;/em&gt; (e.g. blitz), as the presentation was
+similarly updated.&lt;/p&gt;
+&lt;/blockquote&gt;</content><category term="work"></category><category term="pivotal"></category><category term="pairing"></category><category term="xp"></category></entry><entry><title>Interviewing and hiring at Pivotal</title><link href="https://blog.jonrshar.pe/2016/Dec/05/pivotal-interviews.html" rel="alternate"></link><published>2016-12-05T21:11:00+00:00</published><updated>2021-11-24T11:12:00+00:00</updated><author><name>Jonathan Sharpe</name></author><id>tag:blog.jonrshar.pe,2016-12-05:/2016/Dec/05/pivotal-interviews.html</id><summary type="html">&lt;p&gt;My experiences of the hiring process at Pivotal, from both sides.&lt;/p&gt;</summary><content type="html">&lt;p&gt;My current employer, Pivotal, practices the Extreme Programming (XP) software
+development methodology. One of the core practices of this methodology is pair
+programming: two engineers, two mice, two keyboards, two monitors but &lt;em&gt;one
+computer&lt;/em&gt; and &lt;em&gt;one task&lt;/em&gt;.  Here's what a typical day of pairing looks like:&lt;/p&gt;
+&lt;p&gt;&lt;img alt="Pairing at Pivotal London" src="https://blog.jonrshar.pe/images/springboard-pairing.png"&gt;&lt;/p&gt;
+&lt;p&gt;I won't go over the various methods for pairing here, but suffice to say
+this style of development requires solid interpersonal skills, even before we
+get into the &lt;a href="https://blog.pivotal.io/pivotal-labs/tech-talks/balanced-team-janice-fraser"&gt;balanced team&lt;/a&gt; approach that sits the engineers with the
+product managers and designers to collaborate together on a daily basis.&lt;/p&gt;
+&lt;p&gt;In what I think is a nice summary of this approach, there was a poster in
+Pivotal London's old office featuring Pivotal Labs founder and current Pivotal
+CEO Rob Mee with the quote:&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;"Software development, it turns out, is a team sport."&lt;/p&gt;
+&lt;p&gt;&lt;small&gt;from &lt;a href="http://fourhourworkweek.com/2011/06/07/whats-your-start-up-bus-count-7-myths-of-entrepreneurship-and-programming/"&gt;What's Your Start-up's "Bus Count"? 7 Myths of Entrepreneurship 
+and Programming&lt;/a&gt;&lt;/small&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;All of this means that there are plenty of great programmers out there who would
+not be a great fit for this working method, preferring to work exclusively on
+their own. Conversely, there are plenty of people who might not think that they
+are great programmers who have all of the skills needed to flourish as an
+engineer at Pivotal. As &lt;a href="https://blog.pivotal.io/pivotal/features/pivots-are-what-set-pivotal-apart"&gt;Pivots Are What Set Pivotal Apart&lt;/a&gt; puts it:&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;...being a Pivot means embracing the principles at the core of this approach.
+Pivots teach and learn from each other, demonstrating empathy, trust,
+respect, communication, feedback, and collaboration at every turn.&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;Pivotal hires, in short, for &lt;em&gt;empathy&lt;/em&gt;. So how do they do that? There is a
+three-step process for hiring a new engineer at Pivotal:&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;
+&lt;p&gt;Initial CV/cover letter screening or contact from a recruiter.&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;A short (30-60min) technical screening known as the RPI (for &lt;em&gt;"Rob [Mee]
+Pairing Interview"&lt;/em&gt;).&lt;/p&gt;
+&lt;p&gt;This is a simple pair programming exercise where the Pivotal employee
+"drives" (i.e. does all of the typing) while the candidate "navigates" (i.e.
+figures out what the driver should type next). This is to demonstrate that
+the candidate knows the basics of writing code and also that they're capable
+of interacting with another engineer while doing so, describing their
+thinking.&lt;/p&gt;
+&lt;p&gt;I found this a really good introduction to how engineering at Pivotal works,
+and the format makes it fairly low-pressure. By making the Pivotal employee
+the primary driver, it ensures that you can complete the exercise whether or
+not you're familiar with the specific language used (I wasn't); all that's
+needed is an ability to express the underlying ideas and engage in a
+discussion around the best way to accomplish the task.&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;A &lt;em&gt;"day in the life"&lt;/em&gt; session at a Pivotal office.&lt;/p&gt;
+&lt;p&gt;The final step is a full-day exercise, which generally involves two half-day
+pairing sessions, one with an engineer from the &lt;a href="https://pivotal.io/platform"&gt;Cloud Foundry&lt;/a&gt; side of
+the business and one with an engineer from the &lt;a href="https://pivotal.io/labs"&gt;Labs&lt;/a&gt; side (the hiring
+criteria are the same, I know quite a few people who've moved from one to
+the other). Where possible, the candidate works on real projects and solves
+real problems (or fails to, which doesn't necessarily mean failing the
+interview!) The idea is to make it as representative as possible of what
+working for Pivotal is like; this is as much for the candidate to get a
+sense of whether they'd like it as the other way around.&lt;/p&gt;
+&lt;p&gt;Although a full day of pair programming can be exhausting, especially if you
+are new to it (as I was when I interviewed), I felt that the level of
+support you got from your pair made up for that. Again, if you aren't
+familiar with the specific technologies being used, they can do more of the
+driving while you help with suggestions on the direction the task is taking.
+As with the RPI there isn't too much pressure on you, unlike the typical
+tech interview, and you're actually demonstrating the skills you'll be using
+on a daily basis if you join the company.&lt;/p&gt;
+&lt;p&gt;I have hosted a few interviews too, which entails introducing the candidate
+at the morning's office standup, taking them out for lunch and collecting
+any feedback they have at the end. One candidate recently described it to me
+as &lt;em&gt;"the way [they] would want to be interviewed"&lt;/em&gt;, which is heartening.&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;In all, I think it's a good approach that really reinforces the way that Pivotal
+works; it has certainly lead to great teams at the Pivotal offices that I've
+worked in (London and Dublin). By focusing on the skills you'll be using
+day-to-day rather than contrived whiteboard challenges or trick questions, it
+gives applicants from a broad range of backgrounds the chance to find out
+whether they would enjoy the work, while acknowledging the truth that skills in
+a specific programming language are often less important than the ability to
+pick up the one best suited to the task. In my view, it's a truly empathetic
+way to hire people.&lt;/p&gt;</content><category term="work"></category><category term="pivotal"></category><category term="hiring"></category></entry></feed>

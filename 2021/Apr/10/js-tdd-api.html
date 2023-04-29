@@ -1,0 +1,1442 @@
+<!DOCTYPE html>
+<html lang="en">
+<head prefix="og: http://ogp.me/ns# article: http://ogp.me/ns/article#">
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width">
+  <title>JS TDD API</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.9.4/css/bulma.min.css">
+    <link rel="stylesheet" href="https://blog.jonrshar.pe/theme/css/main.3dad1b7a.css">
+  <style media="print">.is-hidden-print{display:none !important}</style>
+      <link rel="stylesheet" href="https://blog.jonrshar.pe/custom.css">
+<meta property="og:title" content="textbook - JS TDD API">
+  <meta property="og:description" content="Test-driven JavaScript development done right - part 3">
+<meta property="og:url" content="https://blog.jonrshar.pe/2021/Apr/10/js-tdd-api.html">
+    <meta property="og:image" content="https://blog.jonrshar.pe/images/rps-api-ui.png">
+    <meta name="twitter:image:alt" content="textbook | These are my opinions - if you don't like them, I have others">
+<meta name="twitter:card" content="summary">
+  <meta name="twitter:creator" content="@jonrsharpe">
+  <meta name="twitter:site" content="@jonrsharpe">
+<meta property="og:site_name" content="textbook">
+<meta property="og:type" content="article">
+  <meta property="article:published_time" content="2021-04-10T20:30:00+01:00">
+  <meta property="article:modified_time" content="2021-04-13T17:30:00+01:00">
+    <meta property="article:tag" content="javascript">
+    <meta property="article:tag" content="tdd">
+    <meta property="article:tag" content="xp">
+  <meta property="article:section" content="development">
+</head>
+
+<body id="index" class="home">
+<header class="hero is-primary">
+  <div class="hero-head">
+    <div class="container">
+      <nav class="navbar">
+        <div class="navbar-brand">
+          <a class="navbar-item title is-3"
+             href="https://blog.jonrshar.pe/">textbook</a>
+        </div>
+      </nav>
+    </div>
+  </div>
+</header>
+
+<nav class="navbar has-shadow is-hidden-print">
+  <div class="container">
+    <div class="navbar-center"></div>
+    <span id="navToggle" class="navbar-burger">
+      <span></span>
+      <span></span>
+      <span></span>
+    </span>
+    <div id="navMenu" class="navbar-menu">
+        <div class="navbar-end">
+              <a class="navbar-item is-tab "
+                 href="https://blog.jonrshar.pe/category/work.html">work</a>
+              <a class="navbar-item is-tab "
+                 href="https://blog.jonrshar.pe/category/meta.html">meta</a>
+              <a class="navbar-item is-tab is-active"
+                 href="https://blog.jonrshar.pe/category/development.html">development</a>
+        </div>
+    </div>
+  </div>
+</nav>
+
+<div class="container">
+  <div class="section columns">
+    <div class="column is-three-quarters-desktop is-two-thirds-tablet">
+<section id="content" class="body">
+  <article>
+    <h1 class="title">
+      <a href="https://blog.jonrshar.pe/2021/Apr/10/js-tdd-api.html" rel="bookmark"
+         title="Permalink to JS TDD API">JS TDD API</a></h1>
+<footer class="post-info">
+  <abbr class="published" title="2021-04-10T20:30:00+01:00">
+    Published <span class="is-info">Sat 10 April 2021</span>
+    in <a href="https://blog.jonrshar.pe/category/development.html">development</a>
+  </abbr>
+    <br />
+    <abbr class="modified" title="2021-04-13T17:30:00+01:00">
+      Updated Tue 13 April 2021
+    </abbr>
+
+    <p class="author">
+      <em>by           Jonathan Sharpe
+</em>
+      <span class="tag is-small is-rounded">
+        <a href="https://blog.jonrshar.pe/tag/javascript.html">javascript</a>
+      </span>
+      <span class="tag is-small is-rounded">
+        <a href="https://blog.jonrshar.pe/tag/tdd.html">tdd</a>
+      </span>
+      <span class="tag is-small is-rounded">
+        <a href="https://blog.jonrshar.pe/tag/xp.html">xp</a>
+      </span>
+    </p>
+  
+</footer>    <div class="section"><p>Welcome to part 3 of this ongoing series on test-driven development (TDD) in JavaScript. So far we've covered:</p>
+<ul>
+<li><strong><a href="https://blog.jonrshar.pe/2020/Aug/31/js-tdd-ftw.html">Part 1</a></strong> - the basic principles of test-driven development, showing unit testing using <a href="https://jestjs.io/">Jest</a></li>
+<li><strong><a href="https://blog.jonrshar.pe/2020/Nov/22/js-tdd-e2e.html">Part 2</a></strong> - expanding to higher level testing, using <a href="https://cypress.io">Cypress</a> for E2E and Jest for integration (and unit) testing of a simple React app with <a href="https://testing-library.com">Testing Library</a></li>
+</ul>
+<p>In the second part, I covered:</p>
+<ul>
+<li>How to add Cypress tests to a basic <a href="https://create-react-app.dev/docs/getting-started">Create React App</a> project</li>
+<li>Outside-in TDD, working from E2E tests in Cypress; through integration tests of multiple components working together; down to the unit level of individual components</li>
+<li>Testing <em>presentation</em> components (<code>&lt;Outcome result={...} /&gt;</code>) by rendering them with different props and checking what gets displayed in the DOM</li>
+<li>Testing <em>interaction</em> components (<code>&lt;Form onSubmit={...} /&gt;</code>) by passing <em>test doubles</em> for their callbacks and checking they get called appropriately on simulated user interaction</li>
+</ul>
+<p>If you haven't read these yet, I'd suggest you go back and run through them before getting stuck into this one. Make sure you're confident with the approach so far, because we're going to add in a few new ideas here.</p>
+<p>So what's next? Our rock, paper, scissors (RPS) game isn't very much fun right now, because the second player can guarantee a win by waiting to see what the first player throws and choosing their weapon accordingly. Instead, let's make it a one-player game where you're taking on a random user:</p>
+<p><img alt="Mockup of the proposed RPS UI" src="https://blog.jonrshar.pe/images/rps-api-ui.png"></p>
+<p><small><em>Created with <a href="https://remarkable.com/">reMarkable</a>.</em></small></p>
+<p>Here the <code>???</code>s indicate information that will be random - we don't know the <em>name</em> of the opponent or which <em>weapon</em> they'll choose and therefore what the <em>outcome</em> will be. That's part of the fun! But it also makes it a little trickier to test.</p>
+<p>This also gives us the opportunity to practice interacting with an API; making requests and handling responses, and seeing how to test that at various levels. Again this adds complexity, this time because it's random and because it's <em>asynchronous</em>. We will get the opponent data from <code>https://randomuser.me/</code>, a really handy API for exactly this kind of exercise.</p>
+<p>Before we continue, think about how you might actually implement that UI in React - what components would you have, how would they interact, where would the state live? Note your ideas down, we'll revisit them later.</p>
+<h3>Requirements</h3>
+<p>The prerequisites here are the same as the previous articles:</p>
+<ul>
+<li>*nix command line: already provided on macOS and Linux; if you're using Windows try <a href="https://docs.microsoft.com/en-us/windows/wsl/about">WSL</a> or <a href="https://gitforwindows.org/">Git BASH</a>;</li>
+<li><a href="https://nodejs.org/">Node</a> (10+ recommended, Jest 26 <a href="https://jestjs.io/blog/2020/05/05/jest-26#other-breaking-changes-in-jest-26">dropped support</a> for Node 8; run <code>node -v</code> to check) and NPM; and</li>
+<li>Familiarity with ES6 JavaScript syntax.</li>
+</ul>
+<p>In addition, given the domain for this post, you'll need:</p>
+<ul>
+<li>Familiarity with React development - I'm going to assume you know how to write a basic implementation, guiding you with test cases and a few function component examples.</li>
+<li>Familiarity with promises - the asynchronous parts will use <code>async</code>/<code>await</code> syntax, and Cypress uses <code>.then</code> in a similar way to promises.</li>
+</ul>
+<p>Again please carefully <em>read everything</em>, and for newer developers I'd recommend <em>typing the code</em> rather than copy-pasting.</p>
+<h2>Setup [1//8]</h2>
+<p>Let's create a new CRA-with-Cypress project. You can return to part 2 for more detailed instructions, or follow the steps below if you're feeling more confident (I've also published instructions and even a script to automate the process in <a href="https://gist.github.com/textbook/3377dda14efe4449772c2377188c3fa8">this Gist</a>):</p>
+<ol>
+<li>Create a new React app with <code>npx create-react-app@latest --use-npm rps-api</code></li>
+<li>Enter the project directory with <code>cd rps-api/</code></li>
+<li>Add Cypress and the relevant Testing Library utilities with <code>npm install cypress @testing-library/cypress</code></li>
+<li>Open the Cypress UI to do the initial setup with <code>./node_modules/.bin/cypress open</code> then quit the UI</li>
+<li>Remove the examples with <code>rm -rf ./cypress/integration/examples/ ./cypress/fixtures/example.json</code></li>
+<li>Configure Cypress to look for the CRA app and not create videos by adding <code>"baseUrl": "http://localhost:3000"</code> and <code>"video": false</code> into the root object in <code>cypress.json</code></li>
+<li>Set up the Testing Library utilities by adding <code>import "@testing-library/cypress/add-commands";</code> to <code>./cypress/support/commands.js</code></li>
+<li>Exclude any screenshots and videos Cypress generates from your commits by adding <code>cypress/screenshots/</code> and <code>cypress/videos/</code> to <code>.gitignore</code></li>
+<li>Add a command to run the E2E tests by adding <code>"e2e": "cypress run"</code> into the <code>"scripts"</code> object in <code>package.json</code></li>
+<li>Create a new test file with <code>touch ./cypress/integration/e2e.test.js</code></li>
+<li><em>[Optional]</em> Install the ESLint plugin with <code>npm install eslint-plugin-cypress</code> and add the following to the <code>eslintConfig</code> in <code>package.json</code>:<div class="highlight"><pre><span></span><code><span class="nt">&quot;overrides&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">  </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">&quot;extends&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">      </span><span class="s2">&quot;plugin:cypress/recommended&quot;</span>
+<span class="w">    </span><span class="p">],</span>
+<span class="w">    </span><span class="nt">&quot;files&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">      </span><span class="s2">&quot;cypress/**/*.js&quot;</span>
+<span class="w">    </span><span class="p">]</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">]</span>
+</code></pre></div>
+
+</li>
+</ol>
+<p>If you've done all of the above correctly, you should be able to run <code>npm start</code> in one terminal window and then <code>npm run e2e</code> in another, giving the following output:</p>
+<div class="highlight"><pre><span></span><code>$<span class="w"> </span>npm<span class="w"> </span>run<span class="w"> </span>e2e
+
+&gt;<span class="w"> </span>rps-api@0.1.0<span class="w"> </span>e2e
+&gt;<span class="w"> </span>cypress<span class="w"> </span>run
+
+Couldn<span class="err">&#39;</span>t<span class="w"> </span>find<span class="w"> </span>tsconfig.json.<span class="w"> </span>tsconfig-paths<span class="w"> </span>will<span class="w"> </span>be<span class="w"> </span><span class="nv">skipped</span>
+
+<span class="o">====================================================================================================</span>
+
+<span class="w">  </span><span class="o">(</span>Run<span class="w"> </span>Starting<span class="o">)</span>
+
+<span class="w">  </span>┌────────────────────────────────────────────────────────────────────────────────────────────────┐
+<span class="w">  </span>│<span class="w"> </span>Cypress:<span class="w">    </span><span class="m">6</span>.9.1<span class="w">                                                                              </span>│
+<span class="w">  </span>│<span class="w"> </span>Browser:<span class="w">    </span>Electron<span class="w"> </span><span class="m">87</span><span class="w"> </span><span class="o">(</span>headless<span class="o">)</span><span class="w">                                                             </span>│
+<span class="w">  </span>│<span class="w"> </span>Specs:<span class="w">      </span><span class="m">1</span><span class="w"> </span>found<span class="w"> </span><span class="o">(</span>e2e.test.js<span class="o">)</span><span class="w">                                                              </span>│
+<span class="w">  </span>└────────────────────────────────────────────────────────────────────────────────────────────────┘
+
+
+────────────────────────────────────────────────────────────────────────────────────────────────────
+
+<span class="w">  </span>Running:<span class="w">  </span>e2e.test.js<span class="w">                                                                     </span><span class="o">(</span><span class="m">1</span><span class="w"> </span>of<span class="w"> </span><span class="m">1</span><span class="o">)</span>
+
+
+<span class="w">  </span><span class="m">0</span><span class="w"> </span>passing<span class="w"> </span><span class="o">(</span>17ms<span class="o">)</span>
+
+
+<span class="w">  </span><span class="o">(</span>Results<span class="o">)</span>
+
+<span class="w">  </span>┌────────────────────────────────────────────────────────────────────────────────────────────────┐
+<span class="w">  </span>│<span class="w"> </span>Tests:<span class="w">        </span><span class="m">0</span><span class="w">                                                                                </span>│
+<span class="w">  </span>│<span class="w"> </span>Passing:<span class="w">      </span><span class="m">0</span><span class="w">                                                                                </span>│
+<span class="w">  </span>│<span class="w"> </span>Failing:<span class="w">      </span><span class="m">0</span><span class="w">                                                                                </span>│
+<span class="w">  </span>│<span class="w"> </span>Pending:<span class="w">      </span><span class="m">0</span><span class="w">                                                                                </span>│
+<span class="w">  </span>│<span class="w"> </span>Skipped:<span class="w">      </span><span class="m">0</span><span class="w">                                                                                </span>│
+<span class="w">  </span>│<span class="w"> </span>Screenshots:<span class="w">  </span><span class="m">0</span><span class="w">                                                                                </span>│
+<span class="w">  </span>│<span class="w"> </span>Video:<span class="w">        </span><span class="nb">false</span><span class="w">                                                                            </span>│
+<span class="w">  </span>│<span class="w"> </span>Duration:<span class="w">     </span><span class="m">0</span><span class="w"> </span>seconds<span class="w">                                                                        </span>│
+<span class="w">  </span>│<span class="w"> </span>Spec<span class="w"> </span>Ran:<span class="w">     </span>e2e.test.js<span class="w">                                                                      </span>│
+<span class="w">  </span>└────────────────────────────────────────────────────────────────────────────────────────────────┘
+
+
+<span class="o">====================================================================================================</span>
+
+<span class="w">  </span><span class="o">(</span>Run<span class="w"> </span>Finished<span class="o">)</span>
+
+
+<span class="w">       </span>Spec<span class="w">                                              </span>Tests<span class="w">  </span>Passing<span class="w">  </span>Failing<span class="w">  </span>Pending<span class="w">  </span>Skipped<span class="w">  </span>
+<span class="w">  </span>┌────────────────────────────────────────────────────────────────────────────────────────────────┐
+<span class="w">  </span>│<span class="w"> </span>✔<span class="w">  </span>e2e.test.js<span class="w">                                </span>1ms<span class="w">        </span>-<span class="w">        </span>-<span class="w">        </span>-<span class="w">        </span>-<span class="w">        </span>-<span class="w"> </span>│
+<span class="w">  </span>└────────────────────────────────────────────────────────────────────────────────────────────────┘
+<span class="w">    </span>✔<span class="w">  </span>All<span class="w"> </span>specs<span class="w"> </span>passed!<span class="w">                          </span>1ms<span class="w">        </span>-<span class="w">        </span>-<span class="w">        </span>-<span class="w">        </span>-<span class="w">        </span>-<span class="w">  </span>
+</code></pre></div>
+
+<p>If you don't see that output, go back and double-check you've followed all of the steps as written. If you do, great! Make a commit:</p>
+<div class="highlight"><pre><span></span><code>$<span class="w"> </span>git<span class="w"> </span>add<span class="w"> </span>.
+
+$<span class="w"> </span>git<span class="w"> </span>status
+On<span class="w"> </span>branch<span class="w"> </span>main
+Changes<span class="w"> </span>to<span class="w"> </span>be<span class="w"> </span>committed:
+<span class="w">  </span><span class="o">(</span>use<span class="w"> </span><span class="s2">&quot;git restore --staged &lt;file&gt;...&quot;</span><span class="w"> </span>to<span class="w"> </span>unstage<span class="o">)</span>
+<span class="w">        </span>modified:<span class="w">   </span>.gitignore
+<span class="w">        </span>new<span class="w"> </span>file:<span class="w">   </span>cypress.json
+<span class="w">        </span>new<span class="w"> </span>file:<span class="w">   </span>cypress/integration/e2e.test.js
+<span class="w">        </span>new<span class="w"> </span>file:<span class="w">   </span>cypress/plugins/index.js
+<span class="w">        </span>new<span class="w"> </span>file:<span class="w">   </span>cypress/support/commands.js
+<span class="w">        </span>new<span class="w"> </span>file:<span class="w">   </span>cypress/support/index.js
+<span class="w">        </span>modified:<span class="w">   </span>package-lock.json
+<span class="w">        </span>modified:<span class="w">   </span>package.json
+
+
+$<span class="w"> </span>git<span class="w"> </span>commit<span class="w"> </span>-m<span class="w"> </span><span class="s1">&#39;Install and configure Cypress&#39;</span>
+<span class="o">[</span>main<span class="w"> </span>9d1af26<span class="o">]</span><span class="w"> </span>Install<span class="w"> </span>and<span class="w"> </span>configure<span class="w"> </span>Cypress
+<span class="w"> </span><span class="m">8</span><span class="w"> </span>files<span class="w"> </span>changed,<span class="w"> </span><span class="m">2242</span><span class="w"> </span>insertions<span class="o">(</span>+<span class="o">)</span>
+<span class="w"> </span>create<span class="w"> </span>mode<span class="w"> </span><span class="m">100644</span><span class="w"> </span>cypress.json
+<span class="w"> </span>create<span class="w"> </span>mode<span class="w"> </span><span class="m">100644</span><span class="w"> </span>cypress/integration/e2e.test.js
+<span class="w"> </span>create<span class="w"> </span>mode<span class="w"> </span><span class="m">100644</span><span class="w"> </span>cypress/plugins/index.js
+<span class="w"> </span>create<span class="w"> </span>mode<span class="w"> </span><span class="m">100644</span><span class="w"> </span>cypress/support/commands.js
+<span class="w"> </span>create<span class="w"> </span>mode<span class="w"> </span><span class="m">100644</span><span class="w"> </span>cypress/support/index.js
+</code></pre></div>
+
+<h2>Dealing with unknowns [2/8]</h2>
+<p>Based on the above UI sketch, the way our new RPS game should work is as follows:</p>
+<ul>
+<li>You are always the "left" player, with the same drop-down to select  a weapon as before</li>
+<li>Your opponent is always the "right" player, a computer player with random personal details (we'll show their avatar and name)</li>
+<li>When you throw, the computer player picks a random weapon</li>
+<li>The outcome is displayed exactly as before ("Left wins!", "Right wins!" or "Draw")</li>
+</ul>
+<p>I'm going to split that into two tests in <code>cypress/integration/e2e.test.js</code>:</p>
+<div class="highlight"><pre><span></span><code><span class="nx">it</span><span class="p">(</span><span class="s2">&quot;displays a random opponent&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">()</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="nx">cy</span><span class="p">.</span><span class="nx">visit</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">);</span>
+
+<span class="w">  </span><span class="nx">cy</span><span class="p">.</span><span class="nx">findByTestId</span><span class="p">(</span><span class="s2">&quot;opponent-name&quot;</span><span class="p">).</span><span class="nx">should</span><span class="p">(</span><span class="s2">&quot;contain.text&quot;</span><span class="p">,</span><span class="w"> </span><span class="cm">/* ??? */</span><span class="p">);</span>
+<span class="w">  </span><span class="nx">cy</span><span class="p">.</span><span class="nx">findByTestId</span><span class="p">(</span><span class="s2">&quot;opponent-avatar&quot;</span><span class="p">).</span><span class="nx">should</span><span class="p">(</span><span class="s2">&quot;have.attr&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;src&quot;</span><span class="p">,</span><span class="w"> </span><span class="cm">/* ??? */</span><span class="p">);</span>
+<span class="p">});</span>
+
+<span class="nx">it</span><span class="p">(</span><span class="s2">&quot;displays the appropriate winner&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">()</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="nx">cy</span><span class="p">.</span><span class="nx">visit</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">);</span>
+
+<span class="w">  </span><span class="nx">cy</span><span class="p">.</span><span class="nx">findByLabelText</span><span class="p">(</span><span class="s2">&quot;Left&quot;</span><span class="p">).</span><span class="nx">select</span><span class="p">(</span><span class="s2">&quot;rock&quot;</span><span class="p">);</span><span class="w">  </span>
+<span class="w">  </span><span class="nx">cy</span><span class="p">.</span><span class="nx">findByText</span><span class="p">(</span><span class="s2">&quot;Throw&quot;</span><span class="p">).</span><span class="nx">click</span><span class="p">();</span>
+
+<span class="w">  </span><span class="nx">cy</span><span class="p">.</span><span class="nx">findByTestId</span><span class="p">(</span><span class="s2">&quot;opponent-weapon&quot;</span><span class="p">).</span><span class="nx">should</span><span class="p">(</span><span class="s2">&quot;contain.text&quot;</span><span class="p">,</span><span class="w"> </span><span class="cm">/* ??? */</span><span class="p">);</span>
+<span class="w">  </span><span class="nx">cy</span><span class="p">.</span><span class="nx">findByTestId</span><span class="p">(</span><span class="s2">&quot;outcome&quot;</span><span class="p">).</span><span class="nx">should</span><span class="p">(</span><span class="s2">&quot;contain.text&quot;</span><span class="p">,</span><span class="w"> </span><span class="cm">/* ??? */</span><span class="p">);</span>
+<span class="p">});</span>
+</code></pre></div>
+
+<p>Immediately we can see a problem - if the opponent and their throw are random, we don't know what the <em>values</em> are going to be. I'll explore three different ways to deal with this.</p>
+<ol>
+<li>
+<p><strong>Broaden expectations</strong> - we could use less specific expectations to test that the <em>shape</em> of the output is appropriate, without checking the details of the <em>values</em>:</p>
+<div class="highlight"><pre><span></span><code><span class="nx">it</span><span class="p">(</span><span class="s2">&quot;displays an opponent from the API&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">()</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="nx">cy</span><span class="p">.</span><span class="nx">visit</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">);</span>
+
+<span class="w">  </span><span class="nx">cy</span><span class="p">.</span><span class="nx">findByTestId</span><span class="p">(</span><span class="s2">&quot;opponent-name&quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="p">.</span><span class="nx">invoke</span><span class="p">(</span><span class="s2">&quot;text&quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="p">.</span><span class="nx">should</span><span class="p">(</span><span class="s2">&quot;match&quot;</span><span class="p">,</span><span class="w"> </span><span class="sr">/[A-Z][a-z]+ [A-Z][a-z]+/</span><span class="p">);</span>
+<span class="w">  </span><span class="nx">cy</span><span class="p">.</span><span class="nx">findByTestId</span><span class="p">(</span><span class="s2">&quot;opponent-avatar&quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="p">.</span><span class="nx">should</span><span class="p">(</span><span class="s2">&quot;have.attr&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;src&quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="p">.</span><span class="nx">and</span><span class="p">(</span><span class="s2">&quot;match&quot;</span><span class="p">,</span><span class="w"> </span><span class="sr">/^https:\/\/randomuser\.me\/api\/portraits/</span><span class="p">);</span>
+<span class="p">});</span>
+</code></pre></div>
+
+<p>If you're unfamiliar with the regular expression (<em>"regex"</em>) syntax used in <code>match</code>, you can paste those patterns into e.g. <a href="https://regex101.com/">Regex 101</a> to get an explanation, but basically this says that the name should be two words, each starting with a capital letter, and the avatar's source should start like a URL. This means we don't have to know exactly what data we'll get back from the API to make an assertion on it.</p>
+<p><strong>Note</strong> that this isn't a very thorough regex, and people's names take <a href="https://www.kalzumeus.com/2010/06/17/falsehoods-programmers-believe-about-names/">a lot of forms</a> not considered by it. While writing this article I got one assertion error due to it failing to match an entirely valid name:</p>
+<p><code>AssertionError: Timed out retrying after 4000ms: expected 'Maïwenn Gaillard' to match /[A-Z][a-z]+ [A-Z][a-z]+/</code></p>
+<p>I'm using it here as an example to show how you can provide a "fuzzier" match for uncontrolled data, it shouldn't be used for e.g. input validation in a real system.</p>
+</li>
+<li>
+<p><strong>Fake data</strong> - for sources of unknown data <em>outside</em> of our application, that we're getting from APIs, we can provide known fake data. Cypress 6 <a href="https://www.cypress.io/blog/2020/11/24/introducing-cy-intercept-next-generation-network-stubbing-in-cypress-6-0/">introduced</a> <em>"next generation network stubbing"</em>, so I thought it would be interesting to show how we can use that, but note there are lots of other ways to do this (see e.g. <a href="https://blog.jonrshar.pe/2020/Sep/19/spa-config.html">this post</a> on how to configure single-page apps, letting you fetch data from a different API for testing).</p>
+<p>To make sure our example is as realistic as possible, let's get it directly from the API we're going to use:</p>
+<div class="highlight"><pre><span></span><code>$<span class="w"> </span>curl<span class="w"> </span>https://api.randomuser.me<span class="w"> </span>&gt;<span class="w"> </span>./cypress/fixtures/example.json
+<span class="w">  </span>%<span class="w"> </span>Total<span class="w">    </span>%<span class="w"> </span>Received<span class="w"> </span>%<span class="w"> </span>Xferd<span class="w">  </span>Average<span class="w"> </span>Speed<span class="w">   </span>Time<span class="w">    </span>Time<span class="w">     </span>Time<span class="w">  </span>Current
+<span class="w">                                 </span>Dload<span class="w">  </span>Upload<span class="w">   </span>Total<span class="w">   </span>Spent<span class="w">    </span>Left<span class="w">  </span>Speed
+<span class="m">100</span><span class="w">  </span><span class="m">1167</span><span class="w">    </span><span class="m">0</span><span class="w">  </span><span class="m">1167</span><span class="w">    </span><span class="m">0</span><span class="w">     </span><span class="m">0</span><span class="w">   </span><span class="m">5984</span><span class="w">      </span><span class="m">0</span><span class="w"> </span>--:--:--<span class="w"> </span>--:--:--<span class="w"> </span>--:--:--<span class="w">  </span><span class="m">5984</span>
+
+$<span class="w"> </span>cat<span class="w"> </span>./cypress/fixtures/example.json
+<span class="o">{</span><span class="s2">&quot;results&quot;</span>:<span class="o">[{</span><span class="s2">&quot;gender&quot;</span>:<span class="s2">&quot;male&quot;</span>,<span class="s2">&quot;name&quot;</span>:<span class="o">{</span><span class="s2">&quot;title&quot;</span>:<span class="s2">&quot;Mr&quot;</span>,<span class="s2">&quot;first&quot;</span>:<span class="s2">&quot;Randy&quot;</span>,<span class="s2">&quot;last&quot;</span>:<span class="s2">&quot;Wheeler&quot;</span><span class="o">}</span>,<span class="s2">&quot;location&quot;</span>:<span class="o">{</span><span class="s2">&quot;street&quot;</span>:<span class="o">{</span><span class="s2">&quot;number&quot;</span>:9524,<span class="s2">&quot;name&quot;</span>:<span class="s2">&quot;Forest Ln&quot;</span><span class="o">}</span>,<span class="s2">&quot;city&quot;</span>:<span class="s2">&quot;Knoxville&quot;</span>,<span class="s2">&quot;state&quot;</span>:<span class="s2">&quot;North Dakota&quot;</span>,<span class="s2">&quot;country&quot;</span>:<span class="s2">&quot;United States&quot;</span>,<span class="s2">&quot;postcode&quot;</span>:66112,<span class="s2">&quot;coordinates&quot;</span>:<span class="o">{</span><span class="s2">&quot;latitude&quot;</span>:<span class="s2">&quot;83.6453&quot;</span>,<span class="s2">&quot;longitude&quot;</span>:<span class="s2">&quot;-96.6784&quot;</span><span class="o">}</span>,<span class="s2">&quot;timezone&quot;</span>:<span class="o">{</span><span class="s2">&quot;offset&quot;</span>:<span class="s2">&quot;-1:00&quot;</span>,<span class="s2">&quot;description&quot;</span>:<span class="s2">&quot;Azores, Cape Verde Islands&quot;</span><span class="o">}}</span>,<span class="s2">&quot;email&quot;</span>:<span class="s2">&quot;randy.wheeler@example.com&quot;</span>,<span class="s2">&quot;login&quot;</span>:<span class="o">{</span><span class="s2">&quot;uuid&quot;</span>:<span class="s2">&quot;cf6f47a9-05a0-48c7-b09b-f7f25c1fb43f&quot;</span>,<span class="s2">&quot;username&quot;</span>:<span class="s2">&quot;organicpeacock969&quot;</span>,<span class="s2">&quot;password&quot;</span>:<span class="s2">&quot;1103&quot;</span>,<span class="s2">&quot;salt&quot;</span>:<span class="s2">&quot;cuNdIWCC&quot;</span>,<span class="s2">&quot;md5&quot;</span>:<span class="s2">&quot;34329408fbe3f2b9e8e06ca4d9e03eec&quot;</span>,<span class="s2">&quot;sha1&quot;</span>:<span class="s2">&quot;c68b20496e5d747f5b6b2ea75852a4dc8b8e87f0&quot;</span>,<span class="s2">&quot;sha256&quot;</span>:<span class="s2">&quot;85a51818e94cf3e751fe76dff562d6047c261e9a6911994156b5c90176eb2580&quot;</span><span class="o">}</span>,<span class="s2">&quot;dob&quot;</span>:<span class="o">{</span><span class="s2">&quot;date&quot;</span>:<span class="s2">&quot;1970-11-28T01:34:37.972Z&quot;</span>,<span class="s2">&quot;age&quot;</span>:50<span class="o">}</span>,<span class="s2">&quot;registered&quot;</span>:<span class="o">{</span><span class="s2">&quot;date&quot;</span>:<span class="s2">&quot;2018-10-14T00:27:46.788Z&quot;</span>,<span class="s2">&quot;age&quot;</span>:2<span class="o">}</span>,<span class="s2">&quot;phone&quot;</span>:<span class="s2">&quot;(370)-972-2945&quot;</span>,<span class="s2">&quot;cell&quot;</span>:<span class="s2">&quot;(464)-808-2579&quot;</span>,<span class="s2">&quot;id&quot;</span>:<span class="o">{</span><span class="s2">&quot;name&quot;</span>:<span class="s2">&quot;SSN&quot;</span>,<span class="s2">&quot;value&quot;</span>:<span class="s2">&quot;721-97-7603&quot;</span><span class="o">}</span>,<span class="s2">&quot;picture&quot;</span>:<span class="o">{</span><span class="s2">&quot;large&quot;</span>:<span class="s2">&quot;https://randomuser.me/api/portraits/men/12.jpg&quot;</span>,<span class="s2">&quot;medium&quot;</span>:<span class="s2">&quot;https://randomuser.me/api/portraits/med/men/12.jpg&quot;</span>,<span class="s2">&quot;thumbnail&quot;</span>:<span class="s2">&quot;https://randomuser.me/api/portraits/thumb/men/12.jpg&quot;</span><span class="o">}</span>,<span class="s2">&quot;nat&quot;</span>:<span class="s2">&quot;US&quot;</span><span class="o">}]</span>,<span class="s2">&quot;info&quot;</span>:<span class="o">{</span><span class="s2">&quot;seed&quot;</span>:<span class="s2">&quot;133d55784bdd75c9&quot;</span>,<span class="s2">&quot;results&quot;</span>:1,<span class="s2">&quot;page&quot;</span>:1,<span class="s2">&quot;version&quot;</span>:<span class="s2">&quot;1.3&quot;</span><span class="o">}}</span>
+</code></pre></div>
+
+<p>Note that your data will most likely be different, but I'll use the data shown above for the rest of the article. We can now tell Cypress to respond to the request with the data stored in our fixture, then assert on the values from the fixture:</p>
+<div class="highlight"><pre><span></span><code><span class="nx">it</span><span class="p">(</span><span class="s2">&quot;displays an opponent from a fixture&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">()</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="nx">cy</span><span class="p">.</span><span class="nx">intercept</span><span class="p">(</span><span class="s2">&quot;GET&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;https://api.randomuser.me&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">fixture</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;example.json&quot;</span><span class="w"> </span><span class="p">});</span>
+
+<span class="w">  </span><span class="nx">cy</span><span class="p">.</span><span class="nx">visit</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">);</span>
+
+<span class="w">  </span><span class="nx">cy</span><span class="p">.</span><span class="nx">findByTestId</span><span class="p">(</span><span class="s2">&quot;opponent-name&quot;</span><span class="p">).</span><span class="nx">should</span><span class="p">(</span><span class="s2">&quot;contain.text&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;Randy Wheeler&quot;</span><span class="p">);</span>
+<span class="w">  </span><span class="nx">cy</span><span class="p">.</span><span class="nx">findByTestId</span><span class="p">(</span><span class="s2">&quot;opponent-avatar&quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="p">.</span><span class="nx">should</span><span class="p">(</span><span class="s2">&quot;have.attr&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;src&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;https://randomuser.me/api/portraits/thumb/men/12.jpg&quot;</span><span class="p">);</span>
+<span class="p">});</span>
+</code></pre></div>
+
+<p><strong>Note</strong> that this approach is not without risk - if the API we're mocking changes such that the content of <code>example.json</code> doesn't match the response, our tests will still pass but the code <em>won't work</em> in real life.</p>
+</li>
+<li>
+<p><strong>Reimplement logic</strong> - for sources of unknown data <em>inside</em> our application, usually some kind of randomness, we may end up reimplementing some of the logic we're testing. Here we know that the left player will throw <code>"rock"</code>, because we control this, but right player could throw either <code>"rock"</code>, <code>"paper"</code> <em>or</em> <code>"scissors"</code>. Therefore there are three possible outcomes:</p>
+<div class="highlight"><pre><span></span><code><span class="kd">const</span><span class="w"> </span><span class="nx">OUTCOMES</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="s2">&quot;rock&quot;</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;Draw!&quot;</span><span class="p">,</span><span class="w">  </span><span class="c1">// rock draws with rock</span>
+<span class="w">  </span><span class="s2">&quot;paper&quot;</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;Right wins!&quot;</span><span class="p">,</span><span class="w">  </span><span class="c1">// paper wraps rock</span>
+<span class="w">  </span><span class="s2">&quot;scissors&quot;</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;Left wins!&quot;</span><span class="p">,</span><span class="w">  </span><span class="c1">// scissors are blunted by rock</span>
+<span class="p">};</span>
+</code></pre></div>
+
+<p>Although we can't tell in advance which will be randomly picked, once we see the opponent's choice we know what the outcome should be. So we can use Cypress's <a href="https://docs.cypress.io/guides/core-concepts/variables-and-aliases.html#Closures">closures</a>, an API very similar to <em>promises</em>, to get access to the opponent's choice and use that to determine the expected outcome and make the appropriate assertion:</p>
+<div class="highlight"><pre><span></span><code><span class="nx">it</span><span class="p">(</span><span class="s2">&quot;displays the appropriate winner&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">()</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="nx">cy</span><span class="p">.</span><span class="nx">visit</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">);</span>
+
+<span class="w">  </span><span class="nx">cy</span><span class="p">.</span><span class="nx">findByLabelText</span><span class="p">(</span><span class="s2">&quot;Left&quot;</span><span class="p">).</span><span class="nx">select</span><span class="p">(</span><span class="s2">&quot;rock&quot;</span><span class="p">);</span><span class="w">  </span>
+<span class="w">  </span><span class="nx">cy</span><span class="p">.</span><span class="nx">findByText</span><span class="p">(</span><span class="s2">&quot;Throw&quot;</span><span class="p">).</span><span class="nx">click</span><span class="p">();</span>
+
+<span class="w">  </span><span class="nx">cy</span><span class="p">.</span><span class="nx">findByTestId</span><span class="p">(</span><span class="s2">&quot;opponent-weapon&quot;</span><span class="p">).</span><span class="nx">then</span><span class="p">((</span><span class="nx">$weapon</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nx">cy</span><span class="p">.</span><span class="nx">findByTestId</span><span class="p">(</span><span class="s2">&quot;outcome&quot;</span><span class="p">).</span><span class="nx">should</span><span class="p">(</span><span class="s2">&quot;contain.text&quot;</span><span class="p">,</span><span class="w"> </span><span class="nx">OUTCOMES</span><span class="p">[</span><span class="nx">$weapon</span><span class="p">.</span><span class="nx">text</span><span class="p">()]);</span>
+<span class="w">  </span><span class="p">});</span>
+<span class="p">});</span>
+</code></pre></div>
+
+<p><strong>Note</strong> that if you're seeing ESLint warnings it will be unhappy with the last few lines, even if you added the Cypress configuration in step 11 above. One of the Jest-specific rules doesn't understand how the Cypress closures work, so you'll need to explicitly disable it by adding <code>"rules": {"jest/valid-expect-in-promise": "off"}</code> into the override for Cypress files.</p>
+</li>
+</ol>
+<p>By combining these three approaches, we can be confident that our app works correctly despite the uncertainty around the specific values we'll be getting. Call the shots and run the tests:</p>
+<div class="highlight"><pre><span></span><code>$<span class="w"> </span>npm<span class="w"> </span>run<span class="w"> </span>e2e
+
+&gt;<span class="w"> </span>rps-api@0.1.0<span class="w"> </span>e2e
+&gt;<span class="w"> </span>cypress<span class="w"> </span>run
+
+Couldn<span class="err">&#39;</span>t<span class="w"> </span>find<span class="w"> </span>tsconfig.json.<span class="w"> </span>tsconfig-paths<span class="w"> </span>will<span class="w"> </span>be<span class="w"> </span><span class="nv">skipped</span>
+
+<span class="o">====================================================================================================</span>
+
+<span class="w">  </span><span class="o">(</span>Run<span class="w"> </span>Starting<span class="o">)</span>
+
+<span class="w">  </span>┌────────────────────────────────────────────────────────────────────────────────────────────────┐
+<span class="w">  </span>│<span class="w"> </span>Cypress:<span class="w">    </span><span class="m">6</span>.9.1<span class="w">                                                                              </span>│
+<span class="w">  </span>│<span class="w"> </span>Browser:<span class="w">    </span>Electron<span class="w"> </span><span class="m">87</span><span class="w"> </span><span class="o">(</span>headless<span class="o">)</span><span class="w">                                                             </span>│
+<span class="w">  </span>│<span class="w"> </span>Specs:<span class="w">      </span><span class="m">1</span><span class="w"> </span>found<span class="w"> </span><span class="o">(</span>e2e.test.js<span class="o">)</span><span class="w">                                                              </span>│
+<span class="w">  </span>└────────────────────────────────────────────────────────────────────────────────────────────────┘
+
+
+────────────────────────────────────────────────────────────────────────────────────────────────────
+
+<span class="w">  </span>Running:<span class="w">  </span>e2e.test.js<span class="w">                                                                     </span><span class="o">(</span><span class="m">1</span><span class="w"> </span>of<span class="w"> </span><span class="m">1</span><span class="o">)</span>
+
+
+<span class="w">  </span><span class="m">1</span><span class="o">)</span><span class="w"> </span>displays<span class="w"> </span>an<span class="w"> </span>opponent<span class="w"> </span>from<span class="w"> </span>the<span class="w"> </span>API
+<span class="w">  </span><span class="m">2</span><span class="o">)</span><span class="w"> </span>displays<span class="w"> </span>an<span class="w"> </span>opponent<span class="w"> </span>from<span class="w"> </span>a<span class="w"> </span>fixture
+<span class="w">  </span><span class="m">3</span><span class="o">)</span><span class="w"> </span>displays<span class="w"> </span>the<span class="w"> </span>appropriate<span class="w"> </span>winner
+
+<span class="w">  </span><span class="m">0</span><span class="w"> </span>passing<span class="w"> </span><span class="o">(</span>15s<span class="o">)</span>
+<span class="w">  </span><span class="m">3</span><span class="w"> </span>failing
+
+<span class="w">  </span><span class="m">1</span><span class="o">)</span><span class="w"> </span>displays<span class="w"> </span>an<span class="w"> </span>opponent<span class="w"> </span>from<span class="w"> </span>the<span class="w"> </span>API:
+<span class="w">     </span>TestingLibraryElementError:<span class="w"> </span>Timed<span class="w"> </span>out<span class="w"> </span>retrying<span class="w"> </span>after<span class="w"> </span>4000ms:<span class="w"> </span>Unable<span class="w"> </span>to<span class="w"> </span>find<span class="w"> </span>an<span class="w"> </span>element<span class="w"> </span>by:<span class="w"> </span><span class="o">[</span>data-testid<span class="o">=</span><span class="s2">&quot;opponent-name&quot;</span><span class="o">]</span>
+<span class="w">      </span>at<span class="w"> </span>Object.getElementError<span class="w"> </span><span class="o">(</span>http://localhost:3000/__cypress/tests?p<span class="o">=</span>cypress/support/index.js:1875:17<span class="o">)</span>
+<span class="w">      </span>at<span class="w"> </span><span class="nb">eval</span><span class="w"> </span><span class="o">(</span>http://localhost:3000/__cypress/tests?p<span class="o">=</span>cypress/support/index.js:2861:25<span class="o">)</span>
+<span class="w">      </span>at<span class="w"> </span><span class="nb">eval</span><span class="w"> </span><span class="o">(</span>http://localhost:3000/__cypress/tests?p<span class="o">=</span>cypress/support/index.js:2833:24<span class="o">)</span>
+<span class="w">      </span>at<span class="w"> </span><span class="nb">eval</span><span class="w"> </span><span class="o">(</span>http://localhost:3000/__cypress/tests?p<span class="o">=</span>cypress/support/index.js:2886:25<span class="o">)</span>
+<span class="w">      </span>at<span class="w"> </span>baseCommandImpl<span class="w"> </span><span class="o">(</span>http://localhost:3000/__cypress/tests?p<span class="o">=</span>cypress/support/index.js:1316:16<span class="o">)</span>
+<span class="w">      </span>at<span class="w"> </span>commandImpl<span class="w"> </span><span class="o">(</span>http://localhost:3000/__cypress/tests?p<span class="o">=</span>cypress/support/index.js:1319:40<span class="o">)</span>
+<span class="w">      </span>at<span class="w"> </span>getValue<span class="w"> </span><span class="o">(</span>http://localhost:3000/__cypress/tests?p<span class="o">=</span>cypress/support/index.js:1343:23<span class="o">)</span>
+<span class="w">      </span>at<span class="w"> </span>resolveValue<span class="w"> </span><span class="o">(</span>http://localhost:3000/__cypress/tests?p<span class="o">=</span>cypress/support/index.js:1383:35<span class="o">)</span>
+
+<span class="w">  </span><span class="m">2</span><span class="o">)</span><span class="w"> </span>displays<span class="w"> </span>an<span class="w"> </span>opponent<span class="w"> </span>from<span class="w"> </span>a<span class="w"> </span>fixture:
+<span class="w">     </span>TestingLibraryElementError:<span class="w"> </span>Timed<span class="w"> </span>out<span class="w"> </span>retrying<span class="w"> </span>after<span class="w"> </span>4000ms:<span class="w"> </span>Unable<span class="w"> </span>to<span class="w"> </span>find<span class="w"> </span>an<span class="w"> </span>element<span class="w"> </span>by:<span class="w"> </span><span class="o">[</span>data-testid<span class="o">=</span><span class="s2">&quot;opponent-name&quot;</span><span class="o">]</span>
+<span class="w">      </span>at<span class="w"> </span>Object.getElementError<span class="w"> </span><span class="o">(</span>http://localhost:3000/__cypress/tests?p<span class="o">=</span>cypress/support/index.js:1875:17<span class="o">)</span>
+<span class="w">      </span>at<span class="w"> </span><span class="nb">eval</span><span class="w"> </span><span class="o">(</span>http://localhost:3000/__cypress/tests?p<span class="o">=</span>cypress/support/index.js:2861:25<span class="o">)</span>
+<span class="w">      </span>at<span class="w"> </span><span class="nb">eval</span><span class="w"> </span><span class="o">(</span>http://localhost:3000/__cypress/tests?p<span class="o">=</span>cypress/support/index.js:2833:24<span class="o">)</span>
+<span class="w">      </span>at<span class="w"> </span><span class="nb">eval</span><span class="w"> </span><span class="o">(</span>http://localhost:3000/__cypress/tests?p<span class="o">=</span>cypress/support/index.js:2886:25<span class="o">)</span>
+<span class="w">      </span>at<span class="w"> </span>baseCommandImpl<span class="w"> </span><span class="o">(</span>http://localhost:3000/__cypress/tests?p<span class="o">=</span>cypress/support/index.js:1316:16<span class="o">)</span>
+<span class="w">      </span>at<span class="w"> </span>commandImpl<span class="w"> </span><span class="o">(</span>http://localhost:3000/__cypress/tests?p<span class="o">=</span>cypress/support/index.js:1319:40<span class="o">)</span>
+<span class="w">      </span>at<span class="w"> </span>getValue<span class="w"> </span><span class="o">(</span>http://localhost:3000/__cypress/tests?p<span class="o">=</span>cypress/support/index.js:1343:23<span class="o">)</span>
+<span class="w">      </span>at<span class="w"> </span>resolveValue<span class="w"> </span><span class="o">(</span>http://localhost:3000/__cypress/tests?p<span class="o">=</span>cypress/support/index.js:1383:35<span class="o">)</span>
+
+<span class="w">  </span><span class="m">3</span><span class="o">)</span><span class="w"> </span>displays<span class="w"> </span>the<span class="w"> </span>appropriate<span class="w"> </span>winner:
+<span class="w">     </span>TestingLibraryElementError:<span class="w"> </span>Timed<span class="w"> </span>out<span class="w"> </span>retrying<span class="w"> </span>after<span class="w"> </span>4000ms:<span class="w"> </span>Unable<span class="w"> </span>to<span class="w"> </span>find<span class="w"> </span>a<span class="w"> </span>label<span class="w"> </span>with<span class="w"> </span>the<span class="w"> </span>text<span class="w"> </span>of:<span class="w"> </span>Left
+<span class="w">      </span>at<span class="w"> </span>Object.getElementError<span class="w"> </span><span class="o">(</span>http://localhost:3000/__cypress/tests?p<span class="o">=</span>cypress/support/index.js:1875:17<span class="o">)</span>
+<span class="w">      </span>at<span class="w"> </span>getAllByLabelText<span class="w"> </span><span class="o">(</span>http://localhost:3000/__cypress/tests?p<span class="o">=</span>cypress/support/index.js:3092:25<span class="o">)</span>
+<span class="w">      </span>at<span class="w"> </span><span class="nb">eval</span><span class="w"> </span><span class="o">(</span>http://localhost:3000/__cypress/tests?p<span class="o">=</span>cypress/support/index.js:2833:24<span class="o">)</span>
+<span class="w">      </span>at<span class="w"> </span><span class="nb">eval</span><span class="w"> </span><span class="o">(</span>http://localhost:3000/__cypress/tests?p<span class="o">=</span>cypress/support/index.js:2886:25<span class="o">)</span>
+<span class="w">      </span>at<span class="w"> </span>baseCommandImpl<span class="w"> </span><span class="o">(</span>http://localhost:3000/__cypress/tests?p<span class="o">=</span>cypress/support/index.js:1316:16<span class="o">)</span>
+<span class="w">      </span>at<span class="w"> </span>commandImpl<span class="w"> </span><span class="o">(</span>http://localhost:3000/__cypress/tests?p<span class="o">=</span>cypress/support/index.js:1319:40<span class="o">)</span>
+<span class="w">      </span>at<span class="w"> </span>getValue<span class="w"> </span><span class="o">(</span>http://localhost:3000/__cypress/tests?p<span class="o">=</span>cypress/support/index.js:1343:23<span class="o">)</span>
+<span class="w">      </span>at<span class="w"> </span>resolveValue<span class="w"> </span><span class="o">(</span>http://localhost:3000/__cypress/tests?p<span class="o">=</span>cypress/support/index.js:1383:35<span class="o">)</span>
+
+
+
+
+<span class="w">  </span><span class="o">(</span>Results<span class="o">)</span>
+
+<span class="w">  </span>┌────────────────────────────────────────────────────────────────────────────────────────────────┐
+<span class="w">  </span>│<span class="w"> </span>Tests:<span class="w">        </span><span class="m">3</span><span class="w">                                                                                </span>│
+<span class="w">  </span>│<span class="w"> </span>Passing:<span class="w">      </span><span class="m">0</span><span class="w">                                                                                </span>│
+<span class="w">  </span>│<span class="w"> </span>Failing:<span class="w">      </span><span class="m">3</span><span class="w">                                                                                </span>│
+<span class="w">  </span>│<span class="w"> </span>Pending:<span class="w">      </span><span class="m">0</span><span class="w">                                                                                </span>│
+<span class="w">  </span>│<span class="w"> </span>Skipped:<span class="w">      </span><span class="m">0</span><span class="w">                                                                                </span>│
+<span class="w">  </span>│<span class="w"> </span>Screenshots:<span class="w">  </span><span class="m">3</span><span class="w">                                                                                </span>│
+<span class="w">  </span>│<span class="w"> </span>Video:<span class="w">        </span><span class="nb">false</span><span class="w">                                                                            </span>│
+<span class="w">  </span>│<span class="w"> </span>Duration:<span class="w">     </span><span class="m">14</span><span class="w"> </span>seconds<span class="w">                                                                       </span>│
+<span class="w">  </span>│<span class="w"> </span>Spec<span class="w"> </span>Ran:<span class="w">     </span>e2e.test.js<span class="w">                                                                      </span>│
+<span class="w">  </span>└────────────────────────────────────────────────────────────────────────────────────────────────┘
+
+
+<span class="w">  </span><span class="o">(</span>Screenshots<span class="o">)</span>
+
+<span class="w">  </span>-<span class="w">  </span>path/to/rps-api/cypress/screenshots/e2e.test.js/displays<span class="w"> </span>an<span class="w"> </span>opponent<span class="w"> </span>from<span class="w"> </span>the<span class="w">        </span><span class="o">(</span>1280x720<span class="o">)</span>
+<span class="w">     </span>API<span class="w"> </span><span class="o">(</span>failed<span class="o">)</span>.png<span class="w">                                                </span>
+<span class="w">  </span>-<span class="w">  </span>path/to/rps-api/cypress/screenshots/e2e.test.js/displays<span class="w"> </span>an<span class="w"> </span>opponent<span class="w"> </span>from<span class="w"> </span>a<span class="w">          </span><span class="o">(</span>1280x720<span class="o">)</span>
+<span class="w">     </span>fixture<span class="w"> </span><span class="o">(</span>failed<span class="o">)</span>.png<span class="w">                                              </span>
+<span class="w">  </span>-<span class="w">  </span>path/to/rps-api/cypress/screenshots/e2e.test.js/displays<span class="w"> </span>the<span class="w"> </span>appropriate<span class="w"> </span>winner<span class="w">      </span><span class="o">(</span>1280x720<span class="o">)</span>
+<span class="w">     </span><span class="o">(</span>failed<span class="o">)</span>.png<span class="w">                                                  </span>
+
+
+<span class="o">====================================================================================================</span>
+
+<span class="w">  </span><span class="o">(</span>Run<span class="w"> </span>Finished<span class="o">)</span>
+
+
+<span class="w">       </span>Spec<span class="w">                                              </span>Tests<span class="w">  </span>Passing<span class="w">  </span>Failing<span class="w">  </span>Pending<span class="w">  </span>Skipped<span class="w">  </span>
+<span class="w">  </span>┌────────────────────────────────────────────────────────────────────────────────────────────────┐
+<span class="w">  </span>│<span class="w"> </span>✖<span class="w">  </span>e2e.test.js<span class="w">                              </span><span class="m">00</span>:14<span class="w">        </span><span class="m">3</span><span class="w">        </span>-<span class="w">        </span><span class="m">3</span><span class="w">        </span>-<span class="w">        </span>-<span class="w"> </span>│
+<span class="w">  </span>└────────────────────────────────────────────────────────────────────────────────────────────────┘
+<span class="w">    </span>✖<span class="w">  </span><span class="m">1</span><span class="w"> </span>of<span class="w"> </span><span class="m">1</span><span class="w"> </span>failed<span class="w"> </span><span class="o">(</span><span class="m">100</span>%<span class="o">)</span><span class="w">                     </span><span class="m">00</span>:14<span class="w">        </span><span class="m">3</span><span class="w">        </span>-<span class="w">        </span><span class="m">3</span><span class="w">        </span>-<span class="w">        </span>-<span class="w">  </span>
+</code></pre></div>
+
+<p>They all fail for uninteresting reasons at the moment (can't find elements by the test ID or label), but it gives us something to work towards. Make a commit, and we'll move down to the React level.</p>
+<div class="highlight"><pre><span></span><code>$<span class="w"> </span>git<span class="w"> </span>add<span class="w"> </span>.
+
+$<span class="w"> </span>git<span class="w"> </span>status
+On<span class="w"> </span>branch<span class="w"> </span>main
+Changes<span class="w"> </span>to<span class="w"> </span>be<span class="w"> </span>committed:
+<span class="w">  </span><span class="o">(</span>use<span class="w"> </span><span class="s2">&quot;git restore --staged &lt;file&gt;...&quot;</span><span class="w"> </span>to<span class="w"> </span>unstage<span class="o">)</span>
+<span class="w">        </span>new<span class="w"> </span>file:<span class="w">   </span>cypress/fixtures/example.json
+<span class="w">        </span>modified:<span class="w">   </span>cypress/integration/e2e.test.js
+<span class="w">        </span>modified:<span class="w">   </span>package.json
+
+
+$<span class="w"> </span>git<span class="w"> </span>commit<span class="w"> </span>-m<span class="w"> </span><span class="s1">&#39;Failing end-to-end tests&#39;</span>
+<span class="o">[</span>main<span class="w"> </span>dbac8da<span class="o">]</span><span class="w"> </span>Failing<span class="w"> </span>end-to-end<span class="w"> </span>tests
+<span class="w"> </span><span class="m">3</span><span class="w"> </span>files<span class="w"> </span>changed,<span class="w"> </span><span class="m">42</span><span class="w"> </span>insertions<span class="o">(</span>+<span class="o">)</span>,<span class="w"> </span><span class="m">1</span><span class="w"> </span>deletion<span class="o">(</span>-<span class="o">)</span>
+<span class="w"> </span>create<span class="w"> </span>mode<span class="w"> </span><span class="m">100644</span><span class="w"> </span>cypress/fixtures/example.json
+</code></pre></div>
+
+<h2>Dealing with APIs [3/8]</h2>
+<p>As we move to the source code, let's think about architecture. Our previous RPS app had the following structure:</p>
+<div class="highlight"><pre><span></span><code><span class="w">   </span><span class="n">App</span><span class="w"> </span><span class="o">&lt;--&gt;</span><span class="w"> </span><span class="n">rpsService</span>
+<span class="w">  </span><span class="o">/</span><span class="w">   </span><span class="err">\</span>
+<span class="n">Form</span><span class="w">  </span><span class="n">Outcome</span>
+</code></pre></div>
+
+<p>We're extending this </p>
+<div class="highlight"><pre><span></span><code><span class="n">API</span><span class="w"> </span><span class="o">&lt;-</span><span class="kc">...</span><span class="o">-&gt;</span><span class="w"> </span><span class="n">randomUserService</span><span class="w"> </span><span class="o">&lt;--&gt;</span><span class="w"> </span><span class="n">App</span><span class="w"> </span><span class="o">&lt;--&gt;</span><span class="w"> </span><span class="n">rpsService</span>
+<span class="w">                                  </span><span class="o">/</span><span class="w"> </span><span class="o">|</span><span class="w"> </span>\
+<span class="w">                              </span><span class="n">Form</span><span class="w">  </span><span class="o">|</span><span class="w">  </span><span class="n">Opponent</span>
+<span class="w">                                 </span><span class="n">Outcome</span>
+</code></pre></div>
+
+<p>Alone with the coordinating <code>App</code> component, that now gives us two services, two presentation components and one interaction component.</p>
+<ul>
+<li>When the app loads, the <code>App</code> calls the <code>randomUserService</code> to get an opponent </li>
+<li>The <code>App</code> passes that to <code>Opponent</code> for  display</li>
+<li>When the user makes a choice and clicks the Throw button, their choice is sent from the <code>Form</code> to the <code>App</code></li>
+<li>The <code>App</code> calls the <code>rpsService</code> to get a random weapon for the opponent</li>
+<li>The <code>App</code> calls the <code>rpsService</code> again to get the outcome given the player's input and the opponent's weapon</li>
+<li>The <code>App</code> passes that outcome to <code>Outcome</code> for display</li>
+</ul>
+<p>The <code>...</code> on the left represents a request going over the network - the API itself is <em>outside</em> our system. These are relatively slow, so we don't want them happening for real in our integration or lower level tests. They also introduce variability that makes tests less reliable; your code can be working fine, but a test fails because your wifi is flaky.</p>
+<p>Take a typical request from a single-page app:</p>
+<div class="highlight"><pre><span></span><code><span class="nx">fetch</span><span class="p">(</span><span class="nx">someUrl</span><span class="p">)</span>
+<span class="w">  </span><span class="p">.</span><span class="nx">then</span><span class="p">((</span><span class="nx">res</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="nx">res</span><span class="p">.</span><span class="nx">json</span><span class="p">())</span>
+<span class="w">  </span><span class="p">.</span><span class="nx">then</span><span class="p">((</span><span class="nx">data</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="cm">/* use data */</span><span class="p">);</span>
+</code></pre></div>
+
+<p>You might think we should simply replace <code>fetch</code> with a test double. The rule of thumb is <em>"don't mock what you don't own"</em>, though, and here are a few reasons why:</p>
+<ul>
+<li>
+<p>If we replace <code>fetch</code> we couple our code and tests too closely to that interface. Say we decided to use <a href="https://www.npmjs.com/package/axios"><code>axios</code></a> instead of <code>fetch</code>; our existing tests wouldn't help us, we'd have to rewrite all of them. It's hard to be confident that eveything's still correct when you've changed the implementation <em>and</em> the tests.</p>
+</li>
+<li>
+<p>Worse still, if the <code>fetch</code> API changed, our tests would continue to pass even though the implementation doesn't actually work with the new interface. Because we're testing the implementation against the test double, everything seems fine.</p>
+</li>
+<li>
+<p>You could even be wrong about the interface you're replacing and write tests that drive the <em>wrong</em> impementation. For example check out <a href="https://stackoverflow.com/a/65627662/3001761">this Stack Overflow answer</a>, where I found out that the questioner's test double didn't actually match the interface it was replacing.</p>
+</li>
+<li>
+<p><code>fetch</code> specifically is a relatively complicated interface; our test double needs to return a promise of an object with a <code>json</code> method that returns a promise of the response data:</p>
+<div class="highlight"><pre><span></span><code><span class="kd">const</span><span class="w"> </span><span class="nx">fetchTestDouble</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">jest</span><span class="p">.</span><span class="nx">fn</span><span class="p">().</span><span class="nx">mockResolvedValue</span><span class="p">({</span>
+<span class="w">  </span><span class="nx">json</span><span class="o">:</span><span class="w"> </span><span class="nx">jest</span><span class="p">.</span><span class="nx">fn</span><span class="p">().</span><span class="nx">mockResolvedValue</span><span class="p">(</span><span class="nx">data</span><span class="p">),</span>
+<span class="p">});</span>
+</code></pre></div>
+
+<p>Our test double will only gets more complex as our code begins to use other parts of the <code>fetch</code> API (e.g. checking <code>headers</code> or looking the <code>status</code> of the response).</p>
+</li>
+</ul>
+<p>Instead we're going to use <a href="https://mswjs.io/">Mock Service Worker</a> (MSW) to test that the appropriate <em>request</em> gets made, irrespective of how that's done. This allows us to test the <em>behaviour</em> (we make a GET request to the random user API) rather than <em>implementation</em> (we call <code>fetch</code> with the correct URL). Let's add MSW to our app, following along with <a href="https://mswjs.io/docs/getting-started">their instructions</a>, and write an integration test. Start by installing the package:</p>
+<div class="highlight"><pre><span></span><code>$<span class="w"> </span>npm<span class="w"> </span>i<span class="w"> </span>msw
+
+added<span class="w"> </span><span class="m">48</span><span class="w"> </span>packages,<span class="w"> </span>and<span class="w"> </span>audited<span class="w"> </span><span class="m">2153</span><span class="w"> </span>packages<span class="w"> </span><span class="k">in</span><span class="w"> </span>11s
+
+<span class="m">142</span><span class="w"> </span>packages<span class="w"> </span>are<span class="w"> </span>looking<span class="w"> </span><span class="k">for</span><span class="w"> </span>funding
+<span class="w">  </span>run<span class="w"> </span><span class="sb">`</span>npm<span class="w"> </span>fund<span class="sb">`</span><span class="w"> </span><span class="k">for</span><span class="w"> </span>details
+
+found<span class="w"> </span><span class="m">0</span><span class="w"> </span>vulnerabilities
+</code></pre></div>
+
+<p>As this is a relatively simple configuration, rather than splitting it across multiple files, put the following in <code>src/setupTests.js</code> (beneath the existing <code>@testing-library</code> import) to reuse the fixture from our Cypress tests with MSW:</p>
+<div class="highlight"><pre><span></span><code><span class="k">import</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">rest</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s2">&quot;msw&quot;</span><span class="p">;</span>
+<span class="k">import</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">setupServer</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s2">&quot;msw/node&quot;</span><span class="p">;</span>
+
+<span class="k">import</span><span class="w"> </span><span class="nx">fixture</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s2">&quot;../cypress/fixtures/example.json&quot;</span><span class="p">;</span>
+
+<span class="kd">const</span><span class="w"> </span><span class="nx">server</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">setupServer</span><span class="p">(</span>
+<span class="w">  </span><span class="nx">rest</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s2">&quot;https://api.randomuser.me&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">(</span><span class="nx">req</span><span class="p">,</span><span class="w"> </span><span class="nx">res</span><span class="p">,</span><span class="w"> </span><span class="nx">ctx</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nx">res</span><span class="p">(</span><span class="nx">ctx</span><span class="p">.</span><span class="nx">status</span><span class="p">(</span><span class="mf">200</span><span class="p">),</span><span class="w"> </span><span class="nx">ctx</span><span class="p">.</span><span class="nx">json</span><span class="p">(</span><span class="nx">fixture</span><span class="p">));</span>
+<span class="w">  </span><span class="p">}),</span>
+<span class="p">);</span>
+
+<span class="nx">beforeAll</span><span class="p">(()</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="nx">server</span><span class="p">.</span><span class="nx">listen</span><span class="p">());</span>
+
+<span class="nx">afterEach</span><span class="p">(()</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="nx">server</span><span class="p">.</span><span class="nx">resetHandlers</span><span class="p">());</span>
+
+<span class="nx">afterAll</span><span class="p">(()</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="nx">server</span><span class="p">.</span><span class="nx">close</span><span class="p">());</span>
+</code></pre></div>
+
+<p>Our fixture data will be used to respond to a GET request to the API in all of our Jest tests, and everything will be reset between the tests. In the test itself we need to check that the data is appropriately displayed, replacing the content of <code>src/App.test.js</code> with the following:</p>
+<div class="highlight"><pre><span></span><code><span class="kn">import</span> <span class="p">{</span> <span class="n">render</span><span class="p">,</span> <span class="n">screen</span> <span class="p">}</span> <span class="kn">from</span> <span class="s2">&quot;@testing-library/react&quot;</span><span class="p">;</span>
+
+<span class="kn">import</span> <span class="nn">App</span> <span class="kn">from</span> <span class="s2">&quot;./App&quot;</span><span class="p">;</span>
+
+<span class="n">describe</span><span class="p">(</span><span class="s2">&quot;App&quot;</span><span class="p">,</span> <span class="p">()</span> <span class="o">=&gt;</span> <span class="p">{</span>
+  <span class="n">it</span><span class="p">(</span><span class="s2">&quot;displays the opponent&quot;</span><span class="p">,</span> <span class="k">async</span> <span class="p">()</span> <span class="o">=&gt;</span> <span class="p">{</span>
+    <span class="n">render</span><span class="p">(</span><span class="o">&lt;</span><span class="n">App</span> <span class="o">/&gt;</span><span class="p">);</span>
+
+    <span class="k">await</span> <span class="n">screen</span><span class="o">.</span><span class="n">findByTestId</span><span class="p">(</span><span class="s2">&quot;opponent&quot;</span><span class="p">);</span>
+
+    <span class="n">expect</span><span class="p">(</span><span class="n">screen</span><span class="o">.</span><span class="n">getByTestId</span><span class="p">(</span><span class="s2">&quot;opponent-name&quot;</span><span class="p">))</span><span class="o">.</span><span class="n">toHaveTextContent</span><span class="p">(</span><span class="s2">&quot;Randy Wheeler&quot;</span><span class="p">);</span>
+    <span class="n">expect</span><span class="p">(</span><span class="n">screen</span><span class="o">.</span><span class="n">getByTestId</span><span class="p">(</span><span class="s2">&quot;opponent-avatar&quot;</span><span class="p">))</span>
+      <span class="o">.</span><span class="n">toHaveAttribute</span><span class="p">(</span><span class="s2">&quot;src&quot;</span><span class="p">,</span> <span class="s2">&quot;https://randomuser.me/api/portraits/thumb/men/12.jpg&quot;</span><span class="p">);</span>
+  <span class="p">});</span>
+<span class="p">});</span>
+</code></pre></div>
+
+<p><strong>Note</strong> we're using two different query methods here, first awaiting the asynchronous <code>findByTestId</code> because it will allow the testing library to wait (up to 1,000ms, by default) for the element to appear, then using the synchronous <code>getByTestId</code> once we know the elements are rendered. Making a request takes <em>time</em>, and we don't want our whole web app to stop working while we wait for it, so we do it <em>asynchronously</em> in the background. That makes testing trickier, we need to <em>wait</em> for the output we want to be available (Cypress is also doing this, but it does it in the background for you).</p>
+<p>We're also using Testing Library's <code>screen</code> to access the queries rather than getting them from the object returned by the <code>render</code> method (i.e. <code>const { findByTestId, getByTestId } = render(&lt;App /&gt;)</code>. This has become the default setup for CRA, but otherwise everything is the same as the last article; the <code>screen</code> object has the same query methods that <code>render</code> returns.</p>
+<p>Call the shot, and run the tests:</p>
+<div class="highlight"><pre><span></span><code>$<span class="w"> </span><span class="nv">CI</span><span class="o">=</span><span class="nb">true</span><span class="w"> </span>npm<span class="w"> </span><span class="nb">test</span>
+
+&gt;<span class="w"> </span>rps-api@0.1.0<span class="w"> </span><span class="nb">test</span>
+&gt;<span class="w"> </span>react-scripts<span class="w"> </span><span class="nb">test</span>
+
+FAIL<span class="w"> </span>src/App.test.js
+<span class="w">  </span>App
+<span class="w">    </span>✕<span class="w"> </span>displays<span class="w"> </span>the<span class="w"> </span>opponent<span class="w"> </span><span class="o">(</span><span class="m">1036</span><span class="w"> </span>ms<span class="o">)</span>
+
+<span class="w">  </span>●<span class="w"> </span>App<span class="w"> </span>›<span class="w"> </span>displays<span class="w"> </span>the<span class="w"> </span>opponent
+
+<span class="w">    </span>Unable<span class="w"> </span>to<span class="w"> </span>find<span class="w"> </span>an<span class="w"> </span>element<span class="w"> </span>by:<span class="w"> </span><span class="o">[</span>data-testid<span class="o">=</span><span class="s2">&quot;opponent&quot;</span><span class="o">]</span>
+
+<span class="w">    </span>&lt;body&gt;
+<span class="w">      </span>&lt;div&gt;
+<span class="w">        </span>&lt;div
+<span class="w">          </span><span class="nv">class</span><span class="o">=</span><span class="s2">&quot;App&quot;</span>
+<span class="w">        </span>&gt;
+<span class="w">          </span>&lt;header
+<span class="w">            </span><span class="nv">class</span><span class="o">=</span><span class="s2">&quot;App-header&quot;</span>
+<span class="w">          </span>&gt;
+<span class="w">            </span>&lt;img
+<span class="w">              </span><span class="nv">alt</span><span class="o">=</span><span class="s2">&quot;logo&quot;</span>
+<span class="w">              </span><span class="nv">class</span><span class="o">=</span><span class="s2">&quot;App-logo&quot;</span>
+<span class="w">              </span><span class="nv">src</span><span class="o">=</span><span class="s2">&quot;logo.svg&quot;</span>
+<span class="w">            </span>/&gt;
+<span class="w">            </span>&lt;p&gt;
+<span class="w">              </span>Edit<span class="w"> </span>
+<span class="w">              </span>&lt;code&gt;
+<span class="w">                </span>src/App.js
+<span class="w">              </span>&lt;/code&gt;
+<span class="w">               </span>and<span class="w"> </span>save<span class="w"> </span>to<span class="w"> </span>reload.
+<span class="w">            </span>&lt;/p&gt;
+<span class="w">            </span>&lt;a
+<span class="w">              </span><span class="nv">class</span><span class="o">=</span><span class="s2">&quot;App-link&quot;</span>
+<span class="w">              </span><span class="nv">href</span><span class="o">=</span><span class="s2">&quot;https://reactjs.org&quot;</span>
+<span class="w">              </span><span class="nv">rel</span><span class="o">=</span><span class="s2">&quot;noopener noreferrer&quot;</span>
+<span class="w">              </span><span class="nv">target</span><span class="o">=</span><span class="s2">&quot;_blank&quot;</span>
+<span class="w">            </span>&gt;
+<span class="w">              </span>Learn<span class="w"> </span>React
+<span class="w">            </span>&lt;/a&gt;
+<span class="w">          </span>&lt;/header&gt;
+<span class="w">        </span>&lt;/div&gt;
+<span class="w">      </span>&lt;/div&gt;
+<span class="w">    </span>&lt;/body&gt;
+
+<span class="w">       </span><span class="m">7</span><span class="w"> </span><span class="p">|</span><span class="w">     </span>render<span class="o">(</span>&lt;App<span class="w"> </span>/&gt;<span class="o">)</span><span class="p">;</span>
+<span class="w">       </span><span class="m">8</span><span class="w"> </span><span class="p">|</span>
+<span class="w">    </span>&gt;<span class="w">  </span><span class="m">9</span><span class="w"> </span><span class="p">|</span><span class="w">     </span>await<span class="w"> </span>screen.findByTestId<span class="o">(</span><span class="s2">&quot;opponent&quot;</span><span class="o">)</span><span class="p">;</span>
+<span class="w">         </span><span class="p">|</span><span class="w">                  </span>^
+<span class="w">      </span><span class="m">10</span><span class="w"> </span><span class="p">|</span>
+<span class="w">      </span><span class="m">11</span><span class="w"> </span><span class="p">|</span><span class="w">     </span>expect<span class="o">(</span>screen.getByTestId<span class="o">(</span><span class="s2">&quot;opponent-name&quot;</span><span class="o">))</span>.toHaveTextContent<span class="o">(</span><span class="s2">&quot;Randy Wheeler&quot;</span><span class="o">)</span><span class="p">;</span>
+<span class="w">      </span><span class="m">12</span><span class="w"> </span><span class="p">|</span><span class="w">     </span>expect<span class="o">(</span>screen.getByTestId<span class="o">(</span><span class="s2">&quot;opponent-avatar&quot;</span><span class="o">))</span>
+
+<span class="w">      </span>at<span class="w"> </span>waitForWrapper<span class="w"> </span><span class="o">(</span>node_modules/@testing-library/dom/dist/wait-for.js:173:27<span class="o">)</span>
+<span class="w">      </span>at<span class="w"> </span>findByTestId<span class="w"> </span><span class="o">(</span>node_modules/@testing-library/dom/dist/query-helpers.js:101:33<span class="o">)</span>
+<span class="w">      </span>at<span class="w"> </span>Object.&lt;anonymous&gt;<span class="w"> </span><span class="o">(</span>src/App.test.js:9:18<span class="o">)</span>
+
+Test<span class="w"> </span>Suites:<span class="w"> </span><span class="m">1</span><span class="w"> </span>failed,<span class="w"> </span><span class="m">1</span><span class="w"> </span>total
+Tests:<span class="w">       </span><span class="m">1</span><span class="w"> </span>failed,<span class="w"> </span><span class="m">1</span><span class="w"> </span>total
+Snapshots:<span class="w">   </span><span class="m">0</span><span class="w"> </span>total
+Time:<span class="w">        </span><span class="m">6</span>.134<span class="w"> </span>s
+Ran<span class="w"> </span>all<span class="w"> </span><span class="nb">test</span><span class="w"> </span>suites.
+</code></pre></div>
+
+<p>As you hopefully predicted, the test failed (after just over one second) because the required element never appeared in the default CRA page content. Make a commit to save your work so far:</p>
+<div class="highlight"><pre><span></span><code>$<span class="w"> </span>git<span class="w"> </span>add<span class="w"> </span>.
+
+$<span class="w"> </span>git<span class="w"> </span>status
+On<span class="w"> </span>branch<span class="w"> </span>main
+Changes<span class="w"> </span>to<span class="w"> </span>be<span class="w"> </span>committed:
+<span class="w">  </span><span class="o">(</span>use<span class="w"> </span><span class="s2">&quot;git restore --staged &lt;file&gt;...&quot;</span><span class="w"> </span>to<span class="w"> </span>unstage<span class="o">)</span>
+<span class="w">        </span>modified:<span class="w">   </span>package-lock.json
+<span class="w">        </span>modified:<span class="w">   </span>package.json
+<span class="w">        </span>modified:<span class="w">   </span>src/App.test.js
+<span class="w">        </span>modified:<span class="w">   </span>src/setupTests.js
+
+
+$<span class="w"> </span>git<span class="w"> </span>commit<span class="w"> </span>-m<span class="w"> </span><span class="s1">&#39;Failing integration test for opponent&#39;</span>
+<span class="o">[</span>main<span class="w"> </span>113cb6b<span class="o">]</span><span class="w"> </span>Failing<span class="w"> </span>integration<span class="w"> </span><span class="nb">test</span><span class="w"> </span><span class="k">for</span><span class="w"> </span>opponent
+<span class="w"> </span><span class="m">4</span><span class="w"> </span>files<span class="w"> </span>changed,<span class="w"> </span><span class="m">871</span><span class="w"> </span>insertions<span class="o">(</span>+<span class="o">)</span>,<span class="w"> </span><span class="m">17</span><span class="w"> </span>deletions<span class="o">(</span>-<span class="o">)</span>
+<span class="w"> </span>rewrite<span class="w"> </span>src/App.test.js<span class="w"> </span><span class="o">(</span><span class="m">97</span>%<span class="o">)</span>
+</code></pre></div>
+
+<h2>Opposing forces [4/8]</h2>
+<p>From the diagram above you can see that <code>App</code> will use two things to do this: a component and a service.  We can do those in either order, so let's start by writing a unit test for the presentation component that will show the opponent; put the following into <code>src/Opponent.test.js</code>:</p>
+<div class="highlight"><pre><span></span><code><span class="kn">import</span> <span class="p">{</span> <span class="n">render</span><span class="p">,</span> <span class="n">screen</span> <span class="p">}</span> <span class="kn">from</span> <span class="s2">&quot;@testing-library/react&quot;</span><span class="p">;</span>
+
+<span class="kn">import</span> <span class="nn">Opponent</span> <span class="kn">from</span> <span class="s2">&quot;./Opponent&quot;</span><span class="p">;</span>
+
+<span class="n">describe</span><span class="p">(</span><span class="s2">&quot;Opponent component&quot;</span><span class="p">,</span> <span class="p">()</span> <span class="o">=&gt;</span> <span class="p">{</span>
+  <span class="n">it</span><span class="p">(</span><span class="s2">&quot;displays the opponent details&quot;</span><span class="p">,</span> <span class="p">()</span> <span class="o">=&gt;</span> <span class="p">{</span>
+    <span class="n">const</span> <span class="n">thumbnail</span> <span class="o">=</span> <span class="s2">&quot;https://randomuser.me/api/portraits/thumb/women/77.jpg&quot;</span><span class="p">;</span>
+    <span class="n">const</span> <span class="n">opponent</span> <span class="o">=</span> <span class="p">{</span>
+      <span class="n">name</span><span class="p">:</span> <span class="p">{</span>
+        <span class="n">first</span><span class="p">:</span> <span class="s2">&quot;Brittany&quot;</span><span class="p">,</span>
+        <span class="n">last</span><span class="p">:</span> <span class="s2">&quot;Arnold&quot;</span><span class="p">,</span>
+      <span class="p">},</span>
+      <span class="n">picture</span><span class="p">:</span> <span class="p">{</span> <span class="n">thumbnail</span> <span class="p">},</span>
+    <span class="p">};</span>
+
+    <span class="n">render</span><span class="p">(</span><span class="o">&lt;</span><span class="n">Opponent</span> <span class="n">opponent</span><span class="o">=</span><span class="p">{</span><span class="n">opponent</span><span class="p">}</span> <span class="o">/&gt;</span><span class="p">);</span>
+
+    <span class="n">expect</span><span class="p">(</span><span class="n">screen</span><span class="o">.</span><span class="n">getByTestId</span><span class="p">(</span><span class="s2">&quot;opponent&quot;</span><span class="p">))</span><span class="o">.</span><span class="n">toBeInTheDocument</span><span class="p">();</span>
+    <span class="n">expect</span><span class="p">(</span><span class="n">screen</span><span class="o">.</span><span class="n">getByTestId</span><span class="p">(</span><span class="s2">&quot;opponent-name&quot;</span><span class="p">))</span><span class="o">.</span><span class="n">toHaveTextContent</span><span class="p">(</span><span class="s2">&quot;Brittany Arnold&quot;</span><span class="p">);</span>
+    <span class="n">expect</span><span class="p">(</span><span class="n">screen</span><span class="o">.</span><span class="n">getByTestId</span><span class="p">(</span><span class="s2">&quot;opponent-avatar&quot;</span><span class="p">))</span><span class="o">.</span><span class="n">toHaveAttribute</span><span class="p">(</span><span class="s2">&quot;src&quot;</span><span class="p">,</span> <span class="n">thumbnail</span><span class="p">);</span>
+  <span class="p">});</span>
+<span class="p">});</span>
+</code></pre></div>
+
+<p>Call the shot and run the test (note that you'll have <em>two</em> failing tests in Jest, you can use e.g. <code>npm test Opponent</code> to run only the one above). Initially it will fail because Jest <code>Cannot find module './Opponent' from 'src/Opponent.test.js'</code> - that should make sense, we haven't created that file yet. Go through the process of making small changes and re-running the test until it passes, with the <em>simplest possible implementation</em>. Remember to call the shot before each test run, and aim to change the error you get step by step rather than just jumping to the passing test. Once that component works, make a commit to save your work:</p>
+<div class="highlight"><pre><span></span><code>$<span class="w"> </span>git<span class="w"> </span>add<span class="w"> </span>.
+
+$<span class="w"> </span>git<span class="w"> </span>status
+On<span class="w"> </span>branch<span class="w"> </span>main
+Changes<span class="w"> </span>to<span class="w"> </span>be<span class="w"> </span>committed:
+<span class="w">  </span><span class="o">(</span>use<span class="w"> </span><span class="s2">&quot;git restore --staged &lt;file&gt;...&quot;</span><span class="w"> </span>to<span class="w"> </span>unstage<span class="o">)</span>
+<span class="w">        </span>new<span class="w"> </span>file:<span class="w">   </span>src/Opponent.js
+<span class="w">        </span>new<span class="w"> </span>file:<span class="w">   </span>src/Opponent.test.js
+
+
+$<span class="w"> </span>git<span class="w"> </span>commit<span class="w"> </span>-m<span class="w"> </span><span class="s1">&#39;Implement Opponent component&#39;</span>
+<span class="o">[</span>main<span class="w"> </span>46a5dfa<span class="o">]</span><span class="w"> </span>Implement<span class="w"> </span>Opponent<span class="w"> </span>component
+<span class="w"> </span><span class="m">2</span><span class="w"> </span>files<span class="w"> </span>changed,<span class="w"> </span><span class="m">30</span><span class="w"> </span>insertions<span class="o">(</span>+<span class="o">)</span>
+<span class="w"> </span>create<span class="w"> </span>mode<span class="w"> </span><span class="m">100644</span><span class="w"> </span>src/Opponent.js
+<span class="w"> </span>create<span class="w"> </span>mode<span class="w"> </span><span class="m">100644</span><span class="w"> </span>src/Opponent.test.js
+</code></pre></div>
+
+<p>Now we need a service. We <em>could</em> write another integration-style test, using the fixture data from MSW, for example. That seems a bit repetitive, as we're already using MSW at the integration level, so this is a good opportunity to introduce another testing technique for these unit tests. As mentioned above we don't want to mock an interface we don't own, but we could introduce a new interface that we <em>do</em> own and mock that. This is often referred to as a <em>"facade"</em> because (like <a href="https://en.wikipedia.org/wiki/Leinster_Gardens#False_houses">these false buildings</a> hiding part of the London Undeground) it's a thin layer that's easy to fake. For example, you could create this simple function in <code>src/api.js</code>:</p>
+<div class="highlight"><pre><span></span><code><span class="k">export</span><span class="w"> </span><span class="kd">const</span><span class="w"> </span><span class="nx">fetchJson</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="nx">url</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="nx">fetch</span><span class="p">(</span><span class="nx">url</span><span class="p">).</span><span class="nx">then</span><span class="p">((</span><span class="nx">res</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="nx">res</span><span class="p">.</span><span class="nx">json</span><span class="p">());</span>
+</code></pre></div>
+
+<p>We can then mock out this facade (an interface we own) and test the service against it by creating the following tests in <code>src/randomUserService.test.js</code>:</p>
+<div class="highlight"><pre><span></span><code><span class="k">import</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">fetchJson</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s2">&quot;./api&quot;</span><span class="p">;</span>
+<span class="k">import</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">getRandomUser</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s2">&quot;./randomUserService&quot;</span><span class="p">;</span>
+
+<span class="nx">jest</span><span class="p">.</span><span class="nx">mock</span><span class="p">(</span><span class="s2">&quot;./api&quot;</span><span class="p">);</span>
+
+<span class="nx">describe</span><span class="p">(</span><span class="s2">&quot;random user service&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">()</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="nx">it</span><span class="p">(</span><span class="s2">&quot;requests data from the random user API&quot;</span><span class="p">,</span><span class="w"> </span><span class="k">async</span><span class="w"> </span><span class="p">()</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nx">fetchJson</span><span class="p">.</span><span class="nx">mockResolvedValue</span><span class="p">({</span><span class="w"> </span><span class="nx">results</span><span class="o">:</span><span class="w"> </span><span class="p">[]</span><span class="w"> </span><span class="p">});</span>
+
+<span class="w">    </span><span class="k">await</span><span class="w"> </span><span class="nx">getRandomUser</span><span class="p">();</span>
+
+<span class="w">    </span><span class="nx">expect</span><span class="p">(</span><span class="nx">fetchJson</span><span class="p">).</span><span class="nx">toHaveBeenCalledWith</span><span class="p">(</span><span class="s2">&quot;https://api.randomuser.me&quot;</span><span class="p">);</span>
+<span class="w">  </span><span class="p">});</span>
+
+<span class="w">  </span><span class="nx">it</span><span class="p">(</span><span class="s2">&quot;extracts the user data from the response body&quot;</span><span class="p">,</span><span class="w"> </span><span class="k">async</span><span class="w"> </span><span class="p">()</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="kd">const</span><span class="w"> </span><span class="nx">user</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">name</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">first</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;Jane&quot;</span><span class="p">,</span><span class="w"> </span><span class="nx">last</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;Doe&quot;</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="p">};</span>
+<span class="w">    </span><span class="nx">fetchJson</span><span class="p">.</span><span class="nx">mockResolvedValue</span><span class="p">({</span><span class="w"> </span><span class="nx">results</span><span class="o">:</span><span class="w"> </span><span class="p">[</span><span class="nx">user</span><span class="p">]</span><span class="w"> </span><span class="p">});</span>
+
+<span class="w">    </span><span class="kd">const</span><span class="w"> </span><span class="nx">actual</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">getRandomUser</span><span class="p">();</span>
+
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nx">expect</span><span class="p">(</span><span class="nx">actual</span><span class="p">).</span><span class="nx">toEqual</span><span class="p">(</span><span class="nx">user</span><span class="p">);</span>
+<span class="w">  </span><span class="p">});</span>
+<span class="p">});</span>
+</code></pre></div>
+
+<p>You might wonder how we make sure that facade works without mocking <code>fetch</code>. The answer is that <em>we don't need to</em> - facades are deliberately very simple, and the code in them is tested at higher levels (in this case by our MSW integration tests and Cypress E2E tests). Run the test (again you can use <code>npm test randomUser</code> to focus down to this case) and drive out a implementation. Once it's working, make a commit:</p>
+<div class="highlight"><pre><span></span><code>$<span class="w"> </span>git<span class="w"> </span>add<span class="w"> </span>.
+
+$<span class="w"> </span>git<span class="w"> </span>status
+On<span class="w"> </span>branch<span class="w"> </span>main
+Changes<span class="w"> </span>to<span class="w"> </span>be<span class="w"> </span>committed:
+<span class="w">  </span><span class="o">(</span>use<span class="w"> </span><span class="s2">&quot;git restore --staged &lt;file&gt;...&quot;</span><span class="w"> </span>to<span class="w"> </span>unstage<span class="o">)</span>
+<span class="w">        </span>new<span class="w"> </span>file:<span class="w">   </span>src/api.js
+<span class="w">        </span>new<span class="w"> </span>file:<span class="w">   </span>src/randomUserService.js
+<span class="w">        </span>new<span class="w"> </span>file:<span class="w">   </span>src/randomUserService.test.js
+
+
+$<span class="w"> </span>git<span class="w"> </span>commit<span class="w"> </span>-m<span class="w"> </span><span class="s1">&#39;Implement random user service&#39;</span>
+<span class="o">[</span>main<span class="w"> </span>52d9f2e<span class="o">]</span><span class="w"> </span>Implement<span class="w"> </span>random<span class="w"> </span>user<span class="w"> </span>service
+<span class="w"> </span><span class="m">3</span><span class="w"> </span>files<span class="w"> </span>changed,<span class="w"> </span><span class="m">27</span><span class="w"> </span>insertions<span class="o">(</span>+<span class="o">)</span>
+<span class="w"> </span>create<span class="w"> </span>mode<span class="w"> </span><span class="m">100644</span><span class="w"> </span>src/api.js
+<span class="w"> </span>create<span class="w"> </span>mode<span class="w"> </span><span class="m">100644</span><span class="w"> </span>src/randomUserService.js
+<span class="w"> </span>create<span class="w"> </span>mode<span class="w"> </span><span class="m">100644</span><span class="w"> </span>src/randomUserService.test.js
+</code></pre></div>
+
+<p>At this point you should have three passing unit tests and one failing integration test. Fix the implementation in the coordinating <code>App</code> component to call <code>getRandomUser</code> when the component loads and render an <code>Opponent</code> presentation component once the data is available. Once all of the tests are passing, return to the E2E tests. We had three Cypress test cases, so call all of the shots then run them:</p>
+<div class="highlight"><pre><span></span><code>$<span class="w"> </span>npm<span class="w"> </span>run<span class="w"> </span>e2e
+
+&gt;<span class="w"> </span>rps-api@0.1.0<span class="w"> </span>e2e
+&gt;<span class="w"> </span>cypress<span class="w"> </span>run
+
+Couldn<span class="err">&#39;</span>t<span class="w"> </span>find<span class="w"> </span>tsconfig.json.<span class="w"> </span>tsconfig-paths<span class="w"> </span>will<span class="w"> </span>be<span class="w"> </span><span class="nv">skipped</span>
+
+<span class="o">====================================================================================================</span>
+
+<span class="w">  </span><span class="o">(</span>Run<span class="w"> </span>Starting<span class="o">)</span>
+
+<span class="w">  </span>┌────────────────────────────────────────────────────────────────────────────────────────────────┐
+<span class="w">  </span>│<span class="w"> </span>Cypress:<span class="w">    </span><span class="m">6</span>.9.1<span class="w">                                                                              </span>│
+<span class="w">  </span>│<span class="w"> </span>Browser:<span class="w">    </span>Electron<span class="w"> </span><span class="m">87</span><span class="w"> </span><span class="o">(</span>headless<span class="o">)</span><span class="w">                                                             </span>│
+<span class="w">  </span>│<span class="w"> </span>Specs:<span class="w">      </span><span class="m">1</span><span class="w"> </span>found<span class="w"> </span><span class="o">(</span>e2e.test.js<span class="o">)</span><span class="w">                                                              </span>│
+<span class="w">  </span>└────────────────────────────────────────────────────────────────────────────────────────────────┘
+
+
+────────────────────────────────────────────────────────────────────────────────────────────────────
+
+<span class="w">  </span>Running:<span class="w">  </span>e2e.test.js<span class="w">                                                                     </span><span class="o">(</span><span class="m">1</span><span class="w"> </span>of<span class="w"> </span><span class="m">1</span><span class="o">)</span>
+
+
+<span class="w">  </span>✓<span class="w"> </span>displays<span class="w"> </span>an<span class="w"> </span>opponent<span class="w"> </span>from<span class="w"> </span>the<span class="w"> </span>API<span class="w"> </span><span class="o">(</span>1340ms<span class="o">)</span>
+<span class="w">  </span>✓<span class="w"> </span>displays<span class="w"> </span>an<span class="w"> </span>opponent<span class="w"> </span>from<span class="w"> </span>a<span class="w"> </span>fixture<span class="w"> </span><span class="o">(</span>257ms<span class="o">)</span>
+<span class="w">  </span><span class="m">1</span><span class="o">)</span><span class="w"> </span>displays<span class="w"> </span>the<span class="w"> </span>appropriate<span class="w"> </span>winner
+
+<span class="w">  </span><span class="m">2</span><span class="w"> </span>passing<span class="w"> </span><span class="o">(</span>6s<span class="o">)</span>
+<span class="w">  </span><span class="m">1</span><span class="w"> </span>failing
+
+<span class="w">  </span><span class="m">1</span><span class="o">)</span><span class="w"> </span>displays<span class="w"> </span>the<span class="w"> </span>appropriate<span class="w"> </span>winner:
+<span class="w">     </span>TestingLibraryElementError:<span class="w"> </span>Timed<span class="w"> </span>out<span class="w"> </span>retrying<span class="w"> </span>after<span class="w"> </span>4000ms:<span class="w"> </span>Unable<span class="w"> </span>to<span class="w"> </span>find<span class="w"> </span>a<span class="w"> </span>label<span class="w"> </span>with<span class="w"> </span>the<span class="w"> </span>text<span class="w"> </span>of:<span class="w"> </span>Left
+<span class="w">      </span>at<span class="w"> </span>Object.getElementError<span class="w"> </span><span class="o">(</span>http://localhost:3000/__cypress/tests?p<span class="o">=</span>cypress/support/index.js:1875:17<span class="o">)</span>
+<span class="w">      </span>at<span class="w"> </span>getAllByLabelText<span class="w"> </span><span class="o">(</span>http://localhost:3000/__cypress/tests?p<span class="o">=</span>cypress/support/index.js:3092:25<span class="o">)</span>
+<span class="w">      </span>at<span class="w"> </span><span class="nb">eval</span><span class="w"> </span><span class="o">(</span>http://localhost:3000/__cypress/tests?p<span class="o">=</span>cypress/support/index.js:2833:24<span class="o">)</span>
+<span class="w">      </span>at<span class="w"> </span><span class="nb">eval</span><span class="w"> </span><span class="o">(</span>http://localhost:3000/__cypress/tests?p<span class="o">=</span>cypress/support/index.js:2886:25<span class="o">)</span>
+<span class="w">      </span>at<span class="w"> </span>baseCommandImpl<span class="w"> </span><span class="o">(</span>http://localhost:3000/__cypress/tests?p<span class="o">=</span>cypress/support/index.js:1316:16<span class="o">)</span>
+<span class="w">      </span>at<span class="w"> </span>commandImpl<span class="w"> </span><span class="o">(</span>http://localhost:3000/__cypress/tests?p<span class="o">=</span>cypress/support/index.js:1319:40<span class="o">)</span>
+<span class="w">      </span>at<span class="w"> </span>getValue<span class="w"> </span><span class="o">(</span>http://localhost:3000/__cypress/tests?p<span class="o">=</span>cypress/support/index.js:1343:23<span class="o">)</span>
+<span class="w">      </span>at<span class="w"> </span>resolveValue<span class="w"> </span><span class="o">(</span>http://localhost:3000/__cypress/tests?p<span class="o">=</span>cypress/support/index.js:1383:35<span class="o">)</span>
+
+
+
+
+<span class="w">  </span><span class="o">(</span>Results<span class="o">)</span>
+
+<span class="w">  </span>┌────────────────────────────────────────────────────────────────────────────────────────────────┐
+<span class="w">  </span>│<span class="w"> </span>Tests:<span class="w">        </span><span class="m">3</span><span class="w">                                                                                </span>│
+<span class="w">  </span>│<span class="w"> </span>Passing:<span class="w">      </span><span class="m">2</span><span class="w">                                                                                </span>│
+<span class="w">  </span>│<span class="w"> </span>Failing:<span class="w">      </span><span class="m">1</span><span class="w">                                                                                </span>│
+<span class="w">  </span>│<span class="w"> </span>Pending:<span class="w">      </span><span class="m">0</span><span class="w">                                                                                </span>│
+<span class="w">  </span>│<span class="w"> </span>Skipped:<span class="w">      </span><span class="m">0</span><span class="w">                                                                                </span>│
+<span class="w">  </span>│<span class="w"> </span>Screenshots:<span class="w">  </span><span class="m">1</span><span class="w">                                                                                </span>│
+<span class="w">  </span>│<span class="w"> </span>Video:<span class="w">        </span><span class="nb">false</span><span class="w">                                                                            </span>│
+<span class="w">  </span>│<span class="w"> </span>Duration:<span class="w">     </span><span class="m">6</span><span class="w"> </span>seconds<span class="w">                                                                        </span>│
+<span class="w">  </span>│<span class="w"> </span>Spec<span class="w"> </span>Ran:<span class="w">     </span>e2e.test.js<span class="w">                                                                      </span>│
+<span class="w">  </span>└────────────────────────────────────────────────────────────────────────────────────────────────┘
+
+
+<span class="w">  </span><span class="o">(</span>Screenshots<span class="o">)</span>
+
+<span class="w">  </span>-<span class="w">  </span>path/to/rps-api/cypress/screenshots/e2e.test.js/displays<span class="w"> </span>the<span class="w"> </span>appropriate<span class="w"> </span>winner<span class="w">      </span><span class="o">(</span>1280x720<span class="o">)</span>
+<span class="w">     </span><span class="o">(</span>failed<span class="o">)</span>.png<span class="w">                                                  </span>
+
+
+<span class="o">====================================================================================================</span>
+
+<span class="w">  </span><span class="o">(</span>Run<span class="w"> </span>Finished<span class="o">)</span>
+
+
+<span class="w">       </span>Spec<span class="w">                                              </span>Tests<span class="w">  </span>Passing<span class="w">  </span>Failing<span class="w">  </span>Pending<span class="w">  </span>Skipped<span class="w">  </span>
+<span class="w">  </span>┌────────────────────────────────────────────────────────────────────────────────────────────────┐
+<span class="w">  </span>│<span class="w"> </span>✖<span class="w">  </span>e2e.test.js<span class="w">                              </span><span class="m">00</span>:06<span class="w">        </span><span class="m">3</span><span class="w">        </span><span class="m">2</span><span class="w">        </span><span class="m">1</span><span class="w">        </span>-<span class="w">        </span>-<span class="w"> </span>│
+<span class="w">  </span>└────────────────────────────────────────────────────────────────────────────────────────────────┘
+<span class="w">    </span>✖<span class="w">  </span><span class="m">1</span><span class="w"> </span>of<span class="w"> </span><span class="m">1</span><span class="w"> </span>failed<span class="w"> </span><span class="o">(</span><span class="m">100</span>%<span class="o">)</span><span class="w">                     </span><span class="m">00</span>:06<span class="w">        </span><span class="m">3</span><span class="w">        </span><span class="m">2</span><span class="w">        </span><span class="m">1</span><span class="w">        </span>-<span class="w">        </span>-<span class="w">  </span>
+</code></pre></div>
+
+<p>Hopefully both of the opponent display test cases (<em>"displays a random opponent from the API"</em> and <em>"displays an opponent from a fixture"</em>) are passing, so even though the third (<em>"displays the appropriate winner"</em>) is failing, let's make a commit:</p>
+<div class="highlight"><pre><span></span><code>$<span class="w"> </span>git<span class="w"> </span>add<span class="w"> </span>.
+
+$<span class="w"> </span>git<span class="w"> </span>status
+On<span class="w"> </span>branch<span class="w"> </span>main
+Changes<span class="w"> </span>to<span class="w"> </span>be<span class="w"> </span>committed:
+<span class="w">  </span><span class="o">(</span>use<span class="w"> </span><span class="s2">&quot;git restore --staged &lt;file&gt;...&quot;</span><span class="w"> </span>to<span class="w"> </span>unstage<span class="o">)</span>
+<span class="w">        </span>modified:<span class="w">   </span>src/App.js
+
+
+$<span class="w"> </span>git<span class="w"> </span>commit<span class="w"> </span>-m<span class="w"> </span><span class="s1">&#39;Implement computer opponent display&#39;</span>
+<span class="o">[</span>main<span class="w"> </span>037e7ab<span class="o">]</span><span class="w"> </span>Implement<span class="w"> </span>computer<span class="w"> </span>opponent<span class="w"> </span>display
+<span class="w"> </span><span class="m">1</span><span class="w"> </span>file<span class="w"> </span>changed,<span class="w"> </span><span class="m">20</span><span class="w"> </span>insertions<span class="o">(</span>+<span class="o">)</span>,<span class="w"> </span><span class="m">25</span><span class="w"> </span>deletions<span class="o">(</span>-<span class="o">)</span>
+<span class="w"> </span>rewrite<span class="w"> </span>src/App.js<span class="w"> </span><span class="o">(</span><span class="m">90</span>%<span class="o">)</span>
+</code></pre></div>
+
+<h2>On form [5/8]</h2>
+<p>Let's bring in the actual game playing. From the <code>App</code> component's perspective, we can write an integration test very similar to the one we have at the E2E level; add the following to <code>App.test.js</code> (you'll also need to <code>import userEvent from "@testing-library/user-event";</code>):</p>
+<div class="highlight"><pre><span></span><code><span class="n">it</span><span class="p">(</span><span class="ss">&quot;lets you play the random opponent&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">async</span><span class="w"> </span><span class="p">()</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="err">{</span>
+<span class="w">  </span><span class="n">const</span><span class="w"> </span><span class="n">playerWeapon</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ss">&quot;scissors&quot;</span><span class="p">;</span>
+<span class="w">  </span><span class="n">const</span><span class="w"> </span><span class="n">outcomes</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="err">{</span>
+<span class="w">    </span><span class="ss">&quot;rock&quot;</span><span class="err">:</span><span class="w"> </span><span class="ss">&quot;Right wins!&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="ss">&quot;paper&quot;</span><span class="err">:</span><span class="w"> </span><span class="ss">&quot;Left wins!&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="ss">&quot;scissors&quot;</span><span class="err">:</span><span class="w"> </span><span class="ss">&quot;Draw&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="err">}</span><span class="p">;</span>
+<span class="w">  </span><span class="n">render</span><span class="p">(</span><span class="o">&lt;</span><span class="n">App</span><span class="w"> </span><span class="o">/&gt;</span><span class="p">);</span>
+
+<span class="w">  </span><span class="n">userEvent</span><span class="p">.</span><span class="n">selectOptions</span><span class="p">(</span><span class="n">screen</span><span class="p">.</span><span class="n">getByLabelText</span><span class="p">(</span><span class="ss">&quot;Left&quot;</span><span class="p">),</span><span class="w"> </span><span class="n">playerWeapon</span><span class="p">);</span>
+<span class="w">  </span><span class="n">userEvent</span><span class="p">.</span><span class="n">click</span><span class="p">(</span><span class="n">screen</span><span class="p">.</span><span class="n">getByText</span><span class="p">(</span><span class="ss">&quot;Throw&quot;</span><span class="p">));</span>
+<span class="w">  </span><span class="n">await</span><span class="w"> </span><span class="n">screen</span><span class="p">.</span><span class="n">findByTestId</span><span class="p">(</span><span class="ss">&quot;opponent-weapon&quot;</span><span class="p">);</span>
+
+<span class="w">  </span><span class="n">const</span><span class="w"> </span><span class="n">opponentWeapon</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">screen</span><span class="p">.</span><span class="n">getByTestId</span><span class="p">(</span><span class="ss">&quot;opponent-weapon&quot;</span><span class="p">).</span><span class="n">textContent</span>
+<span class="w">  </span><span class="n">expect</span><span class="p">(</span><span class="n">screen</span><span class="p">.</span><span class="n">getByTestId</span><span class="p">(</span><span class="ss">&quot;outcome&quot;</span><span class="p">)).</span><span class="n">toHaveTextContent</span><span class="p">(</span><span class="n">outcomes</span><span class="o">[</span><span class="n">opponentWeapon</span><span class="o">]</span><span class="p">);</span>
+<span class="err">}</span><span class="p">);</span>
+</code></pre></div>
+
+<p>I've deliberately chosen a different weapon and set of outcomes to the E2E test - if we have the same test case over and over again at different levels we might miss some of the cases or hard-code something accidentally. We'll use this test to guide the next few steps, slowly moving the point of failure further through the test, until it's passing. Call the shot and run the test; hopefully it's failing for a sensible reason. If so, commit it:</p>
+<div class="highlight"><pre><span></span><code>$<span class="w"> </span>git<span class="w"> </span>add<span class="w"> </span>.
+
+$<span class="w"> </span>git<span class="w"> </span>status
+On<span class="w"> </span>branch<span class="w"> </span>main
+Changes<span class="w"> </span>to<span class="w"> </span>be<span class="w"> </span>committed:
+<span class="w">  </span><span class="o">(</span>use<span class="w"> </span><span class="s2">&quot;git restore --staged &lt;file&gt;...&quot;</span><span class="w"> </span>to<span class="w"> </span>unstage<span class="o">)</span>
+<span class="w">        </span>modified:<span class="w">   </span>src/App.test.js
+
+
+$<span class="w"> </span>git<span class="w"> </span>commit<span class="w"> </span>-m<span class="w"> </span><span class="s1">&#39;Failing integration test for playing opponent&#39;</span>
+<span class="o">[</span>main<span class="w"> </span>960d7c6<span class="o">]</span><span class="w"> </span>Failing<span class="w"> </span>integration<span class="w"> </span><span class="nb">test</span><span class="w"> </span><span class="k">for</span><span class="w"> </span>playing<span class="w"> </span>opponent
+<span class="w"> </span><span class="m">1</span><span class="w"> </span>file<span class="w"> </span>changed,<span class="w"> </span><span class="m">18</span><span class="w"> </span>insertions<span class="o">(</span>+<span class="o">)</span>
+</code></pre></div>
+
+<p>Our form is a bit simpler than last time, as we only have one input. Add the following to <code>src/Form.test.js</code> and use it to drive out the implementation.</p>
+<div class="highlight"><pre><span></span><code><span class="k">import</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">render</span><span class="p">,</span><span class="w"> </span><span class="nx">screen</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s2">&quot;@testing-library/react&quot;</span><span class="p">;</span>
+<span class="k">import</span><span class="w"> </span><span class="nx">userEvent</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s2">&quot;@testing-library/user-event&quot;</span><span class="p">;</span>
+
+<span class="k">import</span><span class="w"> </span><span class="nx">Form</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s2">&quot;./Form&quot;</span><span class="p">;</span>
+
+<span class="nx">describe</span><span class="p">(</span><span class="s2">&quot;Form component&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">()</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="nx">it</span><span class="p">(</span><span class="s2">&quot;emits the user&#39;s input&quot;</span><span class="p">,</span><span class="w"> </span><span class="k">async</span><span class="w"> </span><span class="p">()</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="kd">const</span><span class="w"> </span><span class="nx">onSubmit</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">jest</span><span class="p">.</span><span class="nx">fn</span><span class="p">();</span>
+<span class="w">    </span><span class="kd">const</span><span class="w"> </span><span class="nx">weapon</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;paper&quot;</span><span class="p">;</span>
+<span class="w">    </span><span class="nx">render</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">Form</span><span class="w"> </span><span class="nx">onSubmit</span><span class="o">=</span><span class="p">{</span><span class="nx">onSubmit</span><span class="p">}</span><span class="w"> </span><span class="o">/&gt;</span><span class="p">);</span>
+
+<span class="w">    </span><span class="nx">userEvent</span><span class="p">.</span><span class="nx">selectOptions</span><span class="p">(</span><span class="nx">screen</span><span class="p">.</span><span class="nx">getByLabelText</span><span class="p">(</span><span class="s2">&quot;Left&quot;</span><span class="p">),</span><span class="w"> </span><span class="nx">weapon</span><span class="p">);</span>
+<span class="w">    </span><span class="nx">userEvent</span><span class="p">.</span><span class="nx">click</span><span class="p">(</span><span class="nx">screen</span><span class="p">.</span><span class="nx">getByText</span><span class="p">(</span><span class="s2">&quot;Throw&quot;</span><span class="p">));</span>
+
+<span class="w">    </span><span class="nx">expect</span><span class="p">(</span><span class="nx">onSubmit</span><span class="p">).</span><span class="nx">toHaveBeenCalledWith</span><span class="p">(</span><span class="nx">weapon</span><span class="p">);</span>
+<span class="w">  </span><span class="p">});</span>
+<span class="p">});</span>
+</code></pre></div>
+
+<p>Once it's passing, run the <code>App</code> integration tests too - you should be able to change the current failure for that test by adding in the <code>Form</code> component (note you'll probably want to set <code>onSubmit={() =&gt; {}}</code> in <code>App</code> to prevent <code>TypeError: onSubmit is not a function</code>). Call the shot, run the test. Once the failure's coming later in the test, make a commit:</p>
+<div class="highlight"><pre><span></span><code>$<span class="w"> </span>git<span class="w"> </span>add<span class="w"> </span>.
+
+$<span class="w"> </span>git<span class="w"> </span>status
+On<span class="w"> </span>branch<span class="w"> </span>main
+Changes<span class="w"> </span>to<span class="w"> </span>be<span class="w"> </span>committed:
+<span class="w">  </span><span class="o">(</span>use<span class="w"> </span><span class="s2">&quot;git restore --staged &lt;file&gt;...&quot;</span><span class="w"> </span>to<span class="w"> </span>unstage<span class="o">)</span>
+<span class="w">        </span>modified:<span class="w">   </span>src/App.js
+<span class="w">        </span>new<span class="w"> </span>file:<span class="w">   </span>src/Form.js
+<span class="w">        </span>new<span class="w"> </span>file:<span class="w">   </span>src/Form.test.js
+
+
+$<span class="w"> </span>git<span class="w"> </span>commit<span class="w"> </span>-m<span class="w"> </span><span class="s1">&#39;Implement Form component&#39;</span>
+<span class="o">[</span>main<span class="w"> </span>bb3f4d6<span class="o">]</span><span class="w"> </span>Implement<span class="w"> </span>Form<span class="w"> </span>component
+<span class="w"> </span><span class="m">3</span><span class="w"> </span>files<span class="w"> </span>changed,<span class="w"> </span><span class="m">40</span><span class="w"> </span>insertions<span class="o">(</span>+<span class="o">)</span>
+<span class="w"> </span>create<span class="w"> </span>mode<span class="w"> </span><span class="m">100644</span><span class="w"> </span>src/Form.js
+<span class="w"> </span>create<span class="w"> </span>mode<span class="w"> </span><span class="m">100644</span><span class="w"> </span>src/Form.test.js
+</code></pre></div>
+
+<h2>A roll of the dice [6/8]</h2>
+<p>Now we can implement the RPS service. We already have most of it from previous implementations, so copy the existing <code>rpsService.js</code> and <code>rpsService.test.js</code> into <code>src/</code> and commit it:</p>
+<div class="highlight"><pre><span></span><code>$<span class="w"> </span>cp<span class="w"> </span>path/to/rps-e2e/src/rpsService*.js<span class="w"> </span>./src
+
+$<span class="w"> </span>git<span class="w"> </span>add<span class="w"> </span>.
+
+$<span class="w"> </span>git<span class="w"> </span>status
+On<span class="w"> </span>branch<span class="w"> </span>main
+Changes<span class="w"> </span>to<span class="w"> </span>be<span class="w"> </span>committed:
+<span class="w">  </span><span class="o">(</span>use<span class="w"> </span><span class="s2">&quot;git restore --staged &lt;file&gt;...&quot;</span><span class="w"> </span>to<span class="w"> </span>unstage<span class="o">)</span>
+<span class="w">        </span>new<span class="w"> </span>file:<span class="w">   </span>src/rpsService.js
+<span class="w">        </span>new<span class="w"> </span>file:<span class="w">   </span>src/rpsService.test.js
+
+
+$<span class="w"> </span>git<span class="w"> </span>commit<span class="w"> </span>-m<span class="w"> </span><span class="s1">&#39;Implement RPS service&#39;</span>
+<span class="o">[</span>main<span class="w"> </span>498c60f<span class="o">]</span><span class="w"> </span>Implement<span class="w"> </span>RPS<span class="w"> </span>service
+<span class="w"> </span><span class="m">2</span><span class="w"> </span>files<span class="w"> </span>changed,<span class="w"> </span><span class="m">75</span><span class="w"> </span>insertions<span class="o">(</span>+<span class="o">)</span>
+<span class="w"> </span>create<span class="w"> </span>mode<span class="w"> </span><span class="m">100644</span><span class="w"> </span>src/rpsService.js
+<span class="w"> </span>create<span class="w"> </span>mode<span class="w"> </span><span class="m">100644</span><span class="w"> </span>src/rpsService.test.js
+</code></pre></div>
+
+<p>Now we're going to add some new functionality, a function that gives us a random weapon. So we can think about how to test it, here's a basic implementation of a coin flip:</p>
+<div class="highlight"><pre><span></span><code><span class="kd">const</span><span class="w"> </span><span class="nx">flipCoin</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">()</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="nb">Math</span><span class="p">.</span><span class="nx">random</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mf">0.5</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="s2">&quot;heads&quot;</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;tails&quot;</span><span class="p">;</span>
+</code></pre></div>
+
+<p>We can be pretty confident that if we call this function a large number of times we'll get roughly half of each outcome:</p>
+<div class="highlight"><pre><span></span><code><span class="o">&gt;</span><span class="w"> </span><span class="nb">Array</span><span class="p">(</span><span class="mf">10</span><span class="p">).</span><span class="nx">fill</span><span class="p">(</span><span class="kc">null</span><span class="p">).</span><span class="nx">map</span><span class="p">(()</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="nx">flipCoin</span><span class="p">());</span>
+<span class="p">[</span><span class="w"> </span><span class="s2">&quot;tails&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;heads&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;heads&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;tails&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;tails&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;tails&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;heads&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;heads&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;tails&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;tails&quot;</span><span class="w"> </span><span class="p">]</span>
+</code></pre></div>
+
+<p>but for a given call we can't be sure which it will be. So how can we write a test for that? We could reach for the facade pattern again, extract <code>const random = () =&gt; Math.random()</code> and replace that with a test double. This would work fine, but be very tightly coupled to the implementation:</p>
+<div class="highlight"><pre><span></span><code><span class="nx">describe</span><span class="p">(</span><span class="s2">&quot;flipCoin&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">()</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="nx">it</span><span class="p">(</span><span class="s2">&quot;returns &#39;heads&#39; when the random number is less than 0.5&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">()</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nx">random</span><span class="p">.</span><span class="nx">mockReturnValue</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.3</span><span class="p">;</span>
+
+<span class="w">    </span><span class="nx">expect</span><span class="p">(</span><span class="nx">flipCoin</span><span class="p">()).</span><span class="nx">toEqual</span><span class="p">(</span><span class="s2">&quot;heads&quot;</span><span class="p">);</span>
+<span class="w">  </span><span class="p">});</span>
+<span class="p">});</span>
+</code></pre></div>
+
+<p>One alternative is to write tests based on the <em>properties</em> of the implementation we want. For example, although we don't know the specific values, we do know:</p>
+<ul>
+<li>It should always give one of the expected outcomes; and</li>
+<li>It shouldn't always give the same outcome (otherwise <code>() =&gt; "heads"</code> would be a valid implementation).</li>
+</ul>
+<p>We can express these properties through a pair of tests as follows:</p>
+<div class="highlight"><pre><span></span><code><span class="nx">describe</span><span class="p">(</span><span class="s2">&quot;flipCoin&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">()</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="kd">const</span><span class="w"> </span><span class="nx">expectedOutcomes</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;heads&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;tails&quot;</span><span class="p">];</span>
+
+<span class="w">  </span><span class="nx">it</span><span class="p">(</span><span class="s2">&quot;always gives one of the expected outcomes&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">()</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="kd">const</span><span class="w"> </span><span class="nx">outcomes</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">Array</span><span class="p">(</span><span class="mf">100</span><span class="p">).</span><span class="nx">fill</span><span class="p">(</span><span class="kc">null</span><span class="p">).</span><span class="nx">map</span><span class="p">(()</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="nx">flipCoin</span><span class="p">());</span>
+
+<span class="w">    </span><span class="nx">expect</span><span class="p">(</span><span class="nx">outcomes</span><span class="p">.</span><span class="nx">every</span><span class="p">((</span><span class="nx">outcome</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="nx">expectedOutcomes</span><span class="p">.</span><span class="nx">includes</span><span class="p">(</span><span class="nx">outcome</span><span class="p">))).</span><span class="nx">toBe</span><span class="p">(</span><span class="kc">true</span><span class="p">);</span>
+<span class="w">  </span><span class="p">});</span>
+
+<span class="w">  </span><span class="nx">it</span><span class="p">(</span><span class="s2">&quot;doesn&#39;t always give the same outcome&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">()</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="kd">const</span><span class="w"> </span><span class="nx">outcomes</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">Array</span><span class="p">(</span><span class="mf">100</span><span class="p">).</span><span class="nx">fill</span><span class="p">(</span><span class="kc">null</span><span class="p">).</span><span class="nx">map</span><span class="p">(()</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="nx">flipCoin</span><span class="p">());</span>
+
+<span class="w">    </span><span class="nx">expect</span><span class="p">(</span><span class="nx">expectedOutcomes</span><span class="p">.</span><span class="nx">every</span><span class="p">((</span><span class="nx">outcome</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="nx">outcomes</span><span class="p">.</span><span class="nx">includes</span><span class="p">(</span><span class="nx">outcome</span><span class="p">))).</span><span class="nx">toBe</span><span class="p">(</span><span class="kc">true</span><span class="p">);</span>
+<span class="w">  </span><span class="p">});</span>
+<span class="p">});</span>
+</code></pre></div>
+
+<p>This is less coupled because it describes the <strong>what</strong>, the <em>behaviour</em> we want from the function, not the <strong>how</strong>, the details of the implementation. That allows us to refactor with confidence if we think of a better way to do it later.</p>
+<p>We could also try to test for the property that it's roughly 50:50 <code>"heads"</code> to <code>"tails"</code>, but then questions like <em>"what do you mean by 'roughly'?"</em> come up. If you try to be too specific, the tests will often fail due to the randomness in the real data. Note that the second test above could already occasionally fail; it's not impossible to get 100 heads in a row, just extremely unlikely.</p>
+<p>Write two tests for a <code>randomWeapon</code> function, to ensure it always returns one of the three expected weapons <code>"rock"</code>, <code>"paper"</code> or <code>"scissors"</code> but doesn't always return the same weapon, then write an implementation that passes those tests by returning a random weapon. Once that's working, make a commit:</p>
+<div class="highlight"><pre><span></span><code>$<span class="w"> </span>git<span class="w"> </span>add<span class="w"> </span>.
+
+$<span class="w"> </span>git<span class="w"> </span>status
+On<span class="w"> </span>branch<span class="w"> </span>main
+Changes<span class="w"> </span>to<span class="w"> </span>be<span class="w"> </span>committed:
+<span class="w">  </span><span class="o">(</span>use<span class="w"> </span><span class="s2">&quot;git restore --staged &lt;file&gt;...&quot;</span><span class="w"> </span>to<span class="w"> </span>unstage<span class="o">)</span>
+<span class="w">        </span>modified:<span class="w">   </span>src/rpsService.js
+<span class="w">        </span>modified:<span class="w">   </span>src/rpsService.test.js
+
+
+$<span class="w"> </span>git<span class="w"> </span>commit<span class="w"> </span>-m<span class="w"> </span><span class="s1">&#39;Implement random weapon function&#39;</span>
+<span class="o">[</span>main<span class="w"> </span><span class="m">2937240</span><span class="o">]</span><span class="w"> </span>Implement<span class="w"> </span>random<span class="w"> </span>weapon<span class="w"> </span><span class="k">function</span>
+<span class="w"> </span><span class="m">2</span><span class="w"> </span>files<span class="w"> </span>changed,<span class="w"> </span><span class="m">19</span><span class="w"> </span>insertions<span class="o">(</span>+<span class="o">)</span>,<span class="w"> </span><span class="m">1</span><span class="w"> </span>deletion<span class="o">(</span>-<span class="o">)</span>
+</code></pre></div>
+
+<h2>A good outcome [7/8]</h2>
+<p>Now we need to display this random weapon for the opponent, but only once it's been selected, so add two new tests to <code>Opponent.test.js</code> as follows:</p>
+<div class="highlight"><pre><span></span><code><span class="nx">it</span><span class="p">(</span><span class="s2">&quot;doesn&#39;t show the opponent&#39;s weapon initially&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">()</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="nx">render</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">Opponent</span><span class="w"> </span><span class="nx">opponent</span><span class="o">=</span><span class="p">{{</span><span class="w"> </span><span class="nx">name</span><span class="o">:</span><span class="w"> </span><span class="p">{},</span><span class="w"> </span><span class="nx">picture</span><span class="o">:</span><span class="w"> </span><span class="p">{}</span><span class="w"> </span><span class="p">}}</span><span class="w"> </span><span class="o">/&gt;</span><span class="p">);</span>
+
+<span class="w">  </span><span class="nx">expect</span><span class="p">(</span><span class="nx">screen</span><span class="p">.</span><span class="nx">queryByTestId</span><span class="p">(</span><span class="s2">&quot;opponent-weapon&quot;</span><span class="p">)).</span><span class="nx">not</span><span class="p">.</span><span class="nx">toBeInTheDocument</span><span class="p">();</span>
+<span class="p">});</span>
+
+<span class="nx">it</span><span class="p">(</span><span class="s2">&quot;shows the opponent&#39;s weapon once selected&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">()</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="kd">const</span><span class="w"> </span><span class="nx">weapon</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;scissors&quot;</span><span class="p">;</span>
+
+<span class="w">  </span><span class="nx">render</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">Opponent</span><span class="w"> </span><span class="nx">weapon</span><span class="o">=</span><span class="p">{</span><span class="nx">weapon</span><span class="p">}</span><span class="w"> </span><span class="nx">opponent</span><span class="o">=</span><span class="p">{{</span><span class="w"> </span><span class="nx">name</span><span class="o">:</span><span class="w"> </span><span class="p">{},</span><span class="w"> </span><span class="nx">picture</span><span class="o">:</span><span class="w"> </span><span class="p">{}</span><span class="w"> </span><span class="p">}}</span><span class="w"> </span><span class="o">/&gt;</span><span class="p">);</span>
+
+<span class="w">  </span><span class="nx">expect</span><span class="p">(</span><span class="nx">screen</span><span class="p">.</span><span class="nx">getByTestId</span><span class="p">(</span><span class="s2">&quot;opponent-weapon&quot;</span><span class="p">)).</span><span class="nx">toHaveTextContent</span><span class="p">(</span><span class="nx">weapon</span><span class="p">);</span>
+<span class="p">});</span>
+</code></pre></div>
+
+<p>Once these tests are passing, update the <code>App</code> component to move the failure of its integration test along again.</p>
+<div class="highlight"><pre><span></span><code>$<span class="w"> </span>git<span class="w"> </span>add<span class="w"> </span>.
+
+$<span class="w"> </span>git<span class="w"> </span>status
+On<span class="w"> </span>branch<span class="w"> </span>main
+Changes<span class="w"> </span>to<span class="w"> </span>be<span class="w"> </span>committed:
+<span class="w">  </span><span class="o">(</span>use<span class="w"> </span><span class="s2">&quot;git restore --staged &lt;file&gt;...&quot;</span><span class="w"> </span>to<span class="w"> </span>unstage<span class="o">)</span>
+<span class="w">        </span>modified:<span class="w">   </span>src/App.js
+<span class="w">        </span>modified:<span class="w">   </span>src/Opponent.js
+<span class="w">        </span>modified:<span class="w">   </span>src/Opponent.test.js
+
+
+$<span class="w"> </span>git<span class="w"> </span>commit<span class="w"> </span>-m<span class="w"> </span><span class="s1">&#39;Add weapon to the Opponent component&#39;</span>
+<span class="o">[</span>main<span class="w"> </span>e037a5f<span class="o">]</span><span class="w"> </span>Add<span class="w"> </span>weapon<span class="w"> </span>to<span class="w"> </span>the<span class="w"> </span>Opponent<span class="w"> </span>component
+<span class="w"> </span><span class="m">3</span><span class="w"> </span>files<span class="w"> </span>changed,<span class="w"> </span><span class="m">24</span><span class="w"> </span>insertions<span class="o">(</span>+<span class="o">)</span>,<span class="w"> </span><span class="m">3</span><span class="w"> </span>deletions<span class="o">(</span>-<span class="o">)</span>
+</code></pre></div>
+
+<p>The <code>Outcome</code> component is exactly the same as last time, so let's copy that in too:</p>
+<div class="highlight"><pre><span></span><code>$<span class="w"> </span>cp<span class="w"> </span>path/to/rps-e2e/src/Outcome*.js<span class="w"> </span>./src
+</code></pre></div>
+
+<p>This is already tested and working, so wire it into the <code>App</code> component to complete the implementation. Check that it's working correctly by running all of the Jest unit/integration tests then the Cypress E2E tests. Congratulations, you're done, make a final commit!</p>
+<div class="highlight"><pre><span></span><code>$<span class="w"> </span>git<span class="w"> </span>add<span class="w"> </span>.
+
+$<span class="w"> </span>git<span class="w"> </span>status
+On<span class="w"> </span>branch<span class="w"> </span>main
+Changes<span class="w"> </span>to<span class="w"> </span>be<span class="w"> </span>committed:
+<span class="w">  </span><span class="o">(</span>use<span class="w"> </span><span class="s2">&quot;git restore --staged &lt;file&gt;...&quot;</span><span class="w"> </span>to<span class="w"> </span>unstage<span class="o">)</span>
+<span class="w">        </span>modified:<span class="w">   </span>src/App.js
+<span class="w">        </span>new<span class="w"> </span>file:<span class="w">   </span>src/Outcome.js
+<span class="w">        </span>new<span class="w"> </span>file:<span class="w">   </span>src/Outcome.test.js
+
+
+$<span class="w"> </span>git<span class="w"> </span>commit<span class="w"> </span>-m<span class="w"> </span><span class="s1">&#39;Show the outcome&#39;</span>
+<span class="o">[</span>main<span class="w"> </span>71f7eab<span class="o">]</span><span class="w"> </span>Show<span class="w"> </span>the<span class="w"> </span>outcome
+<span class="w"> </span><span class="m">3</span><span class="w"> </span>files<span class="w"> </span>changed,<span class="w"> </span><span class="m">39</span><span class="w"> </span>insertions<span class="o">(</span>+<span class="o">)</span>,<span class="w"> </span><span class="m">3</span><span class="w"> </span>deletions<span class="o">(</span>-<span class="o">)</span>
+<span class="w"> </span>create<span class="w"> </span>mode<span class="w"> </span><span class="m">100644</span><span class="w"> </span>src/Outcome.js
+<span class="w"> </span>create<span class="w"> </span>mode<span class="w"> </span><span class="m">100644</span><span class="w"> </span>src/Outcome.test.js
+</code></pre></div>
+
+<p>Now reflect on the exercise - how does the implementation compare to what you'd initially imagined? What felt good or bad about the process?</p>
+<p>You can see my copy of this exercise at <a href="https://github.com/textbook/rps-api">https://github.com/textbook/rps-api</a>.</p>
+<h2>Exercises [8/8]</h2>
+<p>Here are some additional exercises you can run through:</p>
+<ol>
+<li>
+<p>What should happen if a request to the random user API fails? How can you test for that, and at what levels (using Cypress E2E, MSW integration and/or unit tests)? Note that the <code>fetch</code> facade should hide the details of the transport layer:</p>
+<div class="highlight"><pre><span></span><code><span class="kd">const</span><span class="w"> </span><span class="nx">fetchJson</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="nx">url</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="nx">fetch</span><span class="p">(</span><span class="nx">url</span><span class="p">).</span><span class="nx">then</span><span class="p">((</span><span class="nx">res</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">res</span><span class="p">.</span><span class="nx">status</span><span class="w"> </span><span class="o">===</span><span class="w"> </span><span class="mf">200</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nx">res</span><span class="p">.</span><span class="nx">json</span><span class="p">();</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="w">  </span><span class="cm">/* Throw error? Return default values? */</span>
+<span class="p">});</span>
+</code></pre></div>
+
+</li>
+<li>
+<p>Refactor one or more of the components from function-based to class-based, or vice versa. You shouldn't need to change any of the tests!</p>
+</li>
+<li>
+<p>Try to repeat the whole exercise <em>without</em> integration or end-to-end tests, just driving out the code with unit tests and putting them together yourself. Does that feel better or worse? Do you make any mistakes higher-level tests would have caught?</p>
+</li>
+<li>
+<p>Perhaps the <code>Opponent</code> component should make the request for the user data itself (e.g. a <code>fetch</code> in a <code>useEffect</code> hook)? Refactor accordingly - what new tests are needed, which existing tests need to be changed, and which ones get removed entirely?</p>
+</li>
+<li>
+<p>What should happen when the player changes their input but haven't yet clicked the "Throw" button? Currently the opponent's last throw is still shown, along with an outcome that no longer applies. Test drive out better behaviour.</p>
+</li>
+<li>
+<p>Refactor the components (<code>Form</code>, <code>Opponent</code>, <code>Outcome</code>- don't include <code>App</code>) into a new directory <code>src/components/</code> and the services (<code>randomUserService</code> plus <code>api</code>, <code>rpsService</code>) into another directory <code>src/services/</code>. Did the tests make this easier? Harder?</p>
+</li>
+<li>
+<p>Find another free API (see e.g. <a href="https://apilist.fun/">https://apilist.fun/</a>) and test-drive some kind of UI for it. Include tests that use the real API as well as those that provide test doubles at various levels.</p>
+</li>
+<li>
+<p>If you've implemented additional weapons (e.g. Rock Paper Scissors Lizard Spock) in the previous implementations, extend the UI to support them. If not, maybe now's the time!</p>
+</li>
+</ol>
+<p>I'd recommend creating a new git branch for each one you try (e.g. use <code>git checkout -b &lt;name&gt;</code>) and making commits as appropriate.</p>
+<h2>Automatic E2E [bonus]</h2>
+<p>As I mentioned in my <a href="https://blog.jonrshar.pe/2019/Feb/10/automation-for-the-people.html">article on automation</a>, I'm a fan of making developers' lives easier through automating the things you do frequently. You may have found it a bit annoying that you had to manually juggle two terminal windows through the last two articles, one where the app's running (<code>npm start</code>) and another where you run the E2E tests (<code>npm run e2e</code>). So let's simplify that!</p>
+<p>First, install some useful helper dependencies:</p>
+<div class="highlight"><pre><span></span><code>$<span class="w"> </span>npm<span class="w"> </span>install<span class="w"> </span>concurrently<span class="w"> </span>cross-env<span class="w"> </span>wait-on
+</code></pre></div>
+
+<p>Then add some extra scripts to the <code>package.json</code>:</p>
+<div class="highlight"><pre><span></span><code><span class="nt">&quot;e2e:ci&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;concurrently -k -s first \&quot;npm:e2e:ci:*\&quot;&quot;</span><span class="p">,</span>
+<span class="nt">&quot;e2e:ci:app&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;cross-env BROWSER=none PORT=4321 npm start&quot;</span><span class="p">,</span>
+<span class="nt">&quot;pree2e:ci:run&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;wait-on -t 30000 http-get://localhost:4321&quot;</span><span class="p">,</span>
+<span class="nt">&quot;e2e:ci:run&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;cross-env CYPRESS_BASE_URL=http://localhost:4321 npm run e2e&quot;</span><span class="p">,</span>
+</code></pre></div>
+
+<p>So what does that do? When we run <code>npm run e2e:ci</code>, the <code>concurrently</code> script is going to run two things in parallel for us:</p>
+<ul>
+<li><code>e2e:ci:app</code>: Run the app using <code>npm start</code>, with some environment variables set via <code>cross-env</code> (this allows it to work on *nix and Windows):<ul>
+<li><code>BROWSER=none</code> stops the browser from popping up and taking over the screen; and</li>
+<li><code>PORT=4321</code> runs the app on the specified port (so we can still have a version running on port 3000 without causing any conflicts).</li>
+</ul>
+</li>
+<li><code>e2e:ci:run</code>: Run the E2E tests in a two-step process:<ul>
+<li>The <code>pre</code> script runs first, and uses <code>wait-on</code> to wait for up to 30,000ms for the app to be running on the specified port; then</li>
+<li>If that works (i.e. the app starts in less than 30s) run the actual tests, with the <code>baseUrl</code> configuration overridden to point to the right place.</li>
+</ul>
+</li>
+</ul>
+<p>The other configuration options passed to <code>concurrently</code> itself are:</p>
+<ul>
+<li><code>-k</code>, meaning stop all of the other processes when one exits (in this case we expect our tests to exit at some point and want to stop the app when they do); and</li>
+<li><code>-s first</code>, meaning that the output of the overall command is the output of the first one to exit (i.e. output from the <code>e2e:ci</code> command should be the output from the tests).</li>
+</ul>
+<p>The overall result will look like the following (<code>concurrently</code> prefixes the logs from the different processes so you can see what's coming from where):</p>
+<div class="highlight"><pre><span></span><code>$<span class="w"> </span>npm<span class="w"> </span>run<span class="w"> </span>e2e:ci
+
+&gt;<span class="w"> </span>rps-api@0.1.0<span class="w"> </span>e2e:ci
+&gt;<span class="w"> </span>concurrently<span class="w"> </span>-k<span class="w"> </span>-s<span class="w"> </span>first<span class="w"> </span><span class="s2">&quot;npm:e2e:ci:*&quot;</span>
+
+<span class="o">[</span>e2e:ci:app<span class="o">]</span><span class="w"> </span>
+<span class="o">[</span>e2e:ci:app<span class="o">]</span><span class="w"> </span>&gt;<span class="w"> </span>rps-api@0.1.0<span class="w"> </span>e2e:ci:app
+<span class="o">[</span>e2e:ci:app<span class="o">]</span><span class="w"> </span>&gt;<span class="w"> </span>cross-env<span class="w"> </span><span class="nv">BROWSER</span><span class="o">=</span>none<span class="w"> </span><span class="nv">PORT</span><span class="o">=</span><span class="m">4321</span><span class="w"> </span>npm<span class="w"> </span>start
+<span class="o">[</span>e2e:ci:app<span class="o">]</span><span class="w"> </span>
+<span class="o">[</span>e2e:ci:run<span class="o">]</span><span class="w"> </span>
+<span class="o">[</span>e2e:ci:run<span class="o">]</span><span class="w"> </span>&gt;<span class="w"> </span>rps-api@0.1.0<span class="w"> </span>pree2e:ci:run
+<span class="o">[</span>e2e:ci:run<span class="o">]</span><span class="w"> </span>&gt;<span class="w"> </span>wait-on<span class="w"> </span>-t<span class="w"> </span><span class="m">30000</span><span class="w"> </span>http-get://localhost:4321
+<span class="o">[</span>e2e:ci:run<span class="o">]</span><span class="w"> </span>
+<span class="o">[</span>e2e:ci:app<span class="o">]</span><span class="w"> </span>
+<span class="o">[</span>e2e:ci:app<span class="o">]</span><span class="w"> </span>&gt;<span class="w"> </span>rps-api@0.1.0<span class="w"> </span>start
+<span class="o">[</span>e2e:ci:app<span class="o">]</span><span class="w"> </span>&gt;<span class="w"> </span>react-scripts<span class="w"> </span>start
+<span class="o">[</span>e2e:ci:app<span class="o">]</span><span class="w"> </span>
+<span class="o">[</span>e2e:ci:app<span class="o">]</span><span class="w"> </span>ℹ<span class="w"> </span>｢wds｣:<span class="w"> </span>Project<span class="w"> </span>is<span class="w"> </span>running<span class="w"> </span>at<span class="w"> </span>http://192.168.1.65/
+<span class="o">[</span>e2e:ci:app<span class="o">]</span><span class="w"> </span>ℹ<span class="w"> </span>｢wds｣:<span class="w"> </span>webpack<span class="w"> </span>output<span class="w"> </span>is<span class="w"> </span>served<span class="w"> </span>from<span class="w"> </span>
+<span class="o">[</span>e2e:ci:app<span class="o">]</span><span class="w"> </span>ℹ<span class="w"> </span>｢wds｣:<span class="w"> </span>Content<span class="w"> </span>not<span class="w"> </span>from<span class="w"> </span>webpack<span class="w"> </span>is<span class="w"> </span>served<span class="w"> </span>from<span class="w"> </span>path/to/rps-api/public
+<span class="o">[</span>e2e:ci:app<span class="o">]</span><span class="w"> </span>ℹ<span class="w"> </span>｢wds｣:<span class="w"> </span>404s<span class="w"> </span>will<span class="w"> </span>fallback<span class="w"> </span>to<span class="w"> </span>/
+<span class="o">[</span>e2e:ci:app<span class="o">]</span><span class="w"> </span>Starting<span class="w"> </span>the<span class="w"> </span>development<span class="w"> </span>server...
+<span class="o">[</span>e2e:ci:app<span class="o">]</span><span class="w"> </span>
+<span class="o">[</span>e2e:ci:app<span class="o">]</span><span class="w"> </span>Compiled<span class="w"> </span>successfully!
+<span class="o">[</span>e2e:ci:app<span class="o">]</span><span class="w"> </span>
+<span class="o">[</span>e2e:ci:app<span class="o">]</span><span class="w"> </span>You<span class="w"> </span>can<span class="w"> </span>now<span class="w"> </span>view<span class="w"> </span>rps-api<span class="w"> </span><span class="k">in</span><span class="w"> </span>the<span class="w"> </span>browser.
+<span class="o">[</span>e2e:ci:app<span class="o">]</span><span class="w"> </span>
+<span class="o">[</span>e2e:ci:app<span class="o">]</span><span class="w">   </span>Local:<span class="w">            </span>http://localhost:4321
+<span class="o">[</span>e2e:ci:app<span class="o">]</span><span class="w">   </span>On<span class="w"> </span>Your<span class="w"> </span>Network:<span class="w">  </span>http://192.168.1.65:4321
+<span class="o">[</span>e2e:ci:app<span class="o">]</span><span class="w"> </span>
+<span class="o">[</span>e2e:ci:app<span class="o">]</span><span class="w"> </span>Note<span class="w"> </span>that<span class="w"> </span>the<span class="w"> </span>development<span class="w"> </span>build<span class="w"> </span>is<span class="w"> </span>not<span class="w"> </span>optimized.
+<span class="o">[</span>e2e:ci:app<span class="o">]</span><span class="w"> </span>To<span class="w"> </span>create<span class="w"> </span>a<span class="w"> </span>production<span class="w"> </span>build,<span class="w"> </span>use<span class="w"> </span>npm<span class="w"> </span>run<span class="w"> </span>build.
+<span class="o">[</span>e2e:ci:app<span class="o">]</span><span class="w"> </span>
+<span class="o">[</span>e2e:ci:run<span class="o">]</span><span class="w"> </span>
+<span class="o">[</span>e2e:ci:run<span class="o">]</span><span class="w"> </span>&gt;<span class="w"> </span>rps-api@0.1.0<span class="w"> </span>e2e:ci:run
+<span class="o">[</span>e2e:ci:run<span class="o">]</span><span class="w"> </span>&gt;<span class="w"> </span>cross-env<span class="w"> </span><span class="nv">CYPRESS_BASE_URL</span><span class="o">=</span>http://localhost:4321<span class="w"> </span>npm<span class="w"> </span>run<span class="w"> </span>e2e
+<span class="o">[</span>e2e:ci:run<span class="o">]</span><span class="w"> </span>
+<span class="o">[</span>e2e:ci:run<span class="o">]</span><span class="w"> </span>
+<span class="o">[</span>e2e:ci:run<span class="o">]</span><span class="w"> </span>&gt;<span class="w"> </span>rps-api@0.1.0<span class="w"> </span>e2e
+<span class="o">[</span>e2e:ci:run<span class="o">]</span><span class="w"> </span>&gt;<span class="w"> </span>cypress<span class="w"> </span>run
+<span class="o">[</span>e2e:ci:run<span class="o">]</span><span class="w"> </span>
+<span class="o">[</span>e2e:ci:run<span class="o">]</span><span class="w"> </span>Couldn<span class="err">&#39;</span>t<span class="w"> </span>find<span class="w"> </span>tsconfig.json.<span class="w"> </span>tsconfig-paths<span class="w"> </span>will<span class="w"> </span>be<span class="w"> </span>skipped
+<span class="o">[</span>e2e:ci:run<span class="o">]</span><span class="w"> </span>
+<span class="o">[</span>e2e:ci:run<span class="o">]</span><span class="w"> </span><span class="o">====================================================================================================</span>
+<span class="o">[</span>e2e:ci:run<span class="o">]</span><span class="w"> </span>
+<span class="o">[</span>e2e:ci:run<span class="o">]</span><span class="w">   </span><span class="o">(</span>Run<span class="w"> </span>Starting<span class="o">)</span>
+<span class="o">[</span>e2e:ci:run<span class="o">]</span><span class="w"> </span>
+<span class="o">[</span>e2e:ci:run<span class="o">]</span><span class="w">   </span>┌────────────────────────────────────────────────────────────────────────────────────────────────┐
+<span class="o">[</span>e2e:ci:run<span class="o">]</span><span class="w">   </span>│<span class="w"> </span>Cypress:<span class="w">    </span><span class="m">6</span>.9.1<span class="w">                                                                              </span>│
+<span class="o">[</span>e2e:ci:run<span class="o">]</span><span class="w">   </span>│<span class="w"> </span>Browser:<span class="w">    </span>Electron<span class="w"> </span><span class="m">87</span><span class="w"> </span><span class="o">(</span>headless<span class="o">)</span><span class="w">                                                             </span>│
+<span class="o">[</span>e2e:ci:run<span class="o">]</span><span class="w">   </span>│<span class="w"> </span>Specs:<span class="w">      </span><span class="m">1</span><span class="w"> </span>found<span class="w"> </span><span class="o">(</span>e2e.test.js<span class="o">)</span><span class="w">                                                              </span>│
+<span class="o">[</span>e2e:ci:run<span class="o">]</span><span class="w">   </span>└────────────────────────────────────────────────────────────────────────────────────────────────┘
+<span class="o">[</span>e2e:ci:run<span class="o">]</span><span class="w"> </span>
+<span class="o">[</span>e2e:ci:run<span class="o">]</span><span class="w"> </span>
+<span class="o">[</span>e2e:ci:run<span class="o">]</span><span class="w"> </span>────────────────────────────────────────────────────────────────────────────────────────────────────
+<span class="o">[</span>e2e:ci:run<span class="o">]</span><span class="w">                                                                                                     </span>
+<span class="o">[</span>e2e:ci:run<span class="o">]</span><span class="w">   </span>Running:<span class="w">  </span>e2e.test.js<span class="w">                                                                     </span><span class="o">(</span><span class="m">1</span><span class="w"> </span>of<span class="w"> </span><span class="m">1</span><span class="o">)</span>
+<span class="o">[</span>e2e:ci:run<span class="o">]</span><span class="w"> </span>
+<span class="o">[</span>e2e:ci:run<span class="o">]</span><span class="w"> </span>
+<span class="o">[</span>e2e:ci:run<span class="o">]</span><span class="w">   </span>✓<span class="w"> </span>displays<span class="w"> </span>an<span class="w"> </span>opponent<span class="w"> </span>from<span class="w"> </span>the<span class="w"> </span>API<span class="w"> </span><span class="o">(</span>2227ms<span class="o">)</span>
+<span class="o">[</span>e2e:ci:run<span class="o">]</span><span class="w">   </span>✓<span class="w"> </span>displays<span class="w"> </span>an<span class="w"> </span>opponent<span class="w"> </span>from<span class="w"> </span>a<span class="w"> </span>fixture<span class="w"> </span><span class="o">(</span>430ms<span class="o">)</span>
+<span class="o">[</span>e2e:ci:run<span class="o">]</span><span class="w">   </span>✓<span class="w"> </span>displays<span class="w"> </span>the<span class="w"> </span>appropriate<span class="w"> </span>winner<span class="w"> </span><span class="o">(</span>480ms<span class="o">)</span>
+<span class="o">[</span>e2e:ci:run<span class="o">]</span><span class="w"> </span>
+<span class="o">[</span>e2e:ci:run<span class="o">]</span><span class="w">   </span><span class="m">3</span><span class="w"> </span>passing<span class="w"> </span><span class="o">(</span>3s<span class="o">)</span>
+<span class="o">[</span>e2e:ci:run<span class="o">]</span><span class="w"> </span>
+<span class="o">[</span>e2e:ci:run<span class="o">]</span><span class="w"> </span>
+<span class="o">[</span>e2e:ci:run<span class="o">]</span><span class="w">   </span><span class="o">(</span>Results<span class="o">)</span>
+<span class="o">[</span>e2e:ci:run<span class="o">]</span><span class="w"> </span>
+<span class="o">[</span>e2e:ci:run<span class="o">]</span><span class="w">   </span>┌────────────────────────────────────────────────────────────────────────────────────────────────┐
+<span class="o">[</span>e2e:ci:run<span class="o">]</span><span class="w">   </span>│<span class="w"> </span>Tests:<span class="w">        </span><span class="m">3</span><span class="w">                                                                                </span>│
+<span class="o">[</span>e2e:ci:run<span class="o">]</span><span class="w">   </span>│<span class="w"> </span>Passing:<span class="w">      </span><span class="m">3</span><span class="w">                                                                                </span>│
+<span class="o">[</span>e2e:ci:run<span class="o">]</span><span class="w">   </span>│<span class="w"> </span>Failing:<span class="w">      </span><span class="m">0</span><span class="w">                                                                                </span>│
+<span class="o">[</span>e2e:ci:run<span class="o">]</span><span class="w">   </span>│<span class="w"> </span>Pending:<span class="w">      </span><span class="m">0</span><span class="w">                                                                                </span>│
+<span class="o">[</span>e2e:ci:run<span class="o">]</span><span class="w">   </span>│<span class="w"> </span>Skipped:<span class="w">      </span><span class="m">0</span><span class="w">                                                                                </span>│
+<span class="o">[</span>e2e:ci:run<span class="o">]</span><span class="w">   </span>│<span class="w"> </span>Screenshots:<span class="w">  </span><span class="m">0</span><span class="w">                                                                                </span>│
+<span class="o">[</span>e2e:ci:run<span class="o">]</span><span class="w">   </span>│<span class="w"> </span>Video:<span class="w">        </span><span class="nb">false</span><span class="w">                                                                            </span>│
+<span class="o">[</span>e2e:ci:run<span class="o">]</span><span class="w">   </span>│<span class="w"> </span>Duration:<span class="w">     </span><span class="m">3</span><span class="w"> </span>seconds<span class="w">                                                                        </span>│
+<span class="o">[</span>e2e:ci:run<span class="o">]</span><span class="w">   </span>│<span class="w"> </span>Spec<span class="w"> </span>Ran:<span class="w">     </span>e2e.test.js<span class="w">                                                                      </span>│
+<span class="o">[</span>e2e:ci:run<span class="o">]</span><span class="w">   </span>└────────────────────────────────────────────────────────────────────────────────────────────────┘
+<span class="o">[</span>e2e:ci:run<span class="o">]</span><span class="w"> </span>
+<span class="o">[</span>e2e:ci:run<span class="o">]</span><span class="w"> </span>
+<span class="o">[</span>e2e:ci:run<span class="o">]</span><span class="w"> </span><span class="o">====================================================================================================</span>
+<span class="o">[</span>e2e:ci:run<span class="o">]</span><span class="w"> </span>
+<span class="o">[</span>e2e:ci:run<span class="o">]</span><span class="w">   </span><span class="o">(</span>Run<span class="w"> </span>Finished<span class="o">)</span>
+<span class="o">[</span>e2e:ci:run<span class="o">]</span><span class="w"> </span>
+<span class="o">[</span>e2e:ci:run<span class="o">]</span><span class="w"> </span>
+<span class="o">[</span>e2e:ci:run<span class="o">]</span><span class="w">        </span>Spec<span class="w">                                              </span>Tests<span class="w">  </span>Passing<span class="w">  </span>Failing<span class="w">  </span>Pending<span class="w">  </span>Skipped<span class="w">  </span>
+<span class="o">[</span>e2e:ci:run<span class="o">]</span><span class="w">   </span>┌────────────────────────────────────────────────────────────────────────────────────────────────┐
+<span class="o">[</span>e2e:ci:run<span class="o">]</span><span class="w">   </span>│<span class="w"> </span>✔<span class="w">  </span>e2e.test.js<span class="w">                              </span><span class="m">00</span>:03<span class="w">        </span><span class="m">3</span><span class="w">        </span><span class="m">3</span><span class="w">        </span>-<span class="w">        </span>-<span class="w">        </span>-<span class="w"> </span>│
+<span class="o">[</span>e2e:ci:run<span class="o">]</span><span class="w">   </span>└────────────────────────────────────────────────────────────────────────────────────────────────┘
+<span class="o">[</span>e2e:ci:run<span class="o">]</span><span class="w">     </span>✔<span class="w">  </span>All<span class="w"> </span>specs<span class="w"> </span>passed!<span class="w">                        </span><span class="m">00</span>:03<span class="w">        </span><span class="m">3</span><span class="w">        </span><span class="m">3</span><span class="w">        </span>-<span class="w">        </span>-<span class="w">        </span>-<span class="w">  </span>
+<span class="o">[</span>e2e:ci:run<span class="o">]</span><span class="w"> </span>
+<span class="o">[</span>e2e:ci:run<span class="o">]</span><span class="w"> </span>npm<span class="w"> </span>run<span class="w"> </span>e2e:ci:run<span class="w"> </span>exited<span class="w"> </span>with<span class="w"> </span>code<span class="w"> </span><span class="m">0</span>
+--&gt;<span class="w"> </span>Sending<span class="w"> </span>SIGTERM<span class="w"> </span>to<span class="w"> </span>other<span class="w"> </span>processes..
+<span class="o">[</span>e2e:ci:app<span class="o">]</span><span class="w"> </span>npm<span class="w"> </span>run<span class="w"> </span>e2e:ci:app<span class="w"> </span>exited<span class="w"> </span>with<span class="w"> </span>code<span class="w"> </span><span class="m">1</span>
+</code></pre></div>
+
+<p>You can go even further and run the end-to-end tests against the build output, rather than the development server, which lets you check that the app compiles correctly. Run <code>npm install serve</code> to add a simple web server package, then replace the <code>"e2e:ci:app"</code> script with:</p>
+<div class="highlight"><pre><span></span><code><span class="w">    </span><span class="nt">&quot;pree2e:ci:app&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;npm run build&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;e2e:ci:app&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;serve -l 4321 build/&quot;</span><span class="p">,</span>
+</code></pre></div>
+
+<p>As above the <code>pre</code> script runs first, to build the app, then if that's successful the main script starts to serve on the appropriate port (<code>-l 4321</code>) from the output directory (<code>build/</code>).</p></div>
+    <div class="comments">
+      <h2>Comments !</h2>
+      <div id="disqus_thread"></div>
+      <script type="text/javascript">
+        var disqus_shortname = 'textbook-dev';
+        var disqus_identifier = '2021/Apr/10/js-tdd-api.html';
+        var disqus_url = 'https://blog.jonrshar.pe/2021/Apr/10/js-tdd-api.html';
+        (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//textbook-dev.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+      </script>
+      <noscript>Please enable JavaScript to view the comments.</noscript>
+    </div>
+
+  </article>
+</section>
+
+<script type="application/ld+json">
+  {"articleSection": "development", "author": {"@type": "Person", "name": "Jonathan Sharpe"}, "datePublished": "2021-04-10T20:30:00+01:00", "headline": "JS TDD API", "mainEntityOfPage": {"@type": "WebPage", "@id": "https://blog.jonrshar.pe/2021/Apr/10/js-tdd-api.html"}, "@context": "http://schema.org", "@type": "BlogPosting", "dateModified": "2021-04-13T17:30:00+01:00", "description": "Test-driven JavaScript development done right - part 3", "image": {"@type": "ImageObject", "url": "https://blog.jonrshar.pe/images/rps-api-ui.png"}}
+</script>
+    </div>
+
+    <div class="column is-one-quarter-desktop is-one-third-tablet is-hidden-print">
+      <aside class="menu">
+<div id="mc_embed_signup">
+  <form
+      action="https://jonrshar.us15.list-manage.com/subscribe/post?u=7ada11180797f3af73228bf0b&amp;id=d172abcbd2"
+      method="post" id="mc-embedded-subscribe-form"
+      name="mc-embedded-subscribe-form" class="validate" target="_blank"
+      novalidate>
+
+    <h2 class="menu-label">Mailing List</h2>
+
+    <div id="mc_embed_signup_scroll">
+      <div class="field mc-field-group">
+        <label for="mce-EMAIL" class="label is-small">Email</label>
+        <div class="field-body">
+          <div class="field">
+            <p class="control has-icons-left">
+              <input type="email" name="EMAIL" class="input required email is-small"
+                     id="mce-EMAIL" placeholder="Email address">
+              <span class="icon is-small is-left">
+              <i class="fa fa-envelope"></i>
+            </span>
+            </p>
+          </div>
+        </div>
+      </div>
+      <div class="field">
+        <label for="mce-FNAME" class="label is-small">Name</label>
+        <div class="field-body">
+          <div class="field is-grouped">
+            <p class="control is-expanded">
+              <input class="input is-small" type="text" value="" name="FNAME"
+                     id="mce-FNAME" placeholder="First">
+            </p>
+            <p class="control is-expanded">
+              <input class="input is-small" type="text" value="" name="LNAME"
+                     id="mce-LNAME" placeholder="Last">
+            </p>
+          </div>
+        </div>
+      </div>
+      <div class="field is-grouped">
+        <p class="control">
+          <input type="submit" name="subscribe" value="Subscribe"
+                 class="button is-small is-success" id="mc-embedded-subscribe">
+        </p>
+          <p class="control">
+            <span class="help">
+              Powered by
+              <a href="http://eepurl.com/cNv6Rb"
+                 title="MailChimp - email marketing made easy and fun">
+                MailChimp
+              </a>
+            </span>
+          </p>
+      </div>
+
+      <div id="mce-responses" class="clear">
+        <div class="response help is-danger" id="mce-error-response"
+             style="display:none"></div>
+        <div class="response help is-success" id="mce-success-response"
+             style="display:none"></div>
+      </div>
+
+      <div style="position: absolute; left: -5000px;" aria-hidden="true">
+        <input type="text" name="b_7ada11180797f3af73228bf0b_d172abcbd2"
+               tabindex="-1" value="">
+      </div>
+    </div>
+  </form>
+</div>
+
+          <p class="menu-label">Other Pages</p>
+          <ul class="menu-list">
+                <li><a                        href="https://blog.jonrshar.pe/pages/about.html">
+                  <span class="icon is-small"><i class="fa fa-book"></i></span>
+                  <span class="link-text">About</span>
+                </a></li>
+          </ul>
+          <p class="menu-label">Links</p>
+          <ul class="menu-list">
+              <li><a href="http://engineering.pivotal.io/">
+                <span class="icon is-small"><i class="fa fa-globe fa-fw"></i></span>
+                <span class="link-text">Pivotal Engineering Journal</span>
+              </a></li>
+              <li><a href="http://blog.cleancoder.com/">
+                <span class="icon is-small"><i class="fa fa-globe fa-fw"></i></span>
+                <span class="link-text">The Clean Code Blog</span>
+              </a></li>
+              <li><a href="https://codeascraft.com/">
+                <span class="icon is-small"><i class="fa fa-globe fa-fw"></i></span>
+                <span class="link-text">Code as Craft</span>
+              </a></li>
+              <li><a href="http://corgibytes.com/blog/">
+                <span class="icon is-small"><i class="fa fa-globe fa-fw"></i></span>
+                <span class="link-text">Corgibytes Blog</span>
+              </a></li>
+          </ul>
+<p class="menu-label">Social</p>
+<ul class="menu-list">
+    <li><a href="https://github.com/textbook">
+      <span class="icon is-small">
+          <i class="fa fa-github fa-fw"></i>
+      </span>
+      <span class="link-text">GitHub</span>
+    </a></li>
+    <li><a href="http://stackoverflow.com/users/3001761/jonrsharpe">
+      <span class="icon is-small">
+          <i class="fa fa-stack-overflow fa-fw"></i>
+      </span>
+      <span class="link-text">Stack Overflow</span>
+    </a></li>
+    <li><a href="https://twitter.com/jonrsharpe">
+      <span class="icon is-small">
+          <i class="fa fa-twitter fa-fw"></i>
+      </span>
+      <span class="link-text">Twitter</span>
+    </a></li>
+    <li><a href="https://500px.com/jonrsharpe">
+      <span class="icon is-small">
+          <i class="fa fa-500px fa-fw"></i>
+      </span>
+      <span class="link-text">500px</span>
+    </a></li>
+
+    <li><a href="https://blog.jonrshar.pe/feeds/all.atom.xml"
+           type="application/atom+xml" rel="alternate">
+      <span class="icon is-small"><i class="fa fa-rss"></i></span>
+      <span class="link-text">Atom Feed</span>
+    </a></li>
+
+</ul>          <p class="menu-label">License</p>
+          
+<ul class="menu-list">
+  <li>
+    <a rel="license" href="http://creativecommons.org/licenses/by-sa/4.0/">
+      <span class="icon is-small">
+        <i class="fa fa-creative-commons fa-fw"></i>
+      </span>
+      <span>CC BY-SA 4.0</span>
+    </a>
+  </li>
+</ul>
+
+      </aside>
+    </div>
+  </div>
+</div>
+
+<footer class="footer">
+  <div class="container has-text-centered">
+ <p class="subtitle">These are my opinions - if you don't like them, I have others</p>    <div class="credits">
+      <span><a href="https://github.com/textbook/bulrush">Bulrush</a> theme for
+        <a href="https://blog.getpelican.com/">Pelican</a></span>
+      <span><span class="icon is-small"><i class="fa fa-html5"></i></span> HTML 5</span>
+      <span><span class="icon is-small"><i class="fa fa-css3"></i></span> CSS 3</span>
+      <span>Made with <a href="https://bulma.io">Bulma</a></span>
+    </div>
+  </div>
+  <div class="github-fork-ribbon-wrapper is-hidden-mobile is-hidden-print">
+    <div class="github-fork-ribbon">
+      <a href="https://github.com/textbook/textbook.github.io">
+        <i class="fa fa-github fa-fw"></i>
+        Fork me on GitHub
+      </a>
+    </div>
+  </div>
+</footer>
+
+    <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-64837080-1']);
+    _gaq.push(['_trackPageview']);
+    (function() {
+        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+        ga.src = 'https://ssl.google-analytics.com/ga.js';
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+    </script>
+<script type="text/javascript">
+    var disqus_shortname = 'textbook-dev';
+    (function () {
+        var s = document.createElement('script'); s.async = true;
+        s.type = 'text/javascript';
+        s.src = 'https://' + disqus_shortname + '.disqus.com/count.js';
+        (document.getElementsByTagName('HEAD')[0] || document.getElementsByTagName('BODY')[0]).appendChild(s);
+    }());
+</script>
+<script type="text/javascript">
+  document.getElementById('navToggle').addEventListener('click', function () {
+    var nav = document.getElementById('navMenu');
+    var className = nav.getAttribute('class');
+    if (className == 'navbar-menu') {
+      nav.className = 'navbar-menu is-active';
+    } else {
+      nav.className = 'navbar-menu';
+    }
+  });
+</script>
+</body>
+</html>

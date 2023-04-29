@@ -1,0 +1,1100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head prefix="og: http://ogp.me/ns# article: http://ogp.me/ns/article#">
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width">
+  <title>JS TDD FTW</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.9.4/css/bulma.min.css">
+    <link rel="stylesheet" href="https://blog.jonrshar.pe/theme/css/main.3dad1b7a.css">
+  <style media="print">.is-hidden-print{display:none !important}</style>
+      <link rel="stylesheet" href="https://blog.jonrshar.pe/custom.css">
+<meta property="og:title" content="textbook - JS TDD FTW">
+  <meta property="og:description" content="Test-driven JavaScript development done right - part 1">
+<meta property="og:url" content="https://blog.jonrshar.pe/2020/Aug/31/js-tdd-ftw.html">
+    <meta property="og:image" content="https://blog.jonrshar.pe/images/avatar.png">
+    <meta name="twitter:image:alt" content="textbook | These are my opinions - if you don't like them, I have others">
+<meta name="twitter:card" content="summary">
+  <meta name="twitter:creator" content="@jonrsharpe">
+  <meta name="twitter:site" content="@jonrsharpe">
+<meta property="og:site_name" content="textbook">
+<meta property="og:type" content="article">
+  <meta property="article:published_time" content="2020-08-31T16:00:00+01:00">
+  <meta property="article:modified_time" content="2020-11-22T15:30:00+00:00">
+    <meta property="article:tag" content="javascript">
+    <meta property="article:tag" content="tdd">
+    <meta property="article:tag" content="xp">
+  <meta property="article:section" content="development">
+</head>
+
+<body id="index" class="home">
+<header class="hero is-primary">
+  <div class="hero-head">
+    <div class="container">
+      <nav class="navbar">
+        <div class="navbar-brand">
+          <a class="navbar-item title is-3"
+             href="https://blog.jonrshar.pe/">textbook</a>
+        </div>
+      </nav>
+    </div>
+  </div>
+</header>
+
+<nav class="navbar has-shadow is-hidden-print">
+  <div class="container">
+    <div class="navbar-center"></div>
+    <span id="navToggle" class="navbar-burger">
+      <span></span>
+      <span></span>
+      <span></span>
+    </span>
+    <div id="navMenu" class="navbar-menu">
+        <div class="navbar-end">
+              <a class="navbar-item is-tab "
+                 href="https://blog.jonrshar.pe/category/work.html">work</a>
+              <a class="navbar-item is-tab "
+                 href="https://blog.jonrshar.pe/category/meta.html">meta</a>
+              <a class="navbar-item is-tab is-active"
+                 href="https://blog.jonrshar.pe/category/development.html">development</a>
+        </div>
+    </div>
+  </div>
+</nav>
+
+<div class="container">
+  <div class="section columns">
+    <div class="column is-three-quarters-desktop is-two-thirds-tablet">
+<section id="content" class="body">
+  <article>
+    <h1 class="title">
+      <a href="https://blog.jonrshar.pe/2020/Aug/31/js-tdd-ftw.html" rel="bookmark"
+         title="Permalink to JS TDD FTW">JS TDD FTW</a></h1>
+<footer class="post-info">
+  <abbr class="published" title="2020-08-31T16:00:00+01:00">
+    Published <span class="is-info">Mon 31 August 2020</span>
+    in <a href="https://blog.jonrshar.pe/category/development.html">development</a>
+  </abbr>
+    <br />
+    <abbr class="modified" title="2020-11-22T15:30:00+00:00">
+      Updated Sun 22 November 2020
+    </abbr>
+
+    <p class="author">
+      <em>by           Jonathan Sharpe
+</em>
+      <span class="tag is-small is-rounded">
+        <a href="https://blog.jonrshar.pe/tag/javascript.html">javascript</a>
+      </span>
+      <span class="tag is-small is-rounded">
+        <a href="https://blog.jonrshar.pe/tag/tdd.html">tdd</a>
+      </span>
+      <span class="tag is-small is-rounded">
+        <a href="https://blog.jonrshar.pe/tag/xp.html">xp</a>
+      </span>
+    </p>
+  
+</footer>    <div class="section"><p>One of the key Extreme Programming (<a href="http://wiki.c2.com/?ExtremeProgramming">XP</a>) engineering practices is test-driven development (TDD), usually expressed as repeatedly following this simple, three-step process:</p>
+<ol>
+<li><strong>Red</strong> - write a failing test that describes the behaviour you want;</li>
+<li><strong>Green</strong> - write the simplest possible code to make the test pass; and</li>
+<li><strong>Refactor</strong> - clean up your code without breaking the tests.</li>
+</ol>
+<p>I was recently asked if I knew of a good TDD intro for people who were comfortable with JavaScript but hadn't done much testing, so I did some research. There are lots of examples of testing and TDD out there, but often: tied to specific frameworks (e.g. React); with unclear prerequisites; and even showing poor testing practices. So below I'm going to give a proper example of vanilla JavaScript TDD done <em>"the right way"</em>, sprinkling some bonus command line and git practice throughout.</p>
+<h3>Requirements</h3>
+<p>I've aimed this content at more junior developers, so there are more explanations than all readers will need, but anyone new to testing and TDD should find something to take from it. We'll need:</p>
+<ul>
+<li>*nix command line: already provided on macOS and Linux; if you're using Windows try <a href="https://docs.microsoft.com/en-us/windows/wsl/about">WSL</a> or <a href="https://gitforwindows.org/">Git BASH</a>;</li>
+<li><a href="https://nodejs.org/">Node</a> (10+ recommended, Jest 26 <a href="https://jestjs.io/blog/2020/05/05/jest-26#other-breaking-changes-in-jest-26">dropped support</a> for Node 8; run <code>node -v</code> to check) and NPM; and</li>
+<li>Familiarity with ES6 JavaScript syntax (specifically arrow functions).</li>
+</ul>
+<p>We also need something to implement. <a href="https://en.wikipedia.org/wiki/Rock_paper_scissors">Rock Paper Scissors</a> (or just RPS) is a simple playground game that takes some inputs (the shapes that the players present) and gives a single output (the outcome), which makes it a good fit for a simple function to test drive. If you're not familiar with the rules, read the linked Wikipedia article before continuing.</p>
+<p>Before we get into the TDD process, think about what the code for an implementation of RPS might look like. Don't write any code yet (we don't have the failing tests to make us do that!) but imagine a function - what parameters would it accept? What would it return? We're expecting different outputs for different inputs, which implies some conditional logic - what conditions do you think would be involved? Note your ideas down, we'll revisit them later.</p>
+<p>As we go through, please carefully <em>read everything</em>. I'd recommend <em>typing the code</em> rather than copy-pasting, especially if you're a new developer; it's good practice to build your muscle memory.</p>
+<h2>Setup [1/10]</h2>
+<p>Let's get up and running. Starting in your working directory (e.g. I use <code>~/workspace</code>), run the following:</p>
+<div class="highlight"><pre><span></span><code>$<span class="w"> </span>mkdir<span class="w"> </span>rps-tdd<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nb">cd</span><span class="w"> </span><span class="nv">$_</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>git<span class="w"> </span>init<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>git<span class="w"> </span>commit<span class="w"> </span>--allow-empty<span class="w"> </span>-m<span class="w"> </span><span class="s1">&#39;Initial commit&#39;</span>
+Initialized<span class="w"> </span>empty<span class="w"> </span>Git<span class="w"> </span>repository<span class="w"> </span><span class="k">in</span><span class="w"> </span>path/to/rps-tdd/.git/
+<span class="o">[</span>master<span class="w"> </span><span class="o">(</span>root-commit<span class="o">)</span><span class="w"> </span>&lt;hash&gt;<span class="o">]</span><span class="w"> </span>Initial<span class="w"> </span>commit
+</code></pre></div>
+
+<p>By chaining multiple commands using <code>&amp;&amp;</code> (<em>"and"</em>, assuming the previous commands all succeeded), this will:</p>
+<ul>
+<li>Create a new directory named <code>rps-tdd/</code>;</li>
+<li>Switch into it (<code>$_</code> references the argument to the last command, see e.g. <a href="https://stackoverflow.com/q/30154694/3001761">this SO question</a>);</li>
+<li>Initialise a new git repository; and</li>
+<li>Create an empty initial commit (<code>--allow-empty</code> lets us create this first commit without having any content, and <code>-m</code> lets us supply the commit message on the command line).</li>
+</ul>
+<p>Now we need a basic Node project:</p>
+<div class="highlight"><pre><span></span><code>$<span class="w"> </span>npm<span class="w"> </span>init<span class="w"> </span>-y<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>git<span class="w"> </span>add<span class="w"> </span>package.json<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>git<span class="w"> </span>commit<span class="w"> </span>-m<span class="w"> </span><span class="s1">&#39;Create NPM package&#39;</span>
+Wrote<span class="w"> </span>to<span class="w"> </span>path/to/rps-tdd/package.json:
+
+<span class="o">{</span>
+<span class="w">  </span><span class="s2">&quot;name&quot;</span>:<span class="w"> </span><span class="s2">&quot;rps-tdd&quot;</span>,
+<span class="w">  </span><span class="s2">&quot;version&quot;</span>:<span class="w"> </span><span class="s2">&quot;1.0.0&quot;</span>,
+<span class="w">  </span><span class="s2">&quot;description&quot;</span>:<span class="w"> </span><span class="s2">&quot;&quot;</span>,
+<span class="w">  </span><span class="s2">&quot;main&quot;</span>:<span class="w"> </span><span class="s2">&quot;index.js&quot;</span>,
+<span class="w">  </span><span class="s2">&quot;scripts&quot;</span>:<span class="w"> </span><span class="o">{</span>
+<span class="w">    </span><span class="s2">&quot;test&quot;</span>:<span class="w"> </span><span class="s2">&quot;echo \&quot;Error: no test specified\&quot; &amp;&amp; exit 1&quot;</span>
+<span class="w">  </span><span class="o">}</span>,
+<span class="w">  </span><span class="s2">&quot;keywords&quot;</span>:<span class="w"> </span><span class="o">[]</span>,
+<span class="w">  </span><span class="s2">&quot;author&quot;</span>:<span class="w"> </span><span class="s2">&quot;&quot;</span>,
+<span class="w">  </span><span class="s2">&quot;license&quot;</span>:<span class="w"> </span><span class="s2">&quot;ISC&quot;</span>
+<span class="o">}</span>
+
+
+<span class="o">[</span>master<span class="w"> </span>&lt;hash&gt;<span class="o">]</span><span class="w"> </span>Create<span class="w"> </span>NPM<span class="w"> </span>package
+<span class="w"> </span><span class="m">1</span><span class="w"> </span>file<span class="w"> </span>changed,<span class="w"> </span><span class="m">12</span><span class="w"> </span>insertions<span class="o">(</span>+<span class="o">)</span>
+<span class="w"> </span>create<span class="w"> </span>mode<span class="w"> </span><span class="m">100644</span><span class="w"> </span>package.json
+</code></pre></div>
+
+<p>This:</p>
+<ul>
+<li>Creates a basic <code>package.json</code>;</li>
+<li>Adds that to our repo; and</li>
+<li>Makes another commit.</li>
+</ul>
+<p>Next, we're going to need something to <em>run</em> our tests. There are loads of options here (I've used <a href="https://jasmine.github.io/">Jasmine</a>, <a href="https://mochajs.org/">Mocha</a>, <a href="https://www.npmjs.com/package/tape">tape</a>, ...) but we're going to start with one that's become very popular recently: <a href="https://jestjs.io/">Jest</a>. Let's install it as a <em>development dependency</em>:</p>
+<div class="highlight"><pre><span></span><code>$<span class="w"> </span>npm<span class="w"> </span>install<span class="w"> </span>--save-dev<span class="w"> </span>jest
+npm<span class="w"> </span>WARN<span class="w"> </span>deprecated<span class="w"> </span>request@2.88.2:<span class="w"> </span>request<span class="w"> </span>has<span class="w"> </span>been<span class="w"> </span>deprecated,<span class="w"> </span>see<span class="w"> </span>https://github.com/request/request/issues/3142
+npm<span class="w"> </span>WARN<span class="w"> </span>deprecated<span class="w"> </span>request-promise-native@1.0.9:<span class="w"> </span>request-promise-native<span class="w"> </span>has<span class="w"> </span>been<span class="w"> </span>deprecated<span class="w"> </span>because<span class="w"> </span>it<span class="w"> </span>extends<span class="w"> </span>the<span class="w"> </span>now<span class="w"> </span>deprecated<span class="w"> </span>request<span class="w"> </span>package,<span class="w"> </span>see<span class="w"> </span>https://github.com/request/request/issues/3142
+npm<span class="w"> </span>WARN<span class="w"> </span>deprecated<span class="w"> </span>har-validator@5.1.5:<span class="w"> </span>this<span class="w"> </span>library<span class="w"> </span>is<span class="w"> </span>no<span class="w"> </span>longer<span class="w"> </span>supported
+npm<span class="w"> </span>notice<span class="w"> </span>created<span class="w"> </span>a<span class="w"> </span>lockfile<span class="w"> </span>as<span class="w"> </span>package-lock.json.<span class="w"> </span>You<span class="w"> </span>should<span class="w"> </span>commit<span class="w"> </span>this<span class="w"> </span>file.
+npm<span class="w"> </span>WARN<span class="w"> </span>rps-tdd@1.0.0<span class="w"> </span>No<span class="w"> </span>description
+npm<span class="w"> </span>WARN<span class="w"> </span>rps-tdd@1.0.0<span class="w"> </span>No<span class="w"> </span>repository<span class="w"> </span>field.
+
++<span class="w"> </span>jest@26.4.2
+added<span class="w"> </span><span class="m">506</span><span class="w"> </span>packages<span class="w"> </span>from<span class="w"> </span><span class="m">347</span><span class="w"> </span>contributors<span class="w"> </span>and<span class="w"> </span>audited<span class="w"> </span><span class="m">506</span><span class="w"> </span>packages<span class="w"> </span><span class="k">in</span><span class="w"> </span><span class="m">18</span>.837s
+
+<span class="m">21</span><span class="w"> </span>packages<span class="w"> </span>are<span class="w"> </span>looking<span class="w"> </span><span class="k">for</span><span class="w"> </span>funding
+<span class="w">  </span>run<span class="w"> </span><span class="sb">`</span>npm<span class="w"> </span>fund<span class="sb">`</span><span class="w"> </span><span class="k">for</span><span class="w"> </span>details
+
+found<span class="w"> </span><span class="m">0</span><span class="w"> </span>vulnerabilities
+</code></pre></div>
+
+<p>That's quite a lot of information, most of which isn't relevant to us right now - if the install succeeded (you can run <code>echo $?</code> and should see the "success" exit code of <code>0</code>, if you're unsure), we can move on. If you really want to know what the other details mean, see the end of this post.</p>
+<p>We should update our repo:</p>
+<div class="highlight"><pre><span></span><code>$<span class="w"> </span>git<span class="w"> </span>status
+On<span class="w"> </span>branch<span class="w"> </span>master
+Changes<span class="w"> </span>not<span class="w"> </span>staged<span class="w"> </span><span class="k">for</span><span class="w"> </span>commit:
+<span class="w">  </span><span class="o">(</span>use<span class="w"> </span><span class="s2">&quot;git add &lt;file&gt;...&quot;</span><span class="w"> </span>to<span class="w"> </span>update<span class="w"> </span>what<span class="w"> </span>will<span class="w"> </span>be<span class="w"> </span>committed<span class="o">)</span>
+<span class="w">  </span><span class="o">(</span>use<span class="w"> </span><span class="s2">&quot;git restore &lt;file&gt;...&quot;</span><span class="w"> </span>to<span class="w"> </span>discard<span class="w"> </span>changes<span class="w"> </span><span class="k">in</span><span class="w"> </span>working<span class="w"> </span>directory<span class="o">)</span>
+<span class="w">    </span>modified:<span class="w">   </span>package.json
+
+Untracked<span class="w"> </span>files:
+<span class="w">  </span><span class="o">(</span>use<span class="w"> </span><span class="s2">&quot;git add &lt;file&gt;...&quot;</span><span class="w"> </span>to<span class="w"> </span>include<span class="w"> </span><span class="k">in</span><span class="w"> </span>what<span class="w"> </span>will<span class="w"> </span>be<span class="w"> </span>committed<span class="o">)</span>
+<span class="w">    </span>node_modules/
+<span class="w">    </span>package-lock.json
+
+no<span class="w"> </span>changes<span class="w"> </span>added<span class="w"> </span>to<span class="w"> </span>commit<span class="w"> </span><span class="o">(</span>use<span class="w"> </span><span class="s2">&quot;git add&quot;</span><span class="w"> </span>and/or<span class="w"> </span><span class="s2">&quot;git commit -a&quot;</span><span class="o">)</span>
+</code></pre></div>
+
+<p>So we've changed <code>package.json</code>, created the <code>node_modules/</code> dependencies directory and added <code>package-lock.json</code>. Typically we don't want all of the dependencies in our source control, so let's:</p>
+<ul>
+<li>Ignore the dependencies directory by adding it to a <code>.gitignore</code> file</li>
+<li>Add all of the rest (<code>git add .</code> means <em>"add everything from this directory and below"</em>, so will add both <code>.gitignore</code> and <code>package-lock.json</code> as well as the changes to <code>package.json</code>); and</li>
+<li>Commit the result.</li>
+</ul>
+<div class="highlight"><pre><span></span><code>$<span class="w"> </span><span class="nb">echo</span><span class="w"> </span><span class="s1">&#39;node_modules/&#39;</span><span class="w"> </span>&gt;<span class="w"> </span>.gitignore<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>git<span class="w"> </span>add<span class="w"> </span>.<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>git<span class="w"> </span>commit<span class="w"> </span>-m<span class="w"> </span><span class="s1">&#39;Install Jest&#39;</span>
+<span class="o">[</span>master<span class="w"> </span>&lt;hash&gt;<span class="o">]</span><span class="w"> </span>Install<span class="w"> </span>Jest
+<span class="w"> </span><span class="m">3</span><span class="w"> </span>files<span class="w"> </span>changed,<span class="w"> </span><span class="m">4680</span><span class="w"> </span>insertions<span class="o">(</span>+<span class="o">)</span>,<span class="w"> </span><span class="m">1</span><span class="w"> </span>deletion<span class="o">(</span>-<span class="o">)</span>
+<span class="w"> </span>create<span class="w"> </span>mode<span class="w"> </span><span class="m">100644</span><span class="w"> </span>.gitignore
+<span class="w"> </span>create<span class="w"> </span>mode<span class="w"> </span><span class="m">100644</span><span class="w"> </span>package-lock.json
+</code></pre></div>
+
+<h2>Running Jest [2/10]</h2>
+<p>Now we can update <code>package.json</code> to set Jest to be our test command. By default, NPM creates a test script that will throw an error, as we saw above:</p>
+<div class="highlight"><pre><span></span><code><span class="nt">&quot;test&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;echo \&quot;Error: no test specified\&quot; &amp;&amp; exit 1&quot;</span>
+</code></pre></div>
+
+<p>If you run this using <code>npm test</code> (alternatively <code>npm run test</code> or even just <code>npm t</code>) you see the result:</p>
+<div class="highlight"><pre><span></span><code>$<span class="w"> </span>npm<span class="w"> </span><span class="nb">test</span>
+
+&gt;<span class="w"> </span>rps-tdd@1.0.0<span class="w"> </span><span class="nb">test</span><span class="w"> </span>path/to/rps-tdd
+&gt;<span class="w"> </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;Error: no test specified&quot;</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nb">exit</span><span class="w"> </span><span class="m">1</span>
+
+Error:<span class="w"> </span>no<span class="w"> </span><span class="nb">test</span><span class="w"> </span>specified
+npm<span class="w"> </span>ERR!<span class="w"> </span>Test<span class="w"> </span>failed.<span class="w">  </span>See<span class="w"> </span>above<span class="w"> </span><span class="k">for</span><span class="w"> </span>more<span class="w"> </span>details.
+</code></pre></div>
+
+<p>Edit <code>package.json</code> to update the script to <code>"test": "jest"</code>, using an editor or IDE of your choice, to use the test framework we just installed. Then run the tests again:</p>
+<div class="highlight"><pre><span></span><code>$<span class="w"> </span>npm<span class="w"> </span>t
+
+&gt;<span class="w"> </span>rps-tdd@1.0.0<span class="w"> </span><span class="nb">test</span><span class="w"> </span>path/to/rps-tdd
+&gt;<span class="w"> </span>jest
+
+No<span class="w"> </span>tests<span class="w"> </span>found,<span class="w"> </span>exiting<span class="w"> </span>with<span class="w"> </span>code<span class="w"> </span><span class="m">1</span>
+Run<span class="w"> </span>with<span class="w"> </span><span class="sb">`</span>--passWithNoTests<span class="sb">`</span><span class="w"> </span>to<span class="w"> </span><span class="nb">exit</span><span class="w"> </span>with<span class="w"> </span>code<span class="w"> </span><span class="m">0</span>
+In<span class="w"> </span>path/to/rps-tdd
+<span class="w">  </span><span class="m">2</span><span class="w"> </span>files<span class="w"> </span>checked.
+<span class="w">  </span>testMatch:<span class="w"> </span>**/__tests__/**/*.<span class="o">[</span>jt<span class="o">]</span>s?<span class="o">(</span>x<span class="o">)</span>,<span class="w"> </span>**/?<span class="o">(</span>*.<span class="o">)</span>+<span class="o">(</span>spec<span class="p">|</span><span class="nb">test</span><span class="o">)</span>.<span class="o">[</span>tj<span class="o">]</span>s?<span class="o">(</span>x<span class="o">)</span><span class="w"> </span>-<span class="w"> </span><span class="m">0</span><span class="w"> </span>matches
+<span class="w">  </span>testPathIgnorePatterns:<span class="w"> </span>/node_modules/<span class="w"> </span>-<span class="w"> </span><span class="m">2</span><span class="w"> </span>matches
+<span class="w">  </span>testRegex:<span class="w">  </span>-<span class="w"> </span><span class="m">0</span><span class="w"> </span>matches
+Pattern:<span class="w">  </span>-<span class="w"> </span><span class="m">0</span><span class="w"> </span>matches
+npm<span class="w"> </span>ERR!<span class="w"> </span>Test<span class="w"> </span>failed.<span class="w">  </span>See<span class="w"> </span>above<span class="w"> </span><span class="k">for</span><span class="w"> </span>more<span class="w"> </span>details.
+</code></pre></div>
+
+<p>This seems unhappy, but reading the output we can see why: <code>No tests found</code>. One option given there is to add the <code>--passWithNoTests</code> flag, but maybe we should write a test instead. Let's start with something completely trivial to make sure everything is working; add the following to a file named <code>index.test.js</code>:</p>
+<div class="highlight"><pre><span></span><code><span class="nx">it</span><span class="p">(</span><span class="s2">&quot;should work&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">()</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="kd">const</span><span class="w"> </span><span class="nx">left</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">1</span><span class="p">;</span>
+<span class="w">  </span><span class="kd">const</span><span class="w"> </span><span class="nx">right</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">2</span><span class="p">;</span>
+
+<span class="w">  </span><span class="kd">const</span><span class="w"> </span><span class="nx">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">left</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nx">right</span><span class="p">;</span>
+
+<span class="w">  </span><span class="nx">expect</span><span class="p">(</span><span class="nx">result</span><span class="p">).</span><span class="nx">toBe</span><span class="p">(</span><span class="mf">3</span><span class="p">);</span>
+<span class="p">});</span>
+</code></pre></div>
+
+<p>Now run the tests a third time:</p>
+<div class="highlight"><pre><span></span><code>$<span class="w"> </span>npm<span class="w"> </span>t
+
+&gt;<span class="w"> </span>rps-tdd@1.0.0<span class="w"> </span><span class="nb">test</span><span class="w"> </span>path/to/rps-tdd
+&gt;<span class="w"> </span>jest
+
+<span class="w"> </span>PASS<span class="w">  </span>./index.test.js
+<span class="w">  </span>✓<span class="w"> </span>should<span class="w"> </span>work<span class="w"> </span><span class="o">(</span><span class="m">2</span><span class="w"> </span>ms<span class="o">)</span>
+
+Test<span class="w"> </span>Suites:<span class="w"> </span><span class="m">1</span><span class="w"> </span>passed,<span class="w"> </span><span class="m">1</span><span class="w"> </span>total
+Tests:<span class="w">       </span><span class="m">1</span><span class="w"> </span>passed,<span class="w"> </span><span class="m">1</span><span class="w"> </span>total
+Snapshots:<span class="w">   </span><span class="m">0</span><span class="w"> </span>total
+Time:<span class="w">        </span><span class="m">1</span>.224<span class="w"> </span>s
+Ran<span class="w"> </span>all<span class="w"> </span><span class="nb">test</span><span class="w"> </span>suites.
+</code></pre></div>
+
+<p>Much happier! So what does that test <em>do</em>, what's going on there?</p>
+<ol>
+<li>We call the <code>it</code> function (provided by Jest, you can also use the name <code>test</code>) to <strong>register a test</strong>. We pass it two things:<ul>
+<li>The name of the test, as a string (you can see this name in the output, too). In this style of testing we use the function name along with the test as one sentence describing our expectation: <em>"it should work"</em>.</li>
+<li>The body of the test, as a function. Right now we're just <em>registering</em> the test, Jest will call that function for us when it runs the test.</li>
+</ul>
+</li>
+<li>Within the test body, we <strong>establish our expectations</strong>. What exactly do we think should happen? I've split this into three sections:<ul>
+<li><strong>Arrange</strong> (sometimes known as <em>"given"</em>) - set up the preconditions for our test, in this case two initial values.</li>
+<li><strong>Act</strong> (or <em>"when"</em>) - do some work, in this case adding them together. This is what we're actually testing.</li>
+<li><strong>Assert</strong> (or <em>"then"</em>) - make sure that the work was done correctly. The <code>expect</code> function is also provided by Jest; it takes the value we want to check and returns an object with a lot of helpful <a href="https://jestjs.io/docs/en/expect">matcher methods</a> to describe our expectations of it. Again the naming convention allows us to write out a simple sentence: <em>"expect result to be 3"</em>.</li>
+</ul>
+</li>
+</ol>
+<p>One of the things Jest does really well is test feedback. If we had an inaccurate expectation:</p>
+<div class="highlight"><pre><span></span><code><span class="nx">it</span><span class="p">(</span><span class="s2">&quot;should work&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">()</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="kd">const</span><span class="w"> </span><span class="nx">left</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">2</span><span class="p">;</span>
+<span class="w">  </span><span class="kd">const</span><span class="w"> </span><span class="nx">right</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">2</span><span class="p">;</span>
+
+<span class="w">  </span><span class="kd">const</span><span class="w"> </span><span class="nx">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">left</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nx">right</span><span class="p">;</span>
+
+<span class="w">  </span><span class="nx">expect</span><span class="p">(</span><span class="nx">result</span><span class="p">).</span><span class="nx">toBe</span><span class="p">(</span><span class="mf">5</span><span class="p">);</span>
+<span class="p">});</span>
+</code></pre></div>
+
+<p>it would tell us exactly what the problem was:</p>
+<div class="highlight"><pre><span></span><code>$<span class="w"> </span>npm<span class="w"> </span>t
+
+&gt;<span class="w"> </span>rps-tdd@1.0.0<span class="w"> </span><span class="nb">test</span><span class="w"> </span>path/to/rps-tdd
+&gt;<span class="w"> </span>jest
+
+<span class="w"> </span>FAIL<span class="w">  </span>./index.test.js
+<span class="w">  </span>✕<span class="w"> </span>should<span class="w"> </span>work<span class="w"> </span><span class="o">(</span><span class="m">4</span><span class="w"> </span>ms<span class="o">)</span>
+
+<span class="w">  </span>●<span class="w"> </span>should<span class="w"> </span>work
+
+<span class="w">    </span>expect<span class="o">(</span>received<span class="o">)</span>.toBe<span class="o">(</span>expected<span class="o">)</span><span class="w"> </span>//<span class="w"> </span>Object.is<span class="w"> </span>equality
+
+<span class="w">    </span>Expected:<span class="w"> </span><span class="m">5</span>
+<span class="w">    </span>Received:<span class="w"> </span><span class="m">4</span>
+
+<span class="w">       </span><span class="m">5</span><span class="w"> </span><span class="p">|</span><span class="w">   </span>const<span class="w"> </span><span class="nv">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>left<span class="w"> </span>+<span class="w"> </span>right<span class="p">;</span>
+<span class="w">       </span><span class="m">6</span><span class="w"> </span><span class="p">|</span>
+<span class="w">    </span>&gt;<span class="w">  </span><span class="m">7</span><span class="w"> </span><span class="p">|</span><span class="w">   </span>expect<span class="o">(</span>result<span class="o">)</span>.toBe<span class="o">(</span><span class="m">5</span><span class="o">)</span><span class="p">;</span>
+<span class="w">         </span><span class="p">|</span><span class="w">                  </span>^
+<span class="w">       </span><span class="m">8</span><span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="o">})</span><span class="p">;</span>
+<span class="w">       </span><span class="m">9</span><span class="w"> </span><span class="p">|</span>
+<span class="w">      </span><span class="m">10</span><span class="w"> </span><span class="p">|</span>
+
+<span class="w">      </span>at<span class="w"> </span>Object.&lt;anonymous&gt;<span class="w"> </span><span class="o">(</span>index.test.js:7:18<span class="o">)</span>
+
+Test<span class="w"> </span>Suites:<span class="w"> </span><span class="m">1</span><span class="w"> </span>failed,<span class="w"> </span><span class="m">1</span><span class="w"> </span>total
+Tests:<span class="w">       </span><span class="m">1</span><span class="w"> </span>failed,<span class="w"> </span><span class="m">1</span><span class="w"> </span>total
+Snapshots:<span class="w">   </span><span class="m">0</span><span class="w"> </span>total
+Time:<span class="w">        </span><span class="m">0</span>.979<span class="w"> </span>s,<span class="w"> </span>estimated<span class="w"> </span><span class="m">1</span><span class="w"> </span>s
+Ran<span class="w"> </span>all<span class="w"> </span><span class="nb">test</span><span class="w"> </span>suites.
+npm<span class="w"> </span>ERR!<span class="w"> </span>Test<span class="w"> </span>failed.<span class="w">  </span>See<span class="w"> </span>above<span class="w"> </span><span class="k">for</span><span class="w"> </span>more<span class="w"> </span>details.
+</code></pre></div>
+
+<blockquote>
+<p><strong>Protip</strong>: always read the outputs carefully! Sometimes a test fails for an unexpected reason, which usually tells you something interesting.</p>
+</blockquote>
+<p>So, we're happy things are working so far.</p>
+<h2>A failing test [3/10]</h2>
+<p>Let's start some actual TDD, and write our first failing test. Replace the content of <code>index.test.js</code> with:</p>
+<div class="highlight"><pre><span></span><code><span class="nx">describe</span><span class="p">(</span><span class="s2">&quot;rock, paper, scissors&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">()</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="nx">it</span><span class="p">(</span><span class="s2">&quot;should say left wins for rock vs. scissors&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">()</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="kd">const</span><span class="w"> </span><span class="nx">left</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;rock&quot;</span><span class="p">;</span>
+<span class="w">    </span><span class="kd">const</span><span class="w"> </span><span class="nx">right</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;scissors&quot;</span><span class="p">;</span>
+
+<span class="w">    </span><span class="kd">const</span><span class="w"> </span><span class="nx">outcome</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">rps</span><span class="p">(</span><span class="nx">left</span><span class="p">,</span><span class="w"> </span><span class="nx">right</span><span class="p">);</span>
+
+<span class="w">    </span><span class="nx">expect</span><span class="p">(</span><span class="nx">outcome</span><span class="p">).</span><span class="nx">toBe</span><span class="p">(</span><span class="s2">&quot;left&quot;</span><span class="p">);</span>
+<span class="w">  </span><span class="p">});</span>
+<span class="p">});</span>
+</code></pre></div>
+
+<p>Note I've introduced another Jest function, <code>describe</code>. This registers a <em>group</em> of tests, usually referred to as a <em>"suite"</em>. Like <code>it</code>/<code>test</code> it takes a name and a function, then our individual tests are registered inside that function.</p>
+<p>Our first test is that, given that <code>left</code> is <code>"rock"</code> and <code>right</code> is <code>"scissors"</code> (<em>"Arrange"</em>), when the shapes are compared (<em>"Act"</em>) , then the winner should be <code>"left"</code> (<em>"Assert"</em>) because rock blunts scissors.</p>
+<p><strong>Note</strong> one key benefit of TDD here - we can try out how we should interact with our code (its <em>"interface"</em>) before we've even written any. Maybe it should return something other than a string, for example? We can have that discussion now, while it's just a matter of changing our minds rather than the code.</p>
+<p>Before we run the first test, <a href="https://markhneedham.com/blog/2010/07/28/tdd-call-your-shots/"><em>"call the shot"</em></a> - make a prediction of what the test result will be, pass or fail. If you think the test will fail, <strong>why</strong>; will the <code>expect</code>ation be unmet (and what value do you think you'll get instead) or will something else go wrong? This is really good practice for <em>"playing computer"</em> (modelling the behaviour of the code in your head) and you can write your guess down (or say it out loud if you're pairing) to keep yourself honest. Now let's run it:</p>
+<div class="highlight"><pre><span></span><code><span class="n">$</span><span class="w"> </span><span class="n">npm</span><span class="w"> </span><span class="n">t</span>
+
+<span class="o">&gt;</span><span class="w"> </span><span class="n">rps</span><span class="o">-</span><span class="n">tdd</span><span class="mf">@1.0.0</span><span class="w"> </span><span class="n">test</span><span class="w"> </span><span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="n">rps</span><span class="o">-</span><span class="n">tdd</span>
+<span class="o">&gt;</span><span class="w"> </span><span class="n">jest</span>
+
+<span class="w"> </span><span class="n">FAIL</span><span class="w">  </span><span class="p">.</span><span class="o">/</span><span class="n">index</span><span class="p">.</span><span class="n">test</span><span class="p">.</span><span class="n">js</span>
+<span class="w">  </span><span class="n">rock</span><span class="p">,</span><span class="w"> </span><span class="n">paper</span><span class="p">,</span><span class="w"> </span><span class="n">scissors</span>
+<span class="w">    </span><span class="err">✕</span><span class="w"> </span><span class="n">should</span><span class="w"> </span><span class="n">say</span><span class="w"> </span><span class="n">left</span><span class="w"> </span><span class="n">wins</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">rock</span><span class="w"> </span><span class="n">vs</span><span class="p">.</span><span class="w"> </span><span class="n">scissors</span><span class="w"> </span><span class="p">(</span><span class="mi">2</span><span class="w"> </span><span class="n">ms</span><span class="p">)</span>
+
+<span class="w">  </span><span class="err">●</span><span class="w"> </span><span class="n">rock</span><span class="p">,</span><span class="w"> </span><span class="n">paper</span><span class="p">,</span><span class="w"> </span><span class="n">scissors</span><span class="w"> </span><span class="err">›</span><span class="w"> </span><span class="n">should</span><span class="w"> </span><span class="n">say</span><span class="w"> </span><span class="n">left</span><span class="w"> </span><span class="n">wins</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">rock</span><span class="w"> </span><span class="n">vs</span><span class="p">.</span><span class="w"> </span><span class="n">scissors</span>
+
+<span class="w">    </span><span class="nl">ReferenceError</span><span class="p">:</span><span class="w"> </span><span class="n">rps</span><span class="w"> </span><span class="n">is</span><span class="w"> </span><span class="n">not</span><span class="w"> </span><span class="n">defined</span>
+
+<span class="w">      </span><span class="mi">4</span><span class="w"> </span><span class="o">|</span><span class="w">     </span><span class="k">const</span><span class="w"> </span><span class="n">right</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;scissors&quot;</span><span class="p">;</span>
+<span class="w">      </span><span class="mi">5</span><span class="w"> </span><span class="o">|</span>
+<span class="w">    </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">6</span><span class="w"> </span><span class="o">|</span><span class="w">     </span><span class="k">const</span><span class="w"> </span><span class="n">outcome</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">rps</span><span class="p">(</span><span class="n">left</span><span class="p">,</span><span class="w"> </span><span class="n">right</span><span class="p">);</span>
+<span class="w">        </span><span class="o">|</span><span class="w">                     </span><span class="o">^</span>
+<span class="w">      </span><span class="mi">7</span><span class="w"> </span><span class="o">|</span>
+<span class="w">      </span><span class="mi">8</span><span class="w"> </span><span class="o">|</span><span class="w">     </span><span class="n">expect</span><span class="p">(</span><span class="n">outcome</span><span class="p">).</span><span class="n">toBe</span><span class="p">(</span><span class="s">&quot;left&quot;</span><span class="p">);</span>
+<span class="w">      </span><span class="mi">9</span><span class="w"> </span><span class="o">|</span><span class="w">   </span><span class="p">});</span>
+
+<span class="w">      </span><span class="n">at</span><span class="w"> </span><span class="n">Object</span><span class="p">.</span><span class="o">&lt;</span><span class="n">anonymous</span><span class="o">&gt;</span><span class="w"> </span><span class="p">(</span><span class="n">index</span><span class="p">.</span><span class="n">test</span><span class="p">.</span><span class="n">js</span><span class="o">:</span><span class="mi">6</span><span class="o">:</span><span class="mi">21</span><span class="p">)</span>
+
+<span class="n">Test</span><span class="w"> </span><span class="n">Suites</span><span class="o">:</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="n">failed</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="n">total</span>
+<span class="nl">Tests</span><span class="p">:</span><span class="w">       </span><span class="mi">1</span><span class="w"> </span><span class="n">failed</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="n">total</span>
+<span class="nl">Snapshots</span><span class="p">:</span><span class="w">   </span><span class="mi">0</span><span class="w"> </span><span class="n">total</span>
+<span class="nl">Time</span><span class="p">:</span><span class="w">        </span><span class="mf">1.226</span><span class="w"> </span><span class="n">s</span>
+<span class="n">Ran</span><span class="w"> </span><span class="n">all</span><span class="w"> </span><span class="n">test</span><span class="w"> </span><span class="n">suites</span><span class="p">.</span>
+<span class="n">npm</span><span class="w"> </span><span class="n">ERR</span><span class="o">!</span><span class="w"> </span><span class="n">Test</span><span class="w"> </span><span class="n">failed</span><span class="p">.</span><span class="w">  </span><span class="n">See</span><span class="w"> </span><span class="n">above</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">more</span><span class="w"> </span><span class="n">details</span><span class="p">.</span>
+</code></pre></div>
+
+<p>...were you right?</p>
+<h2>The simplest possible change [4/10]</h2>
+<p>As you may have guessed, this fails because <code>rps</code> <em>doesn't exist yet</em>. Let's make the simplest possible change that will at least change the error we're receiving; define the function. At this stage we could <code>import</code>/<code>require</code> the function from another file, but let's keep things simple for now; add the following to the top of <code>index.test.js</code>:</p>
+<div class="highlight"><pre><span></span><code><span class="kd">function</span><span class="w"> </span><span class="nx">rps</span><span class="p">()</span><span class="w"> </span><span class="p">{}</span>
+</code></pre></div>
+
+<p>Call the shot, then run the test again to see if you were right:</p>
+<div class="highlight"><pre><span></span><code>$<span class="w"> </span>npm<span class="w"> </span>t
+
+&gt;<span class="w"> </span>rps-tdd@1.0.0<span class="w"> </span><span class="nb">test</span><span class="w"> </span>path/to/rps-tdd
+&gt;<span class="w"> </span>jest
+
+<span class="w"> </span>FAIL<span class="w">  </span>./index.test.js
+<span class="w">  </span>rock,<span class="w"> </span>paper,<span class="w"> </span>scissors
+<span class="w">    </span>✕<span class="w"> </span>should<span class="w"> </span>say<span class="w"> </span>left<span class="w"> </span>wins<span class="w"> </span><span class="k">for</span><span class="w"> </span>rock<span class="w"> </span>vs.<span class="w"> </span>scissors<span class="w"> </span><span class="o">(</span><span class="m">4</span><span class="w"> </span>ms<span class="o">)</span>
+
+<span class="w">  </span>●<span class="w"> </span>rock,<span class="w"> </span>paper,<span class="w"> </span>scissors<span class="w"> </span>›<span class="w"> </span>should<span class="w"> </span>say<span class="w"> </span>left<span class="w"> </span>wins<span class="w"> </span><span class="k">for</span><span class="w"> </span>rock<span class="w"> </span>vs.<span class="w"> </span>scissors
+
+<span class="w">    </span>expect<span class="o">(</span>received<span class="o">)</span>.toBe<span class="o">(</span>expected<span class="o">)</span><span class="w"> </span>//<span class="w"> </span>Object.is<span class="w"> </span>equality
+
+<span class="w">    </span>Expected:<span class="w"> </span><span class="s2">&quot;left&quot;</span>
+<span class="w">    </span>Received:<span class="w"> </span>undefined
+
+<span class="w">       </span><span class="m">8</span><span class="w"> </span><span class="p">|</span><span class="w">     </span>const<span class="w"> </span><span class="nv">outcome</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>rps<span class="o">(</span>left,<span class="w"> </span>right<span class="o">)</span><span class="p">;</span>
+<span class="w">       </span><span class="m">9</span><span class="w"> </span><span class="p">|</span>
+<span class="w">    </span>&gt;<span class="w"> </span><span class="m">10</span><span class="w"> </span><span class="p">|</span><span class="w">     </span>expect<span class="o">(</span>outcome<span class="o">)</span>.toBe<span class="o">(</span><span class="s2">&quot;left&quot;</span><span class="o">)</span><span class="p">;</span>
+<span class="w">         </span><span class="p">|</span><span class="w">                     </span>^
+<span class="w">      </span><span class="m">11</span><span class="w"> </span><span class="p">|</span><span class="w">   </span><span class="o">})</span><span class="p">;</span>
+<span class="w">      </span><span class="m">12</span><span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="o">})</span><span class="p">;</span>
+<span class="w">      </span><span class="m">13</span><span class="w"> </span><span class="p">|</span>
+
+<span class="w">      </span>at<span class="w"> </span>Object.&lt;anonymous&gt;<span class="w"> </span><span class="o">(</span>index.test.js:10:21<span class="o">)</span>
+
+Test<span class="w"> </span>Suites:<span class="w"> </span><span class="m">1</span><span class="w"> </span>failed,<span class="w"> </span><span class="m">1</span><span class="w"> </span>total
+Tests:<span class="w">       </span><span class="m">1</span><span class="w"> </span>failed,<span class="w"> </span><span class="m">1</span><span class="w"> </span>total
+Snapshots:<span class="w">   </span><span class="m">0</span><span class="w"> </span>total
+Time:<span class="w">        </span><span class="m">1</span>.196<span class="w"> </span>s
+Ran<span class="w"> </span>all<span class="w"> </span><span class="nb">test</span><span class="w"> </span>suites.
+npm<span class="w"> </span>ERR!<span class="w"> </span>Test<span class="w"> </span>failed.<span class="w">  </span>See<span class="w"> </span>above<span class="w"> </span><span class="k">for</span><span class="w"> </span>more<span class="w"> </span>details.
+</code></pre></div>
+
+<p>Our test still doesn't pass, but at least we've changed the error message - we're now reaching the actual expectation, instead of crashing when we try to call the function. So let's make the simplest possible change that should get this passing:</p>
+<div class="highlight"><pre><span></span><code><span class="kd">function</span><span class="w"> </span><span class="nx">rps</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="s2">&quot;left&quot;</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<p>Call the shot, then run the test again to see if you were right:</p>
+<div class="highlight"><pre><span></span><code><span class="n">$</span><span class="w"> </span><span class="n">npm</span><span class="w"> </span><span class="n">t</span>
+
+<span class="o">&gt;</span><span class="w"> </span><span class="n">rps</span><span class="o">-</span><span class="n">tdd</span><span class="mf">@1.0.0</span><span class="w"> </span><span class="n">test</span><span class="w"> </span><span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="n">rps</span><span class="o">-</span><span class="n">tdd</span>
+<span class="o">&gt;</span><span class="w"> </span><span class="n">jest</span>
+
+<span class="w"> </span><span class="n">PASS</span><span class="w">  </span><span class="p">.</span><span class="o">/</span><span class="n">index</span><span class="p">.</span><span class="n">test</span><span class="p">.</span><span class="n">js</span>
+<span class="w">  </span><span class="n">rock</span><span class="p">,</span><span class="w"> </span><span class="n">paper</span><span class="p">,</span><span class="w"> </span><span class="n">scissors</span>
+<span class="w">    </span><span class="err">✓</span><span class="w"> </span><span class="n">should</span><span class="w"> </span><span class="n">say</span><span class="w"> </span><span class="n">left</span><span class="w"> </span><span class="n">wins</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">rock</span><span class="w"> </span><span class="n">vs</span><span class="p">.</span><span class="w"> </span><span class="n">scissors</span><span class="w"> </span><span class="p">(</span><span class="mi">2</span><span class="w"> </span><span class="n">ms</span><span class="p">)</span>
+
+<span class="n">Test</span><span class="w"> </span><span class="n">Suites</span><span class="o">:</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="n">passed</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="n">total</span>
+<span class="nl">Tests</span><span class="p">:</span><span class="w">       </span><span class="mi">1</span><span class="w"> </span><span class="n">passed</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="n">total</span>
+<span class="nl">Snapshots</span><span class="p">:</span><span class="w">   </span><span class="mi">0</span><span class="w"> </span><span class="n">total</span>
+<span class="nl">Time</span><span class="p">:</span><span class="w">        </span><span class="mf">1.198</span><span class="w"> </span><span class="n">s</span>
+<span class="n">Ran</span><span class="w"> </span><span class="n">all</span><span class="w"> </span><span class="n">test</span><span class="w"> </span><span class="n">suites</span><span class="p">.</span>
+</code></pre></div>
+
+<p>Great! This calls for a celebratory commit:</p>
+<div class="highlight"><pre><span></span><code>$<span class="w"> </span>git<span class="w"> </span>add<span class="w"> </span>.<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>git<span class="w"> </span>commit<span class="w"> </span>-m<span class="w"> </span><span class="s1">&#39;First test - rock vs. scissors&#39;</span>
+<span class="o">[</span>master<span class="w"> </span>&lt;hash&gt;<span class="o">]</span><span class="w"> </span>First<span class="w"> </span><span class="nb">test</span><span class="w"> </span>-<span class="w"> </span>rock<span class="w"> </span>vs.<span class="w"> </span>scissors
+<span class="w"> </span><span class="m">2</span><span class="w"> </span>files<span class="w"> </span>changed,<span class="w"> </span><span class="m">15</span><span class="w"> </span>insertions<span class="o">(</span>+<span class="o">)</span>,<span class="w"> </span><span class="m">1</span><span class="w"> </span>deletion<span class="o">(</span>-<span class="o">)</span>
+<span class="w"> </span>create<span class="w"> </span>mode<span class="w"> </span><span class="m">100644</span><span class="w"> </span>index.test.js
+</code></pre></div>
+
+<p><strong>Note</strong> another key benefit of TDD here - it tells you when you're done. Once the tests are passing, the implementation meets the current requirements.</p>
+<h2>The difficult second test [5/10]</h2>
+<p><em>"But wait"</em>, you might be thinking, <em>"that's pointless, it doesn't <strong>do</strong> anything!"</em> And to an extent, that's true; our function just returns a hard-coded string. But let's think about what else has happened:</p>
+<ul>
+<li>We've decided on an interface for our function, what it's going to receive and return;</li>
+<li>We've proved out a test setup that lets us make assertions on the behaviour of that function; and</li>
+<li>We've created the simplest possible implementation for the requirements we've expressed through tests so far, making our code very robust.</li>
+</ul>
+<p>So let's build on that foundation; flip the shapes around to change the output so we can expect the test to fail. Add the following into the <code>describe</code> callback in <code>index.test.js</code>:</p>
+<div class="highlight"><pre><span></span><code><span class="nx">it</span><span class="p">(</span><span class="s2">&quot;should say right wins for scissors vs. rock&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">()</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="kd">const</span><span class="w"> </span><span class="nx">left</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;scissors&quot;</span><span class="p">;</span>
+<span class="w">  </span><span class="kd">const</span><span class="w"> </span><span class="nx">right</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;rock&quot;</span><span class="p">;</span>
+
+<span class="w">  </span><span class="kd">const</span><span class="w"> </span><span class="nx">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">rps</span><span class="p">(</span><span class="nx">left</span><span class="p">,</span><span class="w"> </span><span class="nx">right</span><span class="p">);</span>
+
+<span class="w">  </span><span class="nx">expect</span><span class="p">(</span><span class="nx">result</span><span class="p">).</span><span class="nx">toBe</span><span class="p">(</span><span class="s2">&quot;right&quot;</span><span class="p">);</span>
+<span class="p">});</span>
+</code></pre></div>
+
+<p>Note that the <em>"Act"</em> is the same, but the <em>"Arrange"</em> and <em>"Assert"</em> have changed. Call the shot, then run the test again to see if you were correct:</p>
+<div class="highlight"><pre><span></span><code>$<span class="w"> </span>npm<span class="w"> </span>t
+
+&gt;<span class="w"> </span>rps-tdd@1.0.0<span class="w"> </span><span class="nb">test</span><span class="w"> </span>path/to/rps-tdd
+&gt;<span class="w"> </span>jest
+
+<span class="w"> </span>FAIL<span class="w">  </span>./index.test.js
+<span class="w">  </span>rock,<span class="w"> </span>paper,<span class="w"> </span>scissors
+<span class="w">    </span>✓<span class="w"> </span>should<span class="w"> </span>say<span class="w"> </span>left<span class="w"> </span>wins<span class="w"> </span><span class="k">for</span><span class="w"> </span>rock<span class="w"> </span>vs.<span class="w"> </span>scissors<span class="w"> </span><span class="o">(</span><span class="m">6</span><span class="w"> </span>ms<span class="o">)</span>
+<span class="w">    </span>✕<span class="w"> </span>should<span class="w"> </span>say<span class="w"> </span>right<span class="w"> </span>wins<span class="w"> </span><span class="k">for</span><span class="w"> </span>scissors<span class="w"> </span>vs.<span class="w"> </span>rock<span class="w"> </span><span class="o">(</span><span class="m">4</span><span class="w"> </span>ms<span class="o">)</span>
+
+<span class="w">  </span>●<span class="w"> </span>rock,<span class="w"> </span>paper,<span class="w"> </span>scissors<span class="w"> </span>›<span class="w"> </span>should<span class="w"> </span>say<span class="w"> </span>right<span class="w"> </span>wins<span class="w"> </span><span class="k">for</span><span class="w"> </span>scissors<span class="w"> </span>vs.<span class="w"> </span>rock
+
+<span class="w">    </span>expect<span class="o">(</span>received<span class="o">)</span>.toBe<span class="o">(</span>expected<span class="o">)</span><span class="w"> </span>//<span class="w"> </span>Object.is<span class="w"> </span>equality
+
+<span class="w">    </span>Expected:<span class="w"> </span><span class="s2">&quot;right&quot;</span>
+<span class="w">    </span>Received:<span class="w"> </span><span class="s2">&quot;left&quot;</span>
+
+<span class="w">      </span><span class="m">19</span><span class="w"> </span><span class="p">|</span><span class="w">     </span>const<span class="w"> </span><span class="nv">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>rps<span class="o">(</span>left,<span class="w"> </span>right<span class="o">)</span><span class="p">;</span>
+<span class="w">      </span><span class="m">20</span><span class="w"> </span><span class="p">|</span>
+<span class="w">    </span>&gt;<span class="w"> </span><span class="m">21</span><span class="w"> </span><span class="p">|</span><span class="w">     </span>expect<span class="o">(</span>result<span class="o">)</span>.toBe<span class="o">(</span><span class="s2">&quot;right&quot;</span><span class="o">)</span><span class="p">;</span>
+<span class="w">         </span><span class="p">|</span><span class="w">                    </span>^
+<span class="w">      </span><span class="m">22</span><span class="w"> </span><span class="p">|</span><span class="w">   </span><span class="o">})</span><span class="p">;</span>
+<span class="w">      </span><span class="m">23</span><span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="o">})</span><span class="p">;</span>
+<span class="w">      </span><span class="m">24</span><span class="w"> </span><span class="p">|</span>
+
+<span class="w">      </span>at<span class="w"> </span>Object.&lt;anonymous&gt;<span class="w"> </span><span class="o">(</span>index.test.js:21:20<span class="o">)</span>
+
+Test<span class="w"> </span>Suites:<span class="w"> </span><span class="m">1</span><span class="w"> </span>failed,<span class="w"> </span><span class="m">1</span><span class="w"> </span>total
+Tests:<span class="w">       </span><span class="m">1</span><span class="w"> </span>failed,<span class="w"> </span><span class="m">1</span><span class="w"> </span>passed,<span class="w"> </span><span class="m">2</span><span class="w"> </span>total
+Snapshots:<span class="w">   </span><span class="m">0</span><span class="w"> </span>total
+Time:<span class="w">        </span><span class="m">1</span>.201<span class="w"> </span>s
+Ran<span class="w"> </span>all<span class="w"> </span><span class="nb">test</span><span class="w"> </span>suites.
+npm<span class="w"> </span>ERR!<span class="w"> </span>Test<span class="w"> </span>failed.<span class="w">  </span>See<span class="w"> </span>above<span class="w"> </span><span class="k">for</span><span class="w"> </span>more<span class="w"> </span>details.
+</code></pre></div>
+
+<p>Read that through carefully. What does it tell us?</p>
+<ol>
+<li>Our first test is still passing. That's good news, we haven't broken anything!</li>
+<li>Our second test fails, because it returns <code>"left"</code> but we want it to return <code>"right"</code>.</li>
+</ol>
+<p>So, what's the simplest possible change that would get this test passing? Think about it for a minute or two.</p>
+<p>We're going to need some kind of <em>conditional logic</em> here, because we return different results in different cases. However, we're supposed to be keeping things simple, so we don't want to leap all the way to a full implementation. How about this:</p>
+<div class="highlight"><pre><span></span><code><span class="kd">function</span><span class="w"> </span><span class="nx">rps</span><span class="p">(</span><span class="nx">left</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="nx">left</span><span class="w"> </span><span class="o">===</span><span class="w"> </span><span class="s2">&quot;rock&quot;</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="s2">&quot;left&quot;</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;right&quot;</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<p>Call the shot, then run the test again to see if you were right:</p>
+<div class="highlight"><pre><span></span><code>$<span class="w"> </span>npm<span class="w"> </span>t
+
+&gt;<span class="w"> </span>rps-tdd@1.0.0<span class="w"> </span><span class="nb">test</span><span class="w"> </span>path/to/rps-tdd
+&gt;<span class="w"> </span>jest
+
+<span class="w"> </span>PASS<span class="w">  </span>./index.test.js
+<span class="w">  </span>rock,<span class="w"> </span>paper,<span class="w"> </span>scissors
+<span class="w">    </span>✓<span class="w"> </span>should<span class="w"> </span>say<span class="w"> </span>left<span class="w"> </span>wins<span class="w"> </span><span class="k">for</span><span class="w"> </span>rock<span class="w"> </span>vs.<span class="w"> </span>scissors<span class="w"> </span><span class="o">(</span><span class="m">2</span><span class="w"> </span>ms<span class="o">)</span>
+<span class="w">    </span>✓<span class="w"> </span>should<span class="w"> </span>say<span class="w"> </span>right<span class="w"> </span>wins<span class="w"> </span><span class="k">for</span><span class="w"> </span>scissors<span class="w"> </span>vs.<span class="w"> </span>rock
+
+Test<span class="w"> </span>Suites:<span class="w"> </span><span class="m">1</span><span class="w"> </span>passed,<span class="w"> </span><span class="m">1</span><span class="w"> </span>total
+Tests:<span class="w">       </span><span class="m">2</span><span class="w"> </span>passed,<span class="w"> </span><span class="m">2</span><span class="w"> </span>total
+Snapshots:<span class="w">   </span><span class="m">0</span><span class="w"> </span>total
+Time:<span class="w">        </span><span class="m">1</span>.216<span class="w"> </span>s
+Ran<span class="w"> </span>all<span class="w"> </span><span class="nb">test</span><span class="w"> </span>suites.
+</code></pre></div>
+
+<p>Alright, two down, let's commit what we've done so far:</p>
+<div class="highlight"><pre><span></span><code>$<span class="w"> </span>git<span class="w"> </span>commit<span class="w"> </span>-a<span class="w"> </span>-m<span class="w"> </span><span class="s1">&#39;Second test - scissors vs. rock&#39;</span>
+<span class="o">[</span>master<span class="w"> </span>bd4bbd6<span class="o">]</span><span class="w"> </span>Second<span class="w"> </span><span class="nb">test</span><span class="w"> </span>-<span class="w"> </span>scissors<span class="w"> </span>vs.<span class="w"> </span>rock
+<span class="w"> </span><span class="m">1</span><span class="w"> </span>file<span class="w"> </span>changed,<span class="w"> </span><span class="m">11</span><span class="w"> </span>insertions<span class="o">(</span>+<span class="o">)</span>,<span class="w"> </span><span class="m">2</span><span class="w"> </span>deletions<span class="o">(</span>-<span class="o">)</span>
+</code></pre></div>
+
+<p>We haven't created any new files since the last commit, so we can use the <code>-a</code>/<code>--all</code> flag to <code>git commit</code> to include changes to all files, instead of needing to <code>git add</code> anything.</p>
+<h2>Third time's the charm [6/10]</h2>
+<p>We've handled both of the cases involving rock and scissors, so let's try this one, scissors cut paper:</p>
+<div class="highlight"><pre><span></span><code><span class="nx">it</span><span class="p">(</span><span class="s2">&quot;should say left wins for scissors vs. paper&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">()</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="kd">const</span><span class="w"> </span><span class="nx">left</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;scissors&quot;</span><span class="p">;</span>
+<span class="w">  </span><span class="kd">const</span><span class="w"> </span><span class="nx">right</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;paper&quot;</span><span class="p">;</span>
+
+<span class="w">  </span><span class="kd">const</span><span class="w"> </span><span class="nx">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">rps</span><span class="p">(</span><span class="nx">left</span><span class="p">,</span><span class="w"> </span><span class="nx">right</span><span class="p">);</span>
+
+<span class="w">  </span><span class="nx">expect</span><span class="p">(</span><span class="nx">result</span><span class="p">).</span><span class="nx">toBe</span><span class="p">(</span><span class="s2">&quot;left&quot;</span><span class="p">);</span>
+<span class="p">});</span>
+</code></pre></div>
+
+<p>Call the shot, then run the test again to see if you were right:</p>
+<div class="highlight"><pre><span></span><code>npm<span class="w"> </span>t
+
+&gt;<span class="w"> </span>rps-tdd@1.0.0<span class="w"> </span><span class="nb">test</span><span class="w"> </span>path/to/rps-tdd
+&gt;<span class="w"> </span>jest
+
+<span class="w"> </span>FAIL<span class="w">  </span>./index.test.js
+<span class="w">  </span>rock,<span class="w"> </span>paper,<span class="w"> </span>scissors
+<span class="w">    </span>✓<span class="w"> </span>should<span class="w"> </span>say<span class="w"> </span>left<span class="w"> </span>wins<span class="w"> </span><span class="k">for</span><span class="w"> </span>rock<span class="w"> </span>vs.<span class="w"> </span>scissors<span class="w"> </span><span class="o">(</span><span class="m">1</span><span class="w"> </span>ms<span class="o">)</span>
+<span class="w">    </span>✓<span class="w"> </span>should<span class="w"> </span>say<span class="w"> </span>right<span class="w"> </span>wins<span class="w"> </span><span class="k">for</span><span class="w"> </span>scissors<span class="w"> </span>vs.<span class="w"> </span>rock
+<span class="w">    </span>✕<span class="w"> </span>should<span class="w"> </span>say<span class="w"> </span>left<span class="w"> </span>wins<span class="w"> </span><span class="k">for</span><span class="w"> </span>scissors<span class="w"> </span>vs.<span class="w"> </span>paper<span class="w"> </span><span class="o">(</span><span class="m">3</span><span class="w"> </span>ms<span class="o">)</span>
+
+<span class="w">  </span>●<span class="w"> </span>rock,<span class="w"> </span>paper,<span class="w"> </span>scissors<span class="w"> </span>›<span class="w"> </span>should<span class="w"> </span>say<span class="w"> </span>left<span class="w"> </span>wins<span class="w"> </span><span class="k">for</span><span class="w"> </span>scissors<span class="w"> </span>vs.<span class="w"> </span>paper
+
+<span class="w">    </span>expect<span class="o">(</span>received<span class="o">)</span>.toBe<span class="o">(</span>expected<span class="o">)</span><span class="w"> </span>//<span class="w"> </span>Object.is<span class="w"> </span>equality
+
+<span class="w">    </span>Expected:<span class="w"> </span><span class="s2">&quot;left&quot;</span>
+<span class="w">    </span>Received:<span class="w"> </span><span class="s2">&quot;right&quot;</span>
+
+<span class="w">      </span><span class="m">28</span><span class="w"> </span><span class="p">|</span><span class="w">     </span>const<span class="w"> </span><span class="nv">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>rps<span class="o">(</span>left,<span class="w"> </span>right<span class="o">)</span><span class="p">;</span>
+<span class="w">      </span><span class="m">29</span><span class="w"> </span><span class="p">|</span>
+<span class="w">    </span>&gt;<span class="w"> </span><span class="m">30</span><span class="w"> </span><span class="p">|</span><span class="w">     </span>expect<span class="o">(</span>result<span class="o">)</span>.toBe<span class="o">(</span><span class="s2">&quot;left&quot;</span><span class="o">)</span><span class="p">;</span>
+<span class="w">         </span><span class="p">|</span><span class="w">                    </span>^
+<span class="w">      </span><span class="m">31</span><span class="w"> </span><span class="p">|</span><span class="w">   </span><span class="o">})</span><span class="p">;</span>
+<span class="w">      </span><span class="m">32</span><span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="o">})</span><span class="p">;</span>
+<span class="w">      </span><span class="m">33</span><span class="w"> </span><span class="p">|</span>
+
+<span class="w">      </span>at<span class="w"> </span>Object.&lt;anonymous&gt;<span class="w"> </span><span class="o">(</span>index.test.js:30:20<span class="o">)</span>
+
+Test<span class="w"> </span>Suites:<span class="w"> </span><span class="m">1</span><span class="w"> </span>failed,<span class="w"> </span><span class="m">1</span><span class="w"> </span>total
+Tests:<span class="w">       </span><span class="m">1</span><span class="w"> </span>failed,<span class="w"> </span><span class="m">2</span><span class="w"> </span>passed,<span class="w"> </span><span class="m">3</span><span class="w"> </span>total
+Snapshots:<span class="w">   </span><span class="m">0</span><span class="w"> </span>total
+Time:<span class="w">        </span><span class="m">1</span>.227<span class="w"> </span>s
+Ran<span class="w"> </span>all<span class="w"> </span><span class="nb">test</span><span class="w"> </span>suites.
+npm<span class="w"> </span>ERR!<span class="w"> </span>Test<span class="w"> </span>failed.<span class="w">  </span>See<span class="w"> </span>above<span class="w"> </span><span class="k">for</span><span class="w"> </span>more<span class="w"> </span>details.
+</code></pre></div>
+
+<p>So how can we get this to pass? We can no longer rely on the value of the first parameter alone, because we have two <em>different</em> outputs where <code>left</code> is <code>"scissors"</code>, so we're going to have to also check the <code>right</code> value. For example:</p>
+<div class="highlight"><pre><span></span><code><span class="kd">function</span><span class="w"> </span><span class="nx">rps</span><span class="p">(</span><span class="nx">left</span><span class="p">,</span><span class="w"> </span><span class="nx">right</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="nx">left</span><span class="w"> </span><span class="o">===</span><span class="w"> </span><span class="s2">&quot;rock&quot;</span>
+<span class="w">    </span><span class="o">?</span><span class="w"> </span><span class="s2">&quot;left&quot;</span>
+<span class="w">    </span><span class="o">:</span><span class="w"> </span><span class="p">(</span><span class="nx">right</span><span class="w"> </span><span class="o">===</span><span class="w"> </span><span class="s2">&quot;paper&quot;</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="s2">&quot;left&quot;</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;right&quot;</span><span class="p">);</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<p>Call the shot, then run the test again to see if you were right:</p>
+<div class="highlight"><pre><span></span><code><span class="n">$</span><span class="w"> </span><span class="n">npm</span><span class="w"> </span><span class="n">t</span>
+
+<span class="o">&gt;</span><span class="w"> </span><span class="n">rps</span><span class="o">-</span><span class="n">tdd</span><span class="mf">@1.0.0</span><span class="w"> </span><span class="n">test</span><span class="w"> </span><span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="n">rps</span><span class="o">-</span><span class="n">tdd</span>
+<span class="o">&gt;</span><span class="w"> </span><span class="n">jest</span>
+
+<span class="w"> </span><span class="n">PASS</span><span class="w">  </span><span class="p">.</span><span class="o">/</span><span class="n">index</span><span class="p">.</span><span class="n">test</span><span class="p">.</span><span class="n">js</span>
+<span class="w">  </span><span class="n">rock</span><span class="p">,</span><span class="w"> </span><span class="n">paper</span><span class="p">,</span><span class="w"> </span><span class="n">scissors</span>
+<span class="w">    </span><span class="err">✓</span><span class="w"> </span><span class="n">should</span><span class="w"> </span><span class="n">say</span><span class="w"> </span><span class="n">left</span><span class="w"> </span><span class="n">wins</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">rock</span><span class="w"> </span><span class="n">vs</span><span class="p">.</span><span class="w"> </span><span class="n">scissors</span><span class="w"> </span><span class="p">(</span><span class="mi">1</span><span class="w"> </span><span class="n">ms</span><span class="p">)</span>
+<span class="w">    </span><span class="err">✓</span><span class="w"> </span><span class="n">should</span><span class="w"> </span><span class="n">say</span><span class="w"> </span><span class="n">right</span><span class="w"> </span><span class="n">wins</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">scissors</span><span class="w"> </span><span class="n">vs</span><span class="p">.</span><span class="w"> </span><span class="n">rock</span><span class="w"> </span><span class="p">(</span><span class="mi">1</span><span class="w"> </span><span class="n">ms</span><span class="p">)</span>
+<span class="w">    </span><span class="err">✓</span><span class="w"> </span><span class="n">should</span><span class="w"> </span><span class="n">say</span><span class="w"> </span><span class="n">left</span><span class="w"> </span><span class="n">wins</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">scissors</span><span class="w"> </span><span class="n">vs</span><span class="p">.</span><span class="w"> </span><span class="n">paper</span>
+
+<span class="n">Test</span><span class="w"> </span><span class="n">Suites</span><span class="o">:</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="n">passed</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="n">total</span>
+<span class="nl">Tests</span><span class="p">:</span><span class="w">       </span><span class="mi">3</span><span class="w"> </span><span class="n">passed</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="w"> </span><span class="n">total</span>
+<span class="nl">Snapshots</span><span class="p">:</span><span class="w">   </span><span class="mi">0</span><span class="w"> </span><span class="n">total</span>
+<span class="nl">Time</span><span class="p">:</span><span class="w">        </span><span class="mf">1.109</span><span class="w"> </span><span class="n">s</span>
+<span class="n">Ran</span><span class="w"> </span><span class="n">all</span><span class="w"> </span><span class="n">test</span><span class="w"> </span><span class="n">suites</span><span class="p">.</span>
+</code></pre></div>
+
+<p>That's a successful outcome, but our code is a bit of a mess; a conditional expression inside another conditional expression isn't very clear and we've repeated the <em>"magic value"</em> <code>"left"</code> twice. So now we can <strong>refactor</strong>, keep the tests passing but change the implementation. For example, how about:</p>
+<div class="highlight"><pre><span></span><code><span class="kd">function</span><span class="w"> </span><span class="nx">rps</span><span class="p">(</span><span class="nx">left</span><span class="p">,</span><span class="w"> </span><span class="nx">right</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="nx">left</span><span class="w"> </span><span class="o">===</span><span class="w"> </span><span class="s2">&quot;rock&quot;</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="nx">right</span><span class="w"> </span><span class="o">===</span><span class="w"> </span><span class="s2">&quot;paper&quot;</span>
+<span class="w">    </span><span class="o">?</span><span class="w"> </span><span class="s2">&quot;left&quot;</span>
+<span class="w">    </span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;right&quot;</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<p>Call the shot, then run the test again to see if you were right:</p>
+<div class="highlight"><pre><span></span><code><span class="n">$</span><span class="w"> </span><span class="n">npm</span><span class="w"> </span><span class="n">t</span>
+
+<span class="o">&gt;</span><span class="w"> </span><span class="n">rps</span><span class="o">-</span><span class="n">tdd</span><span class="mf">@1.0.0</span><span class="w"> </span><span class="n">test</span><span class="w"> </span><span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="n">rps</span><span class="o">-</span><span class="n">tdd</span>
+<span class="o">&gt;</span><span class="w"> </span><span class="n">jest</span>
+
+<span class="w"> </span><span class="n">PASS</span><span class="w">  </span><span class="p">.</span><span class="o">/</span><span class="n">index</span><span class="p">.</span><span class="n">test</span><span class="p">.</span><span class="n">js</span>
+<span class="w">  </span><span class="n">rock</span><span class="p">,</span><span class="w"> </span><span class="n">paper</span><span class="p">,</span><span class="w"> </span><span class="n">scissors</span>
+<span class="w">    </span><span class="err">✓</span><span class="w"> </span><span class="n">should</span><span class="w"> </span><span class="n">say</span><span class="w"> </span><span class="n">left</span><span class="w"> </span><span class="n">wins</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">rock</span><span class="w"> </span><span class="n">vs</span><span class="p">.</span><span class="w"> </span><span class="n">scissors</span><span class="w"> </span><span class="p">(</span><span class="mi">1</span><span class="w"> </span><span class="n">ms</span><span class="p">)</span>
+<span class="w">    </span><span class="err">✓</span><span class="w"> </span><span class="n">should</span><span class="w"> </span><span class="n">say</span><span class="w"> </span><span class="n">right</span><span class="w"> </span><span class="n">wins</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">scissors</span><span class="w"> </span><span class="n">vs</span><span class="p">.</span><span class="w"> </span><span class="n">rock</span><span class="w"> </span><span class="p">(</span><span class="mi">1</span><span class="w"> </span><span class="n">ms</span><span class="p">)</span>
+<span class="w">    </span><span class="err">✓</span><span class="w"> </span><span class="n">should</span><span class="w"> </span><span class="n">say</span><span class="w"> </span><span class="n">left</span><span class="w"> </span><span class="n">wins</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">scissors</span><span class="w"> </span><span class="n">vs</span><span class="p">.</span><span class="w"> </span><span class="n">paper</span>
+
+<span class="n">Test</span><span class="w"> </span><span class="n">Suites</span><span class="o">:</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="n">passed</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="n">total</span>
+<span class="nl">Tests</span><span class="p">:</span><span class="w">       </span><span class="mi">3</span><span class="w"> </span><span class="n">passed</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="w"> </span><span class="n">total</span>
+<span class="nl">Snapshots</span><span class="p">:</span><span class="w">   </span><span class="mi">0</span><span class="w"> </span><span class="n">total</span>
+<span class="nl">Time</span><span class="p">:</span><span class="w">        </span><span class="mf">1.109</span><span class="w"> </span><span class="n">s</span>
+<span class="n">Ran</span><span class="w"> </span><span class="n">all</span><span class="w"> </span><span class="n">test</span><span class="w"> </span><span class="n">suites</span><span class="p">.</span>
+</code></pre></div>
+
+<p><strong>Note</strong> a third key benefit of TDD here - we know that the code still does exactly what it's supposed to even though we've just changed the implementation. This allows us to confidently refactor towards cleaner code and higher quality.</p>
+<p>Let's treat ourselves to a commit:</p>
+<div class="highlight"><pre><span></span><code>$<span class="w"> </span>git<span class="w"> </span>commit<span class="w"> </span>-a<span class="w"> </span>-m<span class="w"> </span><span class="s1">&#39;Third test - scissors vs. paper&#39;</span>
+<span class="o">[</span>master<span class="w"> </span>&lt;hash&gt;<span class="o">]</span><span class="w"> </span>Third<span class="w"> </span><span class="nb">test</span><span class="w"> </span>-<span class="w"> </span>scissors<span class="w"> </span>vs.<span class="w"> </span>paper
+<span class="w"> </span><span class="m">1</span><span class="w"> </span>file<span class="w"> </span>changed,<span class="w"> </span><span class="m">13</span><span class="w"> </span>insertions<span class="o">(</span>+<span class="o">)</span>,<span class="w"> </span><span class="m">2</span><span class="w"> </span>deletions<span class="o">(</span>-<span class="o">)</span>
+</code></pre></div>
+
+<h2>Are there any puns about four? [7/10]</h2>
+<p>Let's flip the last condition to cover the other case involving paper and scissors:</p>
+<div class="highlight"><pre><span></span><code><span class="nx">it</span><span class="p">(</span><span class="s2">&quot;should say right wins for paper vs. scissors&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">()</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="kd">const</span><span class="w"> </span><span class="nx">left</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;paper&quot;</span><span class="p">;</span>
+<span class="w">  </span><span class="kd">const</span><span class="w"> </span><span class="nx">right</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;scissors&quot;</span><span class="p">;</span>
+
+<span class="w">  </span><span class="kd">const</span><span class="w"> </span><span class="nx">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">rps</span><span class="p">(</span><span class="nx">left</span><span class="p">,</span><span class="w"> </span><span class="nx">right</span><span class="p">);</span>
+
+<span class="w">  </span><span class="nx">expect</span><span class="p">(</span><span class="nx">result</span><span class="p">).</span><span class="nx">toBe</span><span class="p">(</span><span class="s2">&quot;right&quot;</span><span class="p">);</span>
+<span class="p">});</span>
+</code></pre></div>
+
+<p>Call the shot, then run the test again to see if you were right:</p>
+<div class="highlight"><pre><span></span><code>$<span class="w"> </span>npm<span class="w"> </span>t
+
+&gt;<span class="w"> </span>rps-tdd@1.0.0<span class="w"> </span><span class="nb">test</span><span class="w"> </span>path/to/rps-tdd
+&gt;<span class="w"> </span>jest
+
+<span class="w"> </span>PASS<span class="w">  </span>./index.test.js
+<span class="w">  </span>rock,<span class="w"> </span>paper,<span class="w"> </span>scissors
+<span class="w">    </span>✓<span class="w"> </span>should<span class="w"> </span>say<span class="w"> </span>left<span class="w"> </span>wins<span class="w"> </span><span class="k">for</span><span class="w"> </span>rock<span class="w"> </span>vs.<span class="w"> </span>scissors<span class="w"> </span><span class="o">(</span><span class="m">1</span><span class="w"> </span>ms<span class="o">)</span>
+<span class="w">    </span>✓<span class="w"> </span>should<span class="w"> </span>say<span class="w"> </span>right<span class="w"> </span>wins<span class="w"> </span><span class="k">for</span><span class="w"> </span>scissors<span class="w"> </span>vs.<span class="w"> </span>rock
+<span class="w">    </span>✓<span class="w"> </span>should<span class="w"> </span>say<span class="w"> </span>left<span class="w"> </span>wins<span class="w"> </span><span class="k">for</span><span class="w"> </span>scissors<span class="w"> </span>vs.<span class="w"> </span>paper
+<span class="w">    </span>✓<span class="w"> </span>should<span class="w"> </span>say<span class="w"> </span>right<span class="w"> </span>wins<span class="w"> </span><span class="k">for</span><span class="w"> </span>paper<span class="w"> </span>vs.<span class="w"> </span>scissors
+
+Test<span class="w"> </span>Suites:<span class="w"> </span><span class="m">1</span><span class="w"> </span>passed,<span class="w"> </span><span class="m">1</span><span class="w"> </span>total
+Tests:<span class="w">       </span><span class="m">4</span><span class="w"> </span>passed,<span class="w"> </span><span class="m">4</span><span class="w"> </span>total
+Snapshots:<span class="w">   </span><span class="m">0</span><span class="w"> </span>total
+Time:<span class="w">        </span><span class="m">0</span>.879<span class="w"> </span>s,<span class="w"> </span>estimated<span class="w"> </span><span class="m">1</span><span class="w"> </span>s
+Ran<span class="w"> </span>all<span class="w"> </span><span class="nb">test</span><span class="w"> </span>suites.
+</code></pre></div>
+
+<p>...huh. <code>left</code> isn't <code>"rock"</code> and <code>right</code> isn't <code>"paper"</code>, so it returns <code>"right"</code>, which is the answer we wanted. This doesn't drive our implementation forward, but it is the behaviour we want, so let's commit this too:</p>
+<div class="highlight"><pre><span></span><code>$<span class="w"> </span>git<span class="w"> </span>commit<span class="w"> </span>-a<span class="w"> </span>-m<span class="w"> </span><span class="s1">&#39;Fourth test - paper vs. scissors&#39;</span>
+<span class="o">[</span>master<span class="w"> </span>&lt;hash&gt;<span class="o">]</span><span class="w"> </span>Fourth<span class="w"> </span><span class="nb">test</span><span class="w"> </span>-<span class="w"> </span>paper<span class="w"> </span>vs.<span class="w"> </span>scissors
+<span class="w"> </span><span class="m">1</span><span class="w"> </span>file<span class="w"> </span>changed,<span class="w"> </span><span class="m">9</span><span class="w"> </span>insertions<span class="o">(</span>+<span class="o">)</span>
+</code></pre></div>
+
+<h2>Gift-wrapped rock [8/10]</h2>
+<p>At this point you can probably see what's coming next; paper wraps rock:</p>
+<div class="highlight"><pre><span></span><code><span class="nx">it</span><span class="p">(</span><span class="s2">&quot;should say left wins for paper vs. rock&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">()</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="kd">const</span><span class="w"> </span><span class="nx">left</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;paper&quot;</span><span class="p">;</span>
+<span class="w">  </span><span class="kd">const</span><span class="w"> </span><span class="nx">right</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;rock&quot;</span><span class="p">;</span>
+
+<span class="w">  </span><span class="kd">const</span><span class="w"> </span><span class="nx">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">rps</span><span class="p">(</span><span class="nx">left</span><span class="p">,</span><span class="w"> </span><span class="nx">right</span><span class="p">);</span>
+
+<span class="w">  </span><span class="nx">expect</span><span class="p">(</span><span class="nx">result</span><span class="p">).</span><span class="nx">toBe</span><span class="p">(</span><span class="s2">&quot;left&quot;</span><span class="p">);</span>
+<span class="p">});</span>
+</code></pre></div>
+
+<p>Call the shot, then run the test again to see if you were right:</p>
+<div class="highlight"><pre><span></span><code>$<span class="w"> </span>npm<span class="w"> </span>t
+
+&gt;<span class="w"> </span>rps-tdd@1.0.0<span class="w"> </span><span class="nb">test</span><span class="w"> </span>path/to/rps-tdd
+&gt;<span class="w"> </span>jest
+
+<span class="w"> </span>FAIL<span class="w">  </span>./index.test.js
+<span class="w">  </span>rock,<span class="w"> </span>paper,<span class="w"> </span>scissors
+<span class="w">    </span>✓<span class="w"> </span>should<span class="w"> </span>say<span class="w"> </span>left<span class="w"> </span>wins<span class="w"> </span><span class="k">for</span><span class="w"> </span>rock<span class="w"> </span>vs.<span class="w"> </span>scissors<span class="w"> </span><span class="o">(</span><span class="m">2</span><span class="w"> </span>ms<span class="o">)</span>
+<span class="w">    </span>✓<span class="w"> </span>should<span class="w"> </span>say<span class="w"> </span>right<span class="w"> </span>wins<span class="w"> </span><span class="k">for</span><span class="w"> </span>scissors<span class="w"> </span>vs.<span class="w"> </span>rock
+<span class="w">    </span>✓<span class="w"> </span>should<span class="w"> </span>say<span class="w"> </span>left<span class="w"> </span>wins<span class="w"> </span><span class="k">for</span><span class="w"> </span>scissors<span class="w"> </span>vs.<span class="w"> </span>paper
+<span class="w">    </span>✓<span class="w"> </span>should<span class="w"> </span>say<span class="w"> </span>right<span class="w"> </span>wins<span class="w"> </span><span class="k">for</span><span class="w"> </span>paper<span class="w"> </span>vs.<span class="w"> </span>scissors<span class="w"> </span><span class="o">(</span><span class="m">1</span><span class="w"> </span>ms<span class="o">)</span>
+<span class="w">    </span>✕<span class="w"> </span>should<span class="w"> </span>say<span class="w"> </span>left<span class="w"> </span>wins<span class="w"> </span><span class="k">for</span><span class="w"> </span>paper<span class="w"> </span>vs.<span class="w"> </span>rock<span class="w"> </span><span class="o">(</span><span class="m">3</span><span class="w"> </span>ms<span class="o">)</span>
+
+<span class="w">  </span>●<span class="w"> </span>rock,<span class="w"> </span>paper,<span class="w"> </span>scissors<span class="w"> </span>›<span class="w"> </span>should<span class="w"> </span>say<span class="w"> </span>left<span class="w"> </span>wins<span class="w"> </span><span class="k">for</span><span class="w"> </span>paper<span class="w"> </span>vs.<span class="w"> </span>rock
+
+<span class="w">    </span>expect<span class="o">(</span>received<span class="o">)</span>.toBe<span class="o">(</span>expected<span class="o">)</span><span class="w"> </span>//<span class="w"> </span>Object.is<span class="w"> </span>equality
+
+<span class="w">    </span>Expected:<span class="w"> </span><span class="s2">&quot;left&quot;</span>
+<span class="w">    </span>Received:<span class="w"> </span><span class="s2">&quot;right&quot;</span>
+
+<span class="w">      </span><span class="m">48</span><span class="w"> </span><span class="p">|</span><span class="w">     </span>const<span class="w"> </span><span class="nv">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>rps<span class="o">(</span>left,<span class="w"> </span>right<span class="o">)</span><span class="p">;</span>
+<span class="w">      </span><span class="m">49</span><span class="w"> </span><span class="p">|</span>
+<span class="w">    </span>&gt;<span class="w"> </span><span class="m">50</span><span class="w"> </span><span class="p">|</span><span class="w">     </span>expect<span class="o">(</span>result<span class="o">)</span>.toBe<span class="o">(</span><span class="s2">&quot;left&quot;</span><span class="o">)</span><span class="p">;</span>
+<span class="w">         </span><span class="p">|</span><span class="w">                    </span>^
+<span class="w">      </span><span class="m">51</span><span class="w"> </span><span class="p">|</span><span class="w">   </span><span class="o">})</span><span class="p">;</span>
+<span class="w">      </span><span class="m">52</span><span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="o">})</span><span class="p">;</span>
+<span class="w">      </span><span class="m">53</span><span class="w"> </span><span class="p">|</span>
+
+<span class="w">      </span>at<span class="w"> </span>Object.&lt;anonymous&gt;<span class="w"> </span><span class="o">(</span>index.test.js:50:20<span class="o">)</span>
+
+Test<span class="w"> </span>Suites:<span class="w"> </span><span class="m">1</span><span class="w"> </span>failed,<span class="w"> </span><span class="m">1</span><span class="w"> </span>total
+Tests:<span class="w">       </span><span class="m">1</span><span class="w"> </span>failed,<span class="w"> </span><span class="m">4</span><span class="w"> </span>passed,<span class="w"> </span><span class="m">5</span><span class="w"> </span>total
+Snapshots:<span class="w">   </span><span class="m">0</span><span class="w"> </span>total
+Time:<span class="w">        </span><span class="m">1</span>.234<span class="w"> </span>s
+Ran<span class="w"> </span>all<span class="w"> </span><span class="nb">test</span><span class="w"> </span>suites.
+npm<span class="w"> </span>ERR!<span class="w"> </span>Test<span class="w"> </span>failed.<span class="w">  </span>See<span class="w"> </span>above<span class="w"> </span><span class="k">for</span><span class="w"> </span>more<span class="w"> </span>details.
+</code></pre></div>
+
+<p>Alright, this time we do get a failure again. Have a play with the implementation for a few minutes, see if you can come up with a way to write an implementation of the form <code>&lt;condition&gt; ? "left" : "right";</code> that passes all five tests. Remember: write the code, call the shot, run the test, compare.</p>
+<p>For example, you might get to something like:</p>
+<div class="highlight"><pre><span></span><code><span class="kd">function</span><span class="w"> </span><span class="nx">rps</span><span class="p">(</span><span class="nx">left</span><span class="p">,</span><span class="w"> </span><span class="nx">right</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="nx">left</span><span class="w"> </span><span class="o">===</span><span class="w"> </span><span class="s2">&quot;rock&quot;</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="nx">right</span><span class="w"> </span><span class="o">===</span><span class="w"> </span><span class="s2">&quot;paper&quot;</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="p">(</span><span class="nx">left</span><span class="w"> </span><span class="o">===</span><span class="w"> </span><span class="s2">&quot;paper&quot;</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nx">right</span><span class="w"> </span><span class="o">===</span><span class="w"> </span><span class="s2">&quot;rock&quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="o">?</span><span class="w"> </span><span class="s2">&quot;left&quot;</span>
+<span class="w">    </span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;right&quot;</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<p>Let's commit it and then flip to the last case:</p>
+<div class="highlight"><pre><span></span><code>$<span class="w"> </span>git<span class="w"> </span>commit<span class="w"> </span>-a<span class="w"> </span>-m<span class="w"> </span><span class="s1">&#39;Fifth test - paper vs. rock&#39;</span>
+<span class="o">[</span>master<span class="w"> </span>&lt;bash&gt;<span class="o">]</span><span class="w"> </span>Fifth<span class="w"> </span><span class="nb">test</span><span class="w"> </span>-<span class="w"> </span>paper<span class="w"> </span>vs.<span class="w"> </span>rock
+<span class="w"> </span><span class="m">1</span><span class="w"> </span>file<span class="w"> </span>changed,<span class="w"> </span><span class="m">10</span><span class="w"> </span>insertions<span class="o">(</span>+<span class="o">)</span>,<span class="w"> </span><span class="m">1</span><span class="w"> </span>deletion<span class="o">(</span>-<span class="o">)</span>
+</code></pre></div>
+
+<div class="highlight"><pre><span></span><code><span class="nx">it</span><span class="p">(</span><span class="s2">&quot;should say right wins for rock vs. paper&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">()</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="kd">const</span><span class="w"> </span><span class="nx">left</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;rock&quot;</span><span class="p">;</span>
+<span class="w">  </span><span class="kd">const</span><span class="w"> </span><span class="nx">right</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;paper&quot;</span><span class="p">;</span>
+
+<span class="w">  </span><span class="kd">const</span><span class="w"> </span><span class="nx">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">rps</span><span class="p">(</span><span class="nx">left</span><span class="p">,</span><span class="w"> </span><span class="nx">right</span><span class="p">);</span>
+
+<span class="w">  </span><span class="nx">expect</span><span class="p">(</span><span class="nx">result</span><span class="p">).</span><span class="nx">toBe</span><span class="p">(</span><span class="s2">&quot;right&quot;</span><span class="p">);</span>
+<span class="p">});</span>
+</code></pre></div>
+
+<p>Now we've reached a point where, however we try to rearrange it, we're <em>forced</em> to be explicit about all of the cases. For example, we might write:</p>
+<div class="highlight"><pre><span></span><code><span class="kd">function</span><span class="w"> </span><span class="nx">rps</span><span class="p">(</span><span class="nx">left</span><span class="p">,</span><span class="w"> </span><span class="nx">right</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="p">(</span>
+<span class="w">    </span><span class="p">(</span><span class="nx">left</span><span class="w"> </span><span class="o">===</span><span class="w"> </span><span class="s2">&quot;rock&quot;</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nx">right</span><span class="w"> </span><span class="o">===</span><span class="w"> </span><span class="s2">&quot;scissors&quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="o">||</span><span class="w"> </span><span class="p">(</span><span class="nx">left</span><span class="w"> </span><span class="o">===</span><span class="w"> </span><span class="s2">&quot;scissors&quot;</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nx">right</span><span class="w"> </span><span class="o">===</span><span class="w"> </span><span class="s2">&quot;paper&quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="o">||</span><span class="w"> </span><span class="p">(</span><span class="nx">left</span><span class="w"> </span><span class="o">===</span><span class="w"> </span><span class="s2">&quot;paper&quot;</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nx">right</span><span class="w"> </span><span class="o">===</span><span class="w"> </span><span class="s2">&quot;rock&quot;</span><span class="p">)</span>
+<span class="w">  </span><span class="p">)</span>
+<span class="w">    </span><span class="o">?</span><span class="w"> </span><span class="s2">&quot;left&quot;</span>
+<span class="w">    </span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;right&quot;</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<p>This probably looks a lot like what you imagined to begin with. Let's save it.</p>
+<div class="highlight"><pre><span></span><code>$<span class="w"> </span>git<span class="w"> </span>commit<span class="w"> </span>-a<span class="w"> </span>-m<span class="w"> </span><span class="s1">&#39;Sixth test - rock vs. paper&#39;</span>
+<span class="o">[</span>master<span class="w"> </span>&lt;hash&gt;<span class="o">]</span><span class="w"> </span>Sixth<span class="w"> </span><span class="nb">test</span><span class="w"> </span>-<span class="w"> </span>rock<span class="w"> </span>vs.<span class="w"> </span>paper
+<span class="w"> </span><span class="m">1</span><span class="w"> </span>file<span class="w"> </span>changed,<span class="w"> </span><span class="m">14</span><span class="w"> </span>insertions<span class="o">(</span>+<span class="o">)</span>,<span class="w"> </span><span class="m">1</span><span class="w"> </span>deletion<span class="o">(</span>-<span class="o">)</span>
+</code></pre></div>
+
+<h2>Draw! [9/10]</h2>
+<p>So far we've assumed the two participants choose different values. If you've played RPS, you'll know that's not always the case in real life - sometimes it's a draw.</p>
+<p>This brings us to the idea of <em>parameterised testing</em> - generating tests based on canned data. Jest has built-in functionality to do this, named <a href="https://jestjs.io/docs/en/api#testeachtablename-fn-timeout"><code>each</code></a>, but it's often as easy to do it with an array and <code>forEach</code>:</p>
+<div class="highlight"><pre><span></span><code><span class="p">[</span><span class="s2">&quot;rock&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;paper&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;scissors&quot;</span><span class="p">].</span><span class="nx">forEach</span><span class="p">((</span><span class="nx">both</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="nx">it</span><span class="p">(</span><span class="sb">`should say draw for </span><span class="si">${</span><span class="nx">both</span><span class="si">}</span><span class="sb"> vs. </span><span class="si">${</span><span class="nx">both</span><span class="si">}</span><span class="sb">`</span><span class="p">,</span><span class="w"> </span><span class="p">()</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nx">expect</span><span class="p">(</span><span class="nx">rps</span><span class="p">(</span><span class="nx">both</span><span class="p">,</span><span class="w"> </span><span class="nx">both</span><span class="p">)).</span><span class="nx">toBe</span><span class="p">(</span><span class="s2">&quot;draw&quot;</span><span class="p">);</span>
+<span class="w">  </span><span class="p">});</span>
+<span class="p">});</span>
+</code></pre></div>
+
+<p>Call the shot, run the tests, review the output then, if all of that makes sense, complete the implementation. Maybe something like:</p>
+<div class="highlight"><pre><span></span><code><span class="kd">function</span><span class="w"> </span><span class="nx">rps</span><span class="p">(</span><span class="nx">left</span><span class="p">,</span><span class="w"> </span><span class="nx">right</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">left</span><span class="w"> </span><span class="o">===</span><span class="w"> </span><span class="nx">right</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="s2">&quot;draw&quot;</span><span class="p">;</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="p">(</span>
+<span class="w">    </span><span class="p">(</span><span class="nx">left</span><span class="w"> </span><span class="o">===</span><span class="w"> </span><span class="s2">&quot;rock&quot;</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nx">right</span><span class="w"> </span><span class="o">===</span><span class="w"> </span><span class="s2">&quot;scissors&quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="o">||</span><span class="w"> </span><span class="p">(</span><span class="nx">left</span><span class="w"> </span><span class="o">===</span><span class="w"> </span><span class="s2">&quot;scissors&quot;</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nx">right</span><span class="w"> </span><span class="o">===</span><span class="w"> </span><span class="s2">&quot;paper&quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="o">||</span><span class="w"> </span><span class="p">(</span><span class="nx">left</span><span class="w"> </span><span class="o">===</span><span class="w"> </span><span class="s2">&quot;paper&quot;</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nx">right</span><span class="w"> </span><span class="o">===</span><span class="w"> </span><span class="s2">&quot;rock&quot;</span><span class="p">)</span>
+<span class="w">  </span><span class="p">)</span>
+<span class="w">    </span><span class="o">?</span><span class="w"> </span><span class="s2">&quot;left&quot;</span>
+<span class="w">    </span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;right&quot;</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<p>Once everything's passing and you're happy with your implementation, make the final commit:</p>
+<div class="highlight"><pre><span></span><code>$<span class="w"> </span>git<span class="w"> </span>commit<span class="w"> </span>-a<span class="w"> </span>-m<span class="w"> </span><span class="s1">&#39;Handle the draw cases&#39;</span>
+<span class="o">[</span>master<span class="w"> </span>&lt;hash&gt;<span class="o">]</span><span class="w"> </span>Handle<span class="w"> </span>the<span class="w"> </span>draw<span class="w"> </span>cases
+<span class="w"> </span><span class="m">1</span><span class="w"> </span>file<span class="w"> </span>changed,<span class="w"> </span><span class="m">9</span><span class="w"> </span>insertions<span class="o">(</span>+<span class="o">)</span>
+</code></pre></div>
+
+<p>That's it! We've just test-driven an implementation of RPS, the right way. Reflect on the exercise - how does the implementation compare to what you'd initially imagined? What felt good or bad about the process?</p>
+<p>You can see my copy of this exercise at <a href="https://github.com/textbook/rps-tdd">https://github.com/textbook/rps-tdd</a>.</p>
+<h2>Exercises [10/10]</h2>
+<p>Practice makes perfect! Here are some additional exercises you can run through:</p>
+<ol>
+<li>
+<p>Repeat the process, but tackle the pairs in a different order. What impact does the order have on how and when your implementation gains complexity? Do you end up with a different implementation?</p>
+</li>
+<li>
+<p>Extend your implementation for <a href="https://en.wikipedia.org/wiki/Rock_paper_scissors#Additional_weapons">additional weapons</a> (e.g. Rock Paper Scissors Lizard Spock). How easy or hard is this?</p>
+<ul>
+<li><strong>Advanced</strong> - read about the <em>"open-closed principle"</em>, <a href="https://en.wikipedia.org/wiki/Open%E2%80%93closed_principle">OCP</a>. Can you refactor your code such that adding more weapons doesn't mean a change to the <code>rps</code> function?</li>
+</ul>
+</li>
+<li>
+<p>Test-drive out some validation - what should your code do if either or both of the inputs aren't recognised shapes? If you decide to throw an error, note that per <a href="https://jestjs.io/docs/en/expect#tothrowerror">the Jest docs</a> you need to pass a function to defer execution: </p>
+<p><code>expect(() =&gt; rps("bananas", 123)).toThrowError();</code></p>
+<p>otherwise the error's thrown too early and Jest can't handle it.</p>
+</li>
+<li>
+<p>Refactor the tests to group the test cases into three parameterised tests: one for <code>"left"</code>; one for <code>"right"</code>; and one for <code>"draw"</code>.</p>
+<ul>
+<li><strong>Advanced</strong> - use Jest's <a href="https://jestjs.io/docs/en/api#testeachtablename-fn-timeout"><code>each</code></a> method, either with an array or a template literal.</li>
+</ul>
+</li>
+<li>
+<p>Run through the exercise from the beginning, but using <code>npm t -- --watch</code> instead of just <code>npm t</code> (note the extra <code>--</code>, otherwise the <code>--watch</code> argument gets passed to NPM rather than Jest).</p>
+<p>This will set up Jest to watch your files and re-run the tests if anything changes. Arrange your screen so you can see these outputs while you're writing your code, and leave it running the whole time (if this means you can't make commits, don't worry about it). What impact does that immediate and continuous feedback have on your experience of working on the code?</p>
+</li>
+</ol>
+<blockquote>
+<p><strong>Once you're ready to move on</strong>, check out <a href="https://blog.jonrshar.pe/2020/Nov/22/js-tdd-e2e.html">the next article</a> in this series where we'll use <em>end-to-end</em> and <em>integration</em> testing to build out a React UI for this RPS logic.</p>
+</blockquote>
+<h2>Installation explained [Bonus]</h2>
+<p>As promised above, here's an explanation of everything you were told during the <code>npm install</code>.</p>
+<div class="highlight"><pre><span></span><code>npm<span class="w"> </span>WARN<span class="w"> </span>deprecated<span class="w"> </span>request@2.88.2:<span class="w"> </span>request<span class="w"> </span>has<span class="w"> </span>been<span class="w"> </span>deprecated,<span class="w"> </span>see<span class="w"> </span>https://github.com/request/request/issues/3142
+npm<span class="w"> </span>WARN<span class="w"> </span>deprecated<span class="w"> </span>request-promise-native@1.0.9:<span class="w"> </span>request-promise-native<span class="w"> </span>has<span class="w"> </span>been<span class="w"> </span>deprecated<span class="w"> </span>because<span class="w"> </span>it<span class="w"> </span>extends<span class="w"> </span>the<span class="w"> </span>now<span class="w"> </span>deprecated<span class="w"> </span>request<span class="w"> </span>package,<span class="w"> </span>see<span class="w"> </span>https://github.com/request/request/issues/3142
+npm<span class="w"> </span>WARN<span class="w"> </span>deprecated<span class="w"> </span>har-validator@5.1.5:<span class="w"> </span>this<span class="w"> </span>library<span class="w"> </span>is<span class="w"> </span>no<span class="w"> </span>longer<span class="w"> </span>supported
+</code></pre></div>
+
+<p>Over time, libraries published on NPM will become out-of-date. For various reasons, their maintainers may decide to stop supporting them, or to stop supporting older major versions. This isn't <em>necessarily</em> a problem, but means that future vulnerabilities won't be addressed; try not to depend on deprecated packages.</p>
+<div class="highlight"><pre><span></span><code>npm<span class="w"> </span>notice<span class="w"> </span>created<span class="w"> </span>a<span class="w"> </span>lockfile<span class="w"> </span>as<span class="w"> </span>package-lock.json.<span class="w"> </span>You<span class="w"> </span>should<span class="w"> </span>commit<span class="w"> </span>this<span class="w"> </span>file.
+</code></pre></div>
+
+<p>If you look in the package file after the install, the only information about the dependencies is <code>"jest": "^26.4.2"</code>. This means <em>"requires Jest of at least <code>v26.4.2</code> and up to (but not including) <code>v27.0.0</code>"</em> (you can learn more about this notation with <a href="https://semver.npmjs.com/">the semver calculator</a>). Given the number of dependencies installed (see below), that's not a lot of information - if you installed this package on another machine, it might get a quite different set of dependencies. So that you can reproduce a specific install more easily, NPM stores the <em>exact</em> versions of <em>all</em> of the dependencies in <code>package-lock.json</code>.</p>
+<div class="highlight"><pre><span></span><code>npm<span class="w"> </span>WARN<span class="w"> </span>rps-tdd@1.0.0<span class="w"> </span>No<span class="w"> </span>description
+npm<span class="w"> </span>WARN<span class="w"> </span>rps-tdd@1.0.0<span class="w"> </span>No<span class="w"> </span>repository<span class="w"> </span>field.
+</code></pre></div>
+
+<p>The shortcut we used to create the <code>package.json</code>, <code>npm init -y</code>, created all of the <em>required</em> fields but not all of the <em>recommended</em> fields. If you want to avoid this warning in the future, add a description and repository into your <code>package.json</code> per <a href="https://docs.npmjs.com/files/package.json">the NPM docs</a>. When creating new packages you can use <code>npm init</code> instead to go through an interactive process to enter more of the fields.</p>
+<div class="highlight"><pre><span></span><code>+<span class="w"> </span>jest@26.4.2
+added<span class="w"> </span><span class="m">506</span><span class="w"> </span>packages<span class="w"> </span>from<span class="w"> </span><span class="m">347</span><span class="w"> </span>contributors<span class="w"> </span>and<span class="w"> </span>audited<span class="w"> </span><span class="m">506</span><span class="w"> </span>packages<span class="w"> </span><span class="k">in</span><span class="w"> </span><span class="m">18</span>.837s
+</code></pre></div>
+
+<p>That's the bit we actually care about; Jest (and all of its own dependencies) <strong>has been installed</strong>.</p>
+<div class="highlight"><pre><span></span><code><span class="m">21</span><span class="w"> </span>packages<span class="w"> </span>are<span class="w"> </span>looking<span class="w"> </span><span class="k">for</span><span class="w"> </span>funding
+<span class="w">  </span>run<span class="w"> </span><span class="sb">`</span>npm<span class="w"> </span>fund<span class="sb">`</span><span class="w"> </span><span class="k">for</span><span class="w"> </span>details
+</code></pre></div>
+
+<p>Per <a href="https://github.com/npm/rfcs/blob/2d2f00457ab19b3003eb6ac5ab3d250259fd5a81/accepted/0017-add-funding-support.md">RFC 0017</a>, NPM allows package maintainers to solicit funding by adding information to their package files. As the message says, you can run <a href="https://docs.npmjs.com/cli-commands/fund.html"><code>npm fund</code></a> to see which packages are asking for financial support, and how to provide it.</p>
+<div class="highlight"><pre><span></span><code>found<span class="w"> </span><span class="m">0</span><span class="w"> </span>vulnerabilities
+</code></pre></div>
+
+<p>NPM checks whether there are any known vulnerabilities in the packages in your <code>node_modules/</code>. This can tell you when you need to update your dependencies, especially anything you use in production (as opposed to development dependencies like Jest). You can run <a href="https://docs.npmjs.com/cli-commands/audit.html"><code>npm audit</code></a> at any time to get the latest updates and see more information.</p></div>
+    <div class="comments">
+      <h2>Comments !</h2>
+      <div id="disqus_thread"></div>
+      <script type="text/javascript">
+        var disqus_shortname = 'textbook-dev';
+        var disqus_identifier = '2020/Aug/31/js-tdd-ftw.html';
+        var disqus_url = 'https://blog.jonrshar.pe/2020/Aug/31/js-tdd-ftw.html';
+        (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//textbook-dev.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+      </script>
+      <noscript>Please enable JavaScript to view the comments.</noscript>
+    </div>
+
+  </article>
+</section>
+
+<script type="application/ld+json">
+  {"articleSection": "development", "author": {"@type": "Person", "name": "Jonathan Sharpe"}, "datePublished": "2020-08-31T16:00:00+01:00", "headline": "JS TDD FTW", "mainEntityOfPage": {"@type": "WebPage", "@id": "https://blog.jonrshar.pe/2020/Aug/31/js-tdd-ftw.html"}, "@context": "http://schema.org", "@type": "BlogPosting", "dateModified": "2020-11-22T15:30:00+00:00", "description": "Test-driven JavaScript development done right - part 1"}
+</script>
+    </div>
+
+    <div class="column is-one-quarter-desktop is-one-third-tablet is-hidden-print">
+      <aside class="menu">
+<div id="mc_embed_signup">
+  <form
+      action="https://jonrshar.us15.list-manage.com/subscribe/post?u=7ada11180797f3af73228bf0b&amp;id=d172abcbd2"
+      method="post" id="mc-embedded-subscribe-form"
+      name="mc-embedded-subscribe-form" class="validate" target="_blank"
+      novalidate>
+
+    <h2 class="menu-label">Mailing List</h2>
+
+    <div id="mc_embed_signup_scroll">
+      <div class="field mc-field-group">
+        <label for="mce-EMAIL" class="label is-small">Email</label>
+        <div class="field-body">
+          <div class="field">
+            <p class="control has-icons-left">
+              <input type="email" name="EMAIL" class="input required email is-small"
+                     id="mce-EMAIL" placeholder="Email address">
+              <span class="icon is-small is-left">
+              <i class="fa fa-envelope"></i>
+            </span>
+            </p>
+          </div>
+        </div>
+      </div>
+      <div class="field">
+        <label for="mce-FNAME" class="label is-small">Name</label>
+        <div class="field-body">
+          <div class="field is-grouped">
+            <p class="control is-expanded">
+              <input class="input is-small" type="text" value="" name="FNAME"
+                     id="mce-FNAME" placeholder="First">
+            </p>
+            <p class="control is-expanded">
+              <input class="input is-small" type="text" value="" name="LNAME"
+                     id="mce-LNAME" placeholder="Last">
+            </p>
+          </div>
+        </div>
+      </div>
+      <div class="field is-grouped">
+        <p class="control">
+          <input type="submit" name="subscribe" value="Subscribe"
+                 class="button is-small is-success" id="mc-embedded-subscribe">
+        </p>
+          <p class="control">
+            <span class="help">
+              Powered by
+              <a href="http://eepurl.com/cNv6Rb"
+                 title="MailChimp - email marketing made easy and fun">
+                MailChimp
+              </a>
+            </span>
+          </p>
+      </div>
+
+      <div id="mce-responses" class="clear">
+        <div class="response help is-danger" id="mce-error-response"
+             style="display:none"></div>
+        <div class="response help is-success" id="mce-success-response"
+             style="display:none"></div>
+      </div>
+
+      <div style="position: absolute; left: -5000px;" aria-hidden="true">
+        <input type="text" name="b_7ada11180797f3af73228bf0b_d172abcbd2"
+               tabindex="-1" value="">
+      </div>
+    </div>
+  </form>
+</div>
+
+          <p class="menu-label">Other Pages</p>
+          <ul class="menu-list">
+                <li><a                        href="https://blog.jonrshar.pe/pages/about.html">
+                  <span class="icon is-small"><i class="fa fa-book"></i></span>
+                  <span class="link-text">About</span>
+                </a></li>
+          </ul>
+          <p class="menu-label">Links</p>
+          <ul class="menu-list">
+              <li><a href="http://engineering.pivotal.io/">
+                <span class="icon is-small"><i class="fa fa-globe fa-fw"></i></span>
+                <span class="link-text">Pivotal Engineering Journal</span>
+              </a></li>
+              <li><a href="http://blog.cleancoder.com/">
+                <span class="icon is-small"><i class="fa fa-globe fa-fw"></i></span>
+                <span class="link-text">The Clean Code Blog</span>
+              </a></li>
+              <li><a href="https://codeascraft.com/">
+                <span class="icon is-small"><i class="fa fa-globe fa-fw"></i></span>
+                <span class="link-text">Code as Craft</span>
+              </a></li>
+              <li><a href="http://corgibytes.com/blog/">
+                <span class="icon is-small"><i class="fa fa-globe fa-fw"></i></span>
+                <span class="link-text">Corgibytes Blog</span>
+              </a></li>
+          </ul>
+<p class="menu-label">Social</p>
+<ul class="menu-list">
+    <li><a href="https://github.com/textbook">
+      <span class="icon is-small">
+          <i class="fa fa-github fa-fw"></i>
+      </span>
+      <span class="link-text">GitHub</span>
+    </a></li>
+    <li><a href="http://stackoverflow.com/users/3001761/jonrsharpe">
+      <span class="icon is-small">
+          <i class="fa fa-stack-overflow fa-fw"></i>
+      </span>
+      <span class="link-text">Stack Overflow</span>
+    </a></li>
+    <li><a href="https://twitter.com/jonrsharpe">
+      <span class="icon is-small">
+          <i class="fa fa-twitter fa-fw"></i>
+      </span>
+      <span class="link-text">Twitter</span>
+    </a></li>
+    <li><a href="https://500px.com/jonrsharpe">
+      <span class="icon is-small">
+          <i class="fa fa-500px fa-fw"></i>
+      </span>
+      <span class="link-text">500px</span>
+    </a></li>
+
+    <li><a href="https://blog.jonrshar.pe/feeds/all.atom.xml"
+           type="application/atom+xml" rel="alternate">
+      <span class="icon is-small"><i class="fa fa-rss"></i></span>
+      <span class="link-text">Atom Feed</span>
+    </a></li>
+
+</ul>          <p class="menu-label">License</p>
+          
+<ul class="menu-list">
+  <li>
+    <a rel="license" href="http://creativecommons.org/licenses/by-sa/4.0/">
+      <span class="icon is-small">
+        <i class="fa fa-creative-commons fa-fw"></i>
+      </span>
+      <span>CC BY-SA 4.0</span>
+    </a>
+  </li>
+</ul>
+
+      </aside>
+    </div>
+  </div>
+</div>
+
+<footer class="footer">
+  <div class="container has-text-centered">
+ <p class="subtitle">These are my opinions - if you don't like them, I have others</p>    <div class="credits">
+      <span><a href="https://github.com/textbook/bulrush">Bulrush</a> theme for
+        <a href="https://blog.getpelican.com/">Pelican</a></span>
+      <span><span class="icon is-small"><i class="fa fa-html5"></i></span> HTML 5</span>
+      <span><span class="icon is-small"><i class="fa fa-css3"></i></span> CSS 3</span>
+      <span>Made with <a href="https://bulma.io">Bulma</a></span>
+    </div>
+  </div>
+  <div class="github-fork-ribbon-wrapper is-hidden-mobile is-hidden-print">
+    <div class="github-fork-ribbon">
+      <a href="https://github.com/textbook/textbook.github.io">
+        <i class="fa fa-github fa-fw"></i>
+        Fork me on GitHub
+      </a>
+    </div>
+  </div>
+</footer>
+
+    <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-64837080-1']);
+    _gaq.push(['_trackPageview']);
+    (function() {
+        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+        ga.src = 'https://ssl.google-analytics.com/ga.js';
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+    </script>
+<script type="text/javascript">
+    var disqus_shortname = 'textbook-dev';
+    (function () {
+        var s = document.createElement('script'); s.async = true;
+        s.type = 'text/javascript';
+        s.src = 'https://' + disqus_shortname + '.disqus.com/count.js';
+        (document.getElementsByTagName('HEAD')[0] || document.getElementsByTagName('BODY')[0]).appendChild(s);
+    }());
+</script>
+<script type="text/javascript">
+  document.getElementById('navToggle').addEventListener('click', function () {
+    var nav = document.getElementById('navMenu');
+    var className = nav.getAttribute('class');
+    if (className == 'navbar-menu') {
+      nav.className = 'navbar-menu is-active';
+    } else {
+      nav.className = 'navbar-menu';
+    }
+  });
+</script>
+</body>
+</html>

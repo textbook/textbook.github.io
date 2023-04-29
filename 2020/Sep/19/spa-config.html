@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="en">
+<head prefix="og: http://ogp.me/ns# article: http://ogp.me/ns/article#">
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width">
+  <title>Runtime configuration for single-page apps</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.9.4/css/bulma.min.css">
+    <link rel="stylesheet" href="https://blog.jonrshar.pe/theme/css/main.3dad1b7a.css">
+  <style media="print">.is-hidden-print{display:none !important}</style>
+      <link rel="stylesheet" href="https://blog.jonrshar.pe/custom.css">
+<meta property="og:title" content="textbook - Runtime configuration for single-page apps">
+  <meta property="og:description" content="Tips and tricks for deploying JavaScript SPAs with runtime configuration">
+<meta property="og:url" content="https://blog.jonrshar.pe/2020/Sep/19/spa-config.html">
+    <meta property="og:image" content="https://blog.jonrshar.pe/images/avatar.png">
+    <meta name="twitter:image:alt" content="textbook | These are my opinions - if you don't like them, I have others">
+<meta name="twitter:card" content="summary">
+  <meta name="twitter:creator" content="@jonrsharpe">
+  <meta name="twitter:site" content="@jonrsharpe">
+<meta property="og:site_name" content="textbook">
+<meta property="og:type" content="article">
+  <meta property="article:published_time" content="2020-09-19T15:15:00+01:00">
+  <meta property="article:modified_time" content="2021-03-21T20:00:00+00:00">
+    <meta property="article:tag" content="xp">
+    <meta property="article:tag" content="ci">
+    <meta property="article:tag" content="angular">
+    <meta property="article:tag" content="react">
+  <meta property="article:section" content="development">
+</head>
+
+<body id="index" class="home">
+<header class="hero is-primary">
+  <div class="hero-head">
+    <div class="container">
+      <nav class="navbar">
+        <div class="navbar-brand">
+          <a class="navbar-item title is-3"
+             href="https://blog.jonrshar.pe/">textbook</a>
+        </div>
+      </nav>
+    </div>
+  </div>
+</header>
+
+<nav class="navbar has-shadow is-hidden-print">
+  <div class="container">
+    <div class="navbar-center"></div>
+    <span id="navToggle" class="navbar-burger">
+      <span></span>
+      <span></span>
+      <span></span>
+    </span>
+    <div id="navMenu" class="navbar-menu">
+        <div class="navbar-end">
+              <a class="navbar-item is-tab "
+                 href="https://blog.jonrshar.pe/category/work.html">work</a>
+              <a class="navbar-item is-tab "
+                 href="https://blog.jonrshar.pe/category/meta.html">meta</a>
+              <a class="navbar-item is-tab is-active"
+                 href="https://blog.jonrshar.pe/category/development.html">development</a>
+        </div>
+    </div>
+  </div>
+</nav>
+
+<div class="container">
+  <div class="section columns">
+    <div class="column is-three-quarters-desktop is-two-thirds-tablet">
+<section id="content" class="body">
+  <article>
+    <h1 class="title">
+      <a href="https://blog.jonrshar.pe/2020/Sep/19/spa-config.html" rel="bookmark"
+         title="Permalink to Runtime configuration for single-page apps">Runtime configuration for single-page apps</a></h1>
+<footer class="post-info">
+  <abbr class="published" title="2020-09-19T15:15:00+01:00">
+    Published <span class="is-info">Sat 19 September 2020</span>
+    in <a href="https://blog.jonrshar.pe/category/development.html">development</a>
+  </abbr>
+    <br />
+    <abbr class="modified" title="2021-03-21T20:00:00+00:00">
+      Updated Sun 21 March 2021
+    </abbr>
+
+    <p class="author">
+      <em>by           Jonathan Sharpe
+</em>
+      <span class="tag is-small is-rounded">
+        <a href="https://blog.jonrshar.pe/tag/xp.html">xp</a>
+      </span>
+      <span class="tag is-small is-rounded">
+        <a href="https://blog.jonrshar.pe/tag/ci.html">ci</a>
+      </span>
+      <span class="tag is-small is-rounded">
+        <a href="https://blog.jonrshar.pe/tag/angular.html">angular</a>
+      </span>
+      <span class="tag is-small is-rounded">
+        <a href="https://blog.jonrshar.pe/tag/react.html">react</a>
+      </span>
+    </p>
+  
+</footer>    <div class="section"><h2>Setting the scene</h2>
+<p>Let's imagine the following scenario: you are working on a single-page app (SPA) that's part of a larger system. Could be Angular, React, Svelte, Vue, ... that doesn't really matter. What <em>does</em> matter is:</p>
+<ul>
+<li>that it builds to HTML, CSS and JS; </li>
+<li>that those assets are deployed statically (i.e. <em>not</em> serving them from the same app that provides the backend APIs or using SSR to generate them at runtime, so you don't have access to environment variables);</li>
+<li>that you're deploying to multiple different environments (e.g. acceptance, staging and production); and</li>
+<li>that it needs some kind of configuration (e.g. URLs for relevant backend services) to run correctly that varies across the different environments.</li>
+</ul>
+<p>This is quite a common problem, but it has tripped up a few teams I've worked with. The typical approach to per-environment configuration, setting environment variables that the app can access, isn't effective here. Because the assets are static files and the deployment environment is just a basic web server, it's not clear how to get the content from those environment variables into the assets. The SPA itself is actually running in your client's browser, which doesn't have access to the server-side environment at all.</p>
+<p><strong>Note</strong>: because I work for <a href="https://tanzu.vmware.com/labs">VMware Tanzu Labs</a> and this is the technology I'm most familiar with using for these apps, the practical examples will be based around deployment to the <a href="https://docs.cloudfoundry.org/buildpacks/staticfile/index.html">staticfile buildpack</a> on <a href="https://tanzu.vmware.com/application-service">Tanzu Application Service</a> (TAS). However, the patterns can be applied to whatever deployment environment you're using.</p>
+<h2>Build-time configuration</h2>
+<p>One pattern that's used in e.g. React <a href="https://create-react-app.dev/docs/adding-custom-environment-variables/">custom environment variables</a> (using Webpack's <a href="https://webpack.js.org/plugins/define-plugin/"><code>DefinePlugin</code></a>) and Angular <a href="https://angular.io/guide/build#configuring-application-environments">application environments</a> is injecting the configuration at <em>build</em> time. The appropriate settings are taken from the environment or specific files and baked in when you create the static assets. This means that you have multiple <em>different</em> sets of assets per commit, one for each environment you need to deploy to. You have two choices:</p>
+<ol>
+<li>These are all built at the same time from the same versions of the dependencies and stored in an artifact repository. This means holding and managing multiple (mostly identical) copies, some of which may never actually get used. But storage is cheap and the alternative is...</li>
+<li>They are built as needed, i.e. the staging build is only created when a specific commit is identified for review. This puts a lot of pressure on a reproducible build process, with all dependencies locked and still available (in the Node ecosystem <code>package-lock.json</code> and <code>npm ci</code> can recreate the same dependency tree, unless something got <a href="https://www.theregister.co.uk/2016/03/23/npm_left_pad_chaos/">unpublished</a>).</li>
+</ol>
+<p>Either way, any issues in the build process could mean that one or more of the builds doesn't work correctly and, as you're not actually testing the same asset, you <strong>only find out when that specific build is deployed</strong>. This is not where you want to be for a modern, <a href="https://tanzu.vmware.com/content/blog/beyond-the-twelve-factor-app">12+ factor</a> application. Oh, and even if you choose approach 1, introducing a new environment you need to deploy to would automatically push you back to approach 2, needing to recreate an existing build with a new set of configuration.</p>
+<h2>Runtime configuration</h2>
+<p>Much better than baking in the configuration when you build the assets is to be able to inject it at runtime. One method that I've used in various guises is extracting the app's configuration to one specific file. From there you have various options for switching configuration between environments, for example:</p>
+<ul>
+<li>Copy across an environment-specific file over the default; or</li>
+<li>Generate a new file from a template and e.g. environment variables (see <a href="https://timysewyn.be/blog/2017-12-27-Deploying-web-applications-with-environment-specific-configurations/">my colleague's post</a> on how to do that with <code>envsubst</code>, for example).</li>
+</ul>
+<p>These methods are much simpler and therefore safer operations than rebuilding or transforming the source code itself; they can trivially be scripted as part of an automated deployment process. Broadly there are three ways to do this, outlined below.</p>
+<h3>JavaScript</h3>
+<p>Probably the most common way to extract configuration is to load a separate JavaScript file directly in your HTML (i.e. <em>not</em> part of the bundle that e.g. Webpack is creating):</p>
+<div class="highlight"><pre><span></span><code><span class="p">&lt;</span><span class="nt">script</span> <span class="na">src</span><span class="o">=</span><span class="s">&quot;config.js&quot;</span><span class="p">&gt;&lt;/</span><span class="nt">script</span><span class="p">&gt;</span>
+</code></pre></div>
+
+<p>then in the file you're loading, in this case <code>config.js</code>, add whatever configuration you need to the global <code>window</code> object so your app code can access it:</p>
+<div class="highlight"><pre><span></span><code><span class="nb">window</span><span class="p">.</span><span class="nx">configuration</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="nx">backend</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;host.domain.ext&quot;</span><span class="p">,</span>
+<span class="p">};</span>
+</code></pre></div>
+
+<h3>HTML</h3>
+<p>Server-side includes (SSI) are a way to dynamically inject content into the responses you're serving. So in your <code>index.html</code> you would have an include directive:</p>
+<div class="highlight"><pre><span></span><code><span class="p">&lt;</span><span class="nt">div</span> <span class="na">id</span><span class="o">=</span><span class="s">&quot;root&quot;</span><span class="p">&gt;&lt;/</span><span class="nt">div</span><span class="p">&gt;</span>
+<span class="cm">&lt;!--#include virtual=&quot;globals.html&quot; --&gt;</span> 
+</code></pre></div>
+
+<p>then in <code>globals.html</code> have a script element that updates the <code>window</code> object as above:</p>
+<div class="highlight"><pre><span></span><code><span class="p">&lt;</span><span class="nt">script</span><span class="p">&gt;</span>
+<span class="w">  </span><span class="nb">window</span><span class="p">.</span><span class="nx">configuration</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nx">message</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;Production&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="p">};</span>
+<span class="p">&lt;/</span><span class="nt">script</span><span class="p">&gt;</span>
+</code></pre></div>
+
+<p>Configuring this in the buildpack is simple; you can just add <code>ssi: enabled</code> to a <code>Staticfile</code> at the root of the deployed directory, along with any other configuration (e.g. <code>pushstate: enabled</code> to enable client-side routing using the history API).</p>
+<p><strong>Note</strong> you'll have to make sure your build process leaves the directives in the HTML; I discovered while putting examples together for this post that Create React App <a href="https://github.com/facebook/create-react-app/issues/4245">stripped comments out</a>, for example, so you need to make sure you're using version 5.1.0 or newer of <code>html-minifier-terser</code> where these directives are ignored by default (see this <a href="https://github.com/DanielRuf/html-minifier-terser/pull/39">Pull Request</a>).</p>
+<h3>JSON</h3>
+<p>A third option is having a JSON file, and making a request for it when the app starts up. Rather than the browser making the request for you, as with the JavaScript options, this is made explicitly from the app itself. Once the request resolves the configuration data can be added to the <code>window</code> as above.</p>
+<p>The downside of this is that you need to wait for a request to finish <em>in the app runtime</em> before the configuration is available. Some frameworks can help you with this; for example, Angular provides <a href="https://angular.io/api/core/APP_INITIALIZER"><code>APP_INITIALIZER</code></a>, a hook that allows you to delay initial loading of your app code until the promises you supply have been resolved.</p>
+<div class="highlight"><pre><span></span><code><span class="kd">interface</span><span class="w"> </span><span class="nx">Configuration</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="nx">message</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span>
+<span class="p">};</span>
+
+<span class="kd">@Injectable</span><span class="p">()</span>
+<span class="k">export</span><span class="w"> </span><span class="kd">class</span><span class="w"> </span><span class="nx">ConfigurationService</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">public</span><span class="w"> </span><span class="nx">configuration</span><span class="o">:</span><span class="w"> </span><span class="kt">Configuration</span><span class="p">;</span>
+
+<span class="w">  </span><span class="kr">constructor</span><span class="p">(</span><span class="k">private</span><span class="w"> </span><span class="nx">http</span><span class="o">:</span><span class="w"> </span><span class="kt">HttpClient</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="p">}</span>
+
+<span class="w">  </span><span class="nx">initialise</span><span class="p">()</span><span class="o">:</span><span class="w"> </span><span class="nb">Promise</span><span class="o">&lt;</span><span class="ow">void</span><span class="o">&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="k">this</span><span class="p">.</span><span class="nx">http</span>
+<span class="w">      </span><span class="p">.</span><span class="nx">get</span><span class="o">&lt;</span><span class="nx">Configuration</span><span class="o">&gt;</span><span class="p">(</span><span class="s1">&#39;/config.json&#39;</span><span class="p">)</span>
+<span class="w">      </span><span class="p">.</span><span class="nx">pipe</span><span class="p">(</span>
+<span class="w">        </span><span class="nx">map</span><span class="p">((</span><span class="nx">configuration</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">          </span><span class="k">this</span><span class="p">.</span><span class="nx">configuration</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">configuration</span><span class="p">;</span>
+<span class="w">        </span><span class="p">})</span>
+<span class="w">      </span><span class="p">)</span>
+<span class="w">      </span><span class="p">.</span><span class="nx">toPromise</span><span class="p">();</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<div class="highlight"><pre><span></span><code><span class="w">  </span><span class="nx">providers</span><span class="o">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">    </span><span class="nx">ConfigService</span><span class="p">,</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">      </span><span class="nx">provide</span><span class="o">:</span><span class="w"> </span><span class="kt">APP_INITIALIZER</span><span class="p">,</span>
+<span class="w">      </span><span class="nx">useFactory</span><span class="o">:</span><span class="w"> </span><span class="p">(</span><span class="nx">service</span><span class="o">:</span><span class="w"> </span><span class="kt">ConfigurationService</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">()</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="nx">service</span><span class="p">.</span><span class="nx">initialise</span><span class="p">(),</span>
+<span class="w">      </span><span class="nx">deps</span><span class="o">:</span><span class="w"> </span><span class="p">[</span><span class="nx">ConfigurationService</span><span class="p">],</span>
+<span class="w">      </span><span class="nx">multi</span><span class="o">:</span><span class="w"> </span><span class="kt">true</span><span class="p">,</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">  </span><span class="p">],</span>
+</code></pre></div>
+
+<p>In React, this is the sort of thing that the experimental <a href="https://reactjs.org/docs/concurrent-mode-suspense.html">suspense</a> API looks like it will be really useful for.</p>
+<h3>Accessing configuration</h3>
+<p>However you're loading the configuration, you don't really want your components coupled to the <code>window</code> (this makes e.g. testing harder), so rather than having <code>window.configuration</code> accessed all over your app I would recommend having a single <code>configuration.js</code> containing something like:</p>
+<div class="highlight"><pre><span></span><code><span class="k">export</span><span class="w"> </span><span class="k">default</span><span class="w"> </span><span class="nb">window</span><span class="p">.</span><span class="nx">configuration</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="nx">message</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;Development&quot;</span><span class="p">,</span>
+<span class="p">};</span>
+</code></pre></div>
+
+<p>and using <code>import configuration from "path/to/configuration";</code> to access it in your other JavaScript files.</p>
+<p>This is slightly more complicated when the additional configuration is loaded asynchronously (i.e. using the JSON method). The <code>||</code> in the file would only be evaluated once, which may be <em>before</em> the non-default configuration has been loaded. One method to ensure the app always finds up-to-date configuration is to use a <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Proxy"><code>Proxy</code></a> to ensure the latest <code>window.configuration</code> is checked for on every access:</p>
+<div class="highlight"><pre><span></span><code><span class="k">export</span><span class="w"> </span><span class="k">default</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nb">Proxy</span><span class="p">({</span>
+<span class="w">  </span><span class="nx">message</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;Development&quot;</span><span class="p">,</span>
+<span class="p">},</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="nx">get</span><span class="o">:</span><span class="w"> </span><span class="p">(</span><span class="nx">defaults</span><span class="p">,</span><span class="w"> </span><span class="nx">prop</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">(</span><span class="nb">window</span><span class="p">.</span><span class="nx">configuration</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="nx">defaults</span><span class="p">)[</span><span class="nx">prop</span><span class="p">],</span>
+<span class="p">});</span>
+</code></pre></div>
+
+<h3>Trade-offs</h3>
+<p>Which of these methods you choose will depend on your specific context, I've summarised some of the pros and cons I thought of below:</p>
+<table>
+  <thead>
+    <tr>
+      <th>Method</th>
+      <th>Pros</th>
+      <th>Cons</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>JavaScript</strong></td>
+      <td>
+        <ul>
+          <li>No additional configuration needed</li>
+          <li> JavaScript can include dynamic values if needed</li>
+        </ul>
+      </td>
+      <td>
+        <ul>
+          <li>Another round trip to the server</li>
+        </ul>
+      </td>
+    </tr>
+    <tr>
+      <td><strong>HTML</strong></td>
+      <td>
+        <ul>
+          <li>Guaranteed to be available when the app loads, no additional round trips</li>
+          <li>JavaScript can include dynamic values if needed</li>
+          <li>Works for arbitrary content (e.g. tracking pixels)</li>
+        </ul>
+      </td>
+      <td>
+        <ul>
+          <li>Requires buildpack/server configuration</li>
+          <li>Processing overhead on requests (only for the <code>text/html</code> MIME type by default in NGINX)</li>
+        </ul>
+      </td>
+    </tr>
+    <tr>
+      <td><strong>JSON</strong></td>
+      <td>
+        <ul>
+          <li>No additional configuration needed</li>
+        </ul>
+      </td>
+      <td>
+        <ul>
+          <li>Adds complexity to the app to handle asynchronous access to configuration</li>
+          <li>Another round trip to the server</li>
+          <li>Limited to static JSON content</li>
+        </ul>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+<p><strong>Note</strong> that although I've classed dynamic value support as a Pro above, the flexibility of arbitrary JS code (loaded via HTML or JS files) vs. static JSON data also introduces a security risk. Use with caution! </p>
+<p>I've created simple examples in various frameworks to show how these ideas can be applied practically, they're all published in <a href="https://github.com/spa-configuration">this GitHub org</a>.</p>
+<h2>Path routing</h2>
+<p>If you're using a managed deployment platform that handles routing for you, or can set up routing using something like <a href="https://spring.io/projects/spring-cloud-gateway">Spring Cloud Gateway</a>, you can send traffic to different apps depending on the path. This means you don't need to configure the client the different service APIs at all (or need to configure CORS on the server), because the requests get automagically routed for you.</p>
+<p>For example, I've used this in TAS to set up an Angular frontend served by NGINX on <code>host.domain.ext</code>, with a Spring Boot backend on <code>host.domain.ext/api</code> so that the frontend can make relative requests (i.e. to <code>"/api/endpoint"</code> rather than <code>"host.domain.ext/api/endpoint"</code>), even though they're still <em>two separate apps</em>. You can even set this up from a single manifest file, if you're working in a monorepo:</p>
+<div class="highlight"><pre><span></span><code><span class="nn">---</span>
+<span class="nt">applications</span><span class="p">:</span>
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">frontend</span>
+<span class="w">  </span><span class="nt">routes</span><span class="p">:</span>
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">host.domain.ext</span>
+<span class="w">  </span><span class="nt">buildpacks</span><span class="p">:</span>
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">staticfile_buildpack</span>
+<span class="w">  </span><span class="l l-Scalar l-Scalar-Plain">...</span>
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">backend</span>
+<span class="w">  </span><span class="nt">routes</span><span class="p">:</span>
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">host.domain.ext/api</span>
+<span class="w">  </span><span class="l l-Scalar l-Scalar-Plain">...</span>
+</code></pre></div>
+
+<p>The configuration for this is covered <a href="https://docs.cloudfoundry.org/devguide/deploy-apps/routes-domains.html#-create-an-http-route-with-a-path">here</a>. <strong>Note</strong> that the <code>path</code> key in the manifest file is the directory within your repo that the app is in, <em>not</em> the network path to host the app at.</p>
+<p>The TAS router is smart enough to allow push-state routing, too; a request to <code>host.domain.ext/foo</code> will go to the frontend app unless you explicitly mount another app at <code>/foo</code>. Between that and the ability to simply set <code>pushstate: enabled</code> in the <code>Staticfile</code>, this is a really easy way to handle client-side routing with something like <a href="https://github.com/ReactTraining/react-router">React Router</a> or the built-in <a href="https://angular.io/guide/router">Angular router</a>, taking full advantage of the <a href="https://developer.mozilla.org/en-US/docs/Web/API/History">HTML5 history API</a>. The buildpack will configure NGINX to handle serving the <code>index.html</code> for any missing requests and your SPA can take over from there.</p>
+<p>One limitation of the path routing approach is that this <em>only</em> removes the configuration issue for API URLs; if you have other configuration that varies by environment you'll need to manage that using the methods above. However, if you can make a relative request and have that routed to a dynamic application, the JSON approach can be used and the request fulfilled based on environment variables, so you don't need to swap out files between environments.</p></div>
+    <div class="comments">
+      <h2>Comments !</h2>
+      <div id="disqus_thread"></div>
+      <script type="text/javascript">
+        var disqus_shortname = 'textbook-dev';
+        var disqus_identifier = '2020/Sep/19/spa-config.html';
+        var disqus_url = 'https://blog.jonrshar.pe/2020/Sep/19/spa-config.html';
+        (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//textbook-dev.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+      </script>
+      <noscript>Please enable JavaScript to view the comments.</noscript>
+    </div>
+
+  </article>
+</section>
+
+<script type="application/ld+json">
+  {"articleSection": "development", "author": {"@type": "Person", "name": "Jonathan Sharpe"}, "datePublished": "2020-09-19T15:15:00+01:00", "headline": "Runtime configuration for single-page apps", "mainEntityOfPage": {"@type": "WebPage", "@id": "https://blog.jonrshar.pe/2020/Sep/19/spa-config.html"}, "@context": "http://schema.org", "@type": "BlogPosting", "dateModified": "2021-03-21T20:00:00+00:00", "description": "Tips and tricks for deploying JavaScript SPAs with runtime configuration"}
+</script>
+    </div>
+
+    <div class="column is-one-quarter-desktop is-one-third-tablet is-hidden-print">
+      <aside class="menu">
+<div id="mc_embed_signup">
+  <form
+      action="https://jonrshar.us15.list-manage.com/subscribe/post?u=7ada11180797f3af73228bf0b&amp;id=d172abcbd2"
+      method="post" id="mc-embedded-subscribe-form"
+      name="mc-embedded-subscribe-form" class="validate" target="_blank"
+      novalidate>
+
+    <h2 class="menu-label">Mailing List</h2>
+
+    <div id="mc_embed_signup_scroll">
+      <div class="field mc-field-group">
+        <label for="mce-EMAIL" class="label is-small">Email</label>
+        <div class="field-body">
+          <div class="field">
+            <p class="control has-icons-left">
+              <input type="email" name="EMAIL" class="input required email is-small"
+                     id="mce-EMAIL" placeholder="Email address">
+              <span class="icon is-small is-left">
+              <i class="fa fa-envelope"></i>
+            </span>
+            </p>
+          </div>
+        </div>
+      </div>
+      <div class="field">
+        <label for="mce-FNAME" class="label is-small">Name</label>
+        <div class="field-body">
+          <div class="field is-grouped">
+            <p class="control is-expanded">
+              <input class="input is-small" type="text" value="" name="FNAME"
+                     id="mce-FNAME" placeholder="First">
+            </p>
+            <p class="control is-expanded">
+              <input class="input is-small" type="text" value="" name="LNAME"
+                     id="mce-LNAME" placeholder="Last">
+            </p>
+          </div>
+        </div>
+      </div>
+      <div class="field is-grouped">
+        <p class="control">
+          <input type="submit" name="subscribe" value="Subscribe"
+                 class="button is-small is-success" id="mc-embedded-subscribe">
+        </p>
+          <p class="control">
+            <span class="help">
+              Powered by
+              <a href="http://eepurl.com/cNv6Rb"
+                 title="MailChimp - email marketing made easy and fun">
+                MailChimp
+              </a>
+            </span>
+          </p>
+      </div>
+
+      <div id="mce-responses" class="clear">
+        <div class="response help is-danger" id="mce-error-response"
+             style="display:none"></div>
+        <div class="response help is-success" id="mce-success-response"
+             style="display:none"></div>
+      </div>
+
+      <div style="position: absolute; left: -5000px;" aria-hidden="true">
+        <input type="text" name="b_7ada11180797f3af73228bf0b_d172abcbd2"
+               tabindex="-1" value="">
+      </div>
+    </div>
+  </form>
+</div>
+
+          <p class="menu-label">Other Pages</p>
+          <ul class="menu-list">
+                <li><a                        href="https://blog.jonrshar.pe/pages/about.html">
+                  <span class="icon is-small"><i class="fa fa-book"></i></span>
+                  <span class="link-text">About</span>
+                </a></li>
+          </ul>
+          <p class="menu-label">Links</p>
+          <ul class="menu-list">
+              <li><a href="http://engineering.pivotal.io/">
+                <span class="icon is-small"><i class="fa fa-globe fa-fw"></i></span>
+                <span class="link-text">Pivotal Engineering Journal</span>
+              </a></li>
+              <li><a href="http://blog.cleancoder.com/">
+                <span class="icon is-small"><i class="fa fa-globe fa-fw"></i></span>
+                <span class="link-text">The Clean Code Blog</span>
+              </a></li>
+              <li><a href="https://codeascraft.com/">
+                <span class="icon is-small"><i class="fa fa-globe fa-fw"></i></span>
+                <span class="link-text">Code as Craft</span>
+              </a></li>
+              <li><a href="http://corgibytes.com/blog/">
+                <span class="icon is-small"><i class="fa fa-globe fa-fw"></i></span>
+                <span class="link-text">Corgibytes Blog</span>
+              </a></li>
+          </ul>
+<p class="menu-label">Social</p>
+<ul class="menu-list">
+    <li><a href="https://github.com/textbook">
+      <span class="icon is-small">
+          <i class="fa fa-github fa-fw"></i>
+      </span>
+      <span class="link-text">GitHub</span>
+    </a></li>
+    <li><a href="http://stackoverflow.com/users/3001761/jonrsharpe">
+      <span class="icon is-small">
+          <i class="fa fa-stack-overflow fa-fw"></i>
+      </span>
+      <span class="link-text">Stack Overflow</span>
+    </a></li>
+    <li><a href="https://twitter.com/jonrsharpe">
+      <span class="icon is-small">
+          <i class="fa fa-twitter fa-fw"></i>
+      </span>
+      <span class="link-text">Twitter</span>
+    </a></li>
+    <li><a href="https://500px.com/jonrsharpe">
+      <span class="icon is-small">
+          <i class="fa fa-500px fa-fw"></i>
+      </span>
+      <span class="link-text">500px</span>
+    </a></li>
+
+    <li><a href="https://blog.jonrshar.pe/feeds/all.atom.xml"
+           type="application/atom+xml" rel="alternate">
+      <span class="icon is-small"><i class="fa fa-rss"></i></span>
+      <span class="link-text">Atom Feed</span>
+    </a></li>
+
+</ul>          <p class="menu-label">License</p>
+          
+<ul class="menu-list">
+  <li>
+    <a rel="license" href="http://creativecommons.org/licenses/by-sa/4.0/">
+      <span class="icon is-small">
+        <i class="fa fa-creative-commons fa-fw"></i>
+      </span>
+      <span>CC BY-SA 4.0</span>
+    </a>
+  </li>
+</ul>
+
+      </aside>
+    </div>
+  </div>
+</div>
+
+<footer class="footer">
+  <div class="container has-text-centered">
+ <p class="subtitle">These are my opinions - if you don't like them, I have others</p>    <div class="credits">
+      <span><a href="https://github.com/textbook/bulrush">Bulrush</a> theme for
+        <a href="https://blog.getpelican.com/">Pelican</a></span>
+      <span><span class="icon is-small"><i class="fa fa-html5"></i></span> HTML 5</span>
+      <span><span class="icon is-small"><i class="fa fa-css3"></i></span> CSS 3</span>
+      <span>Made with <a href="https://bulma.io">Bulma</a></span>
+    </div>
+  </div>
+  <div class="github-fork-ribbon-wrapper is-hidden-mobile is-hidden-print">
+    <div class="github-fork-ribbon">
+      <a href="https://github.com/textbook/textbook.github.io">
+        <i class="fa fa-github fa-fw"></i>
+        Fork me on GitHub
+      </a>
+    </div>
+  </div>
+</footer>
+
+    <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-64837080-1']);
+    _gaq.push(['_trackPageview']);
+    (function() {
+        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+        ga.src = 'https://ssl.google-analytics.com/ga.js';
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+    </script>
+<script type="text/javascript">
+    var disqus_shortname = 'textbook-dev';
+    (function () {
+        var s = document.createElement('script'); s.async = true;
+        s.type = 'text/javascript';
+        s.src = 'https://' + disqus_shortname + '.disqus.com/count.js';
+        (document.getElementsByTagName('HEAD')[0] || document.getElementsByTagName('BODY')[0]).appendChild(s);
+    }());
+</script>
+<script type="text/javascript">
+  document.getElementById('navToggle').addEventListener('click', function () {
+    var nav = document.getElementById('navMenu');
+    var className = nav.getAttribute('class');
+    if (className == 'navbar-menu') {
+      nav.className = 'navbar-menu is-active';
+    } else {
+      nav.className = 'navbar-menu';
+    }
+  });
+</script>
+</body>
+</html>

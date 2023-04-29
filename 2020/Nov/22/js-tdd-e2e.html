@@ -1,0 +1,1356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head prefix="og: http://ogp.me/ns# article: http://ogp.me/ns/article#">
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width">
+  <title>JS TDD E2E</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.9.4/css/bulma.min.css">
+    <link rel="stylesheet" href="https://blog.jonrshar.pe/theme/css/main.3dad1b7a.css">
+  <style media="print">.is-hidden-print{display:none !important}</style>
+      <link rel="stylesheet" href="https://blog.jonrshar.pe/custom.css">
+<meta property="og:title" content="textbook - JS TDD E2E">
+  <meta property="og:description" content="Test-driven JavaScript development done right - part 2">
+<meta property="og:url" content="https://blog.jonrshar.pe/2020/Nov/22/js-tdd-e2e.html">
+    <meta property="og:image" content="https://blog.jonrshar.pe/images/cypress-gui.png">
+    <meta name="twitter:image:alt" content="textbook | These are my opinions - if you don't like them, I have others">
+<meta name="twitter:card" content="summary">
+  <meta name="twitter:creator" content="@jonrsharpe">
+  <meta name="twitter:site" content="@jonrsharpe">
+<meta property="og:site_name" content="textbook">
+<meta property="og:type" content="article">
+  <meta property="article:published_time" content="2020-11-22T15:30:00+00:00">
+  <meta property="article:modified_time" content="2021-04-10T20:30:00+01:00">
+    <meta property="article:tag" content="javascript">
+    <meta property="article:tag" content="tdd">
+    <meta property="article:tag" content="xp">
+  <meta property="article:section" content="development">
+</head>
+
+<body id="index" class="home">
+<header class="hero is-primary">
+  <div class="hero-head">
+    <div class="container">
+      <nav class="navbar">
+        <div class="navbar-brand">
+          <a class="navbar-item title is-3"
+             href="https://blog.jonrshar.pe/">textbook</a>
+        </div>
+      </nav>
+    </div>
+  </div>
+</header>
+
+<nav class="navbar has-shadow is-hidden-print">
+  <div class="container">
+    <div class="navbar-center"></div>
+    <span id="navToggle" class="navbar-burger">
+      <span></span>
+      <span></span>
+      <span></span>
+    </span>
+    <div id="navMenu" class="navbar-menu">
+        <div class="navbar-end">
+              <a class="navbar-item is-tab "
+                 href="https://blog.jonrshar.pe/category/work.html">work</a>
+              <a class="navbar-item is-tab "
+                 href="https://blog.jonrshar.pe/category/meta.html">meta</a>
+              <a class="navbar-item is-tab is-active"
+                 href="https://blog.jonrshar.pe/category/development.html">development</a>
+        </div>
+    </div>
+  </div>
+</nav>
+
+<div class="container">
+  <div class="section columns">
+    <div class="column is-three-quarters-desktop is-two-thirds-tablet">
+<section id="content" class="body">
+  <article>
+    <h1 class="title">
+      <a href="https://blog.jonrshar.pe/2020/Nov/22/js-tdd-e2e.html" rel="bookmark"
+         title="Permalink to JS TDD E2E">JS TDD E2E</a></h1>
+<footer class="post-info">
+  <abbr class="published" title="2020-11-22T15:30:00+00:00">
+    Published <span class="is-info">Sun 22 November 2020</span>
+    in <a href="https://blog.jonrshar.pe/category/development.html">development</a>
+  </abbr>
+    <br />
+    <abbr class="modified" title="2021-04-10T20:30:00+01:00">
+      Updated Sat 10 April 2021
+    </abbr>
+
+    <p class="author">
+      <em>by           Jonathan Sharpe
+</em>
+      <span class="tag is-small is-rounded">
+        <a href="https://blog.jonrshar.pe/tag/javascript.html">javascript</a>
+      </span>
+      <span class="tag is-small is-rounded">
+        <a href="https://blog.jonrshar.pe/tag/tdd.html">tdd</a>
+      </span>
+      <span class="tag is-small is-rounded">
+        <a href="https://blog.jonrshar.pe/tag/xp.html">xp</a>
+      </span>
+    </p>
+  
+</footer>    <div class="section"><p>In <a href="https://blog.jonrshar.pe/2020/Aug/31/js-tdd-ftw.html">the previous article</a> in this series, I introduced some of the basics of test-driven development (TDD):</p>
+<ul>
+<li>
+<p>the process:</p>
+<blockquote>
+<ol>
+<li>Red - write a failing test that describes the behaviour you want;</li>
+<li>Green - write the simplest possible code to make the test pass; and</li>
+<li>Refactor - clean up your code without breaking the tests.</li>
+</ol>
+</blockquote>
+</li>
+<li>
+<p>the three main parts of a test:</p>
+<blockquote>
+<ul>
+<li><strong>Arrange</strong> (sometimes known as <em>"given"</em>) - set up the preconditions for our test...</li>
+<li><strong>Act</strong> (or <em>"when"</em>) - do some work... This is what we're actually testing.</li>
+<li><strong>Assert</strong> (or <em>"then"</em>) - make sure that the work was done correctly.</li>
+</ul>
+</blockquote>
+</li>
+<li>
+<p>some of the benefits of test-driving implementations:</p>
+<ul>
+<li>
+<p><em>"...we can try out how we should interact with our code (its "interface") before we've even written any. We can have that discussion... while it's just a matter of changing our minds rather than the code."</em>;</p>
+</li>
+<li>
+<p><em>"...it tells you when you're done. Once the tests are passing, the implementation meets the current requirements."</em>; and</p>
+</li>
+<li>
+<p><em>"...we know that the code still does exactly what it's supposed to even [when] we've just changed the implementation. This allows us to confidently refactor towards cleaner code and higher quality."</em></p>
+</li>
+</ul>
+</li>
+<li>
+<p>how to <em>"call the shot"</em> when running your tests:</p>
+<blockquote>
+<p>...make a prediction of what the test result will be, pass or fail. 
+If you think the test will fail, <strong>why</strong>; will the <code>expect</code>ation be 
+unmet (and what value do you think you'll get instead) or will 
+something else go wrong?</p>
+</blockquote>
+</li>
+</ul>
+<p>I also covered how to use one of the most popular test frameworks in the JavaScript ecosystem at the moment, <a href="https://jestjs.io/">Jest</a>, to start writing unit tests for a simple function:</p>
+<div class="highlight"><pre><span></span><code><span class="nx">describe</span><span class="p">(</span><span class="s2">&quot;rock, paper, scissors&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">()</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="nx">it</span><span class="p">(</span><span class="s2">&quot;should say left wins for rock vs. scissors&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">()</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="c1">// Arrange</span>
+<span class="w">    </span><span class="kd">const</span><span class="w"> </span><span class="nx">left</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;rock&quot;</span><span class="p">;</span>
+<span class="w">    </span><span class="kd">const</span><span class="w"> </span><span class="nx">right</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;scissors&quot;</span><span class="p">;</span>
+
+<span class="w">    </span><span class="c1">// Act</span>
+<span class="w">    </span><span class="kd">const</span><span class="w"> </span><span class="nx">outcome</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">rps</span><span class="p">(</span><span class="nx">left</span><span class="p">,</span><span class="w"> </span><span class="nx">right</span><span class="p">);</span>
+
+<span class="w">    </span><span class="c1">// Assert</span>
+<span class="w">    </span><span class="nx">expect</span><span class="p">(</span><span class="nx">outcome</span><span class="p">).</span><span class="nx">toBe</span><span class="p">(</span><span class="s2">&quot;left&quot;</span><span class="p">);</span>
+<span class="w">  </span><span class="p">});</span>
+<span class="p">});</span>
+</code></pre></div>
+
+<p>Along the way I threw in some *nix CLI commands and practice with using Git. If you haven't read it yet, or any of the above seems unfamiliar, go and check it out!</p>
+<p>One thing that seems to frustrate people new to TDD is that many of the examples are, like my previous post, pretty trivial. They're useful for teaching the flow, but don't actually show you how to test most real applications. So to address that I thought for round two I'd meet a pretty common need - end-to-end (E2E, sometimes known as acceptance or functional) testing a React web app built with <a href="https://create-react-app.dev/docs/getting-started">Create React App</a> (CRA). This will still use the TDD flow, but add an extra layer with some <a href="https://cypress.io">Cypress</a> browser tests. We'll work our way from the <em>outside in</em>, starting with the E2E tests then moving to lower levels.</p>
+<p>Note that I'll use the following names to refer to the different levels:</p>
+<ul>
+<li><strong>End-to-end</strong>: exercises the whole application from the user's point of view;</li>
+<li><strong>Integration</strong>: exercises multiple components of the application, collaborating to provide some functionality; and</li>
+<li><strong>Unit</strong>: exercises a single component, with any collaborating components replaced by <a href="https://tanzu.vmware.com/content/pivotal-engineering-journal/the-test-double-rule-of-thumb-2">test doubles</a>.</li>
+</ul>
+<h3>Requirements</h3>
+<p>The prerequisites here are the same as the previous article:</p>
+<ul>
+<li>*nix command line: already provided on macOS and Linux; if you're using Windows try <a href="https://docs.microsoft.com/en-us/windows/wsl/about">WSL</a> or <a href="https://gitforwindows.org/">Git BASH</a>;</li>
+<li><a href="https://nodejs.org/">Node</a> (10+ recommended, Jest 26 <a href="https://jestjs.io/blog/2020/05/05/jest-26#other-breaking-changes-in-jest-26">dropped support</a> for Node 8; run <code>node -v</code> to check) and NPM; and</li>
+<li>Familiarity with ES6 JavaScript syntax.</li>
+</ul>
+<p>In addition, given the domain for this post, you'll need:</p>
+<ul>
+<li>Familiarity with React development - I'm going to assume you know how to write a basic implementation, guiding you with test cases and a few function component examples.</li>
+</ul>
+<p>We're going to expand on the previous article and add a web UI for our Rock Paper Scissors implementation. This article moves quite quickly; the libraries involved (<a href="https://cypress.io">Cypress</a>, <a href="https://jestjs.io/">Jest</a>, <a href="https://testing-library.com">Testing Library</a>) have quite large APIs, so it's best to read the details in their documentation.</p>
+<p>Again please carefully <em>read everything</em>, and for newer developers I'd recommend <em>typing the code</em> rather than copy-pasting.</p>
+<h2>Setup [1/8]</h2>
+<p>To begin, let's create a new React app in our workspace using CRA:</p>
+<div class="highlight"><pre><span></span><code>$<span class="w"> </span>npx<span class="w"> </span>create-react-app@latest<span class="w"> </span>--use-npm<span class="w"> </span>rps-e2e
+npx:<span class="w"> </span>installed<span class="w"> </span><span class="m">92</span><span class="w"> </span><span class="k">in</span><span class="w"> </span><span class="m">12</span>.05s
+
+Creating<span class="w"> </span>a<span class="w"> </span>new<span class="w"> </span>React<span class="w"> </span>app<span class="w"> </span><span class="k">in</span><span class="w"> </span>path/to/rps-e2e.
+
+Installing<span class="w"> </span>packages.<span class="w"> </span>This<span class="w"> </span>might<span class="w"> </span>take<span class="w"> </span>a<span class="w"> </span>couple<span class="w"> </span>of<span class="w"> </span>minutes.
+Installing<span class="w"> </span>react,<span class="w"> </span>react-dom,<span class="w"> </span>and<span class="w"> </span>react-scripts<span class="w"> </span>with<span class="w"> </span>cra-template...
+
+...
+
++<span class="w"> </span>cra-template@1.1.0
++<span class="w"> </span>react-scripts@4.0.0
++<span class="w"> </span>react@17.0.1
++<span class="w"> </span>react-dom@17.0.1
+added<span class="w"> </span><span class="m">1929</span><span class="w"> </span>packages<span class="w"> </span>from<span class="w"> </span><span class="m">748</span><span class="w"> </span>contributors<span class="w"> </span>and<span class="w"> </span>audited<span class="w"> </span><span class="m">1929</span><span class="w"> </span>packages<span class="w"> </span><span class="k">in</span><span class="w"> </span><span class="m">142</span>.186s
+
+<span class="m">118</span><span class="w"> </span>packages<span class="w"> </span>are<span class="w"> </span>looking<span class="w"> </span><span class="k">for</span><span class="w"> </span>funding
+<span class="w">  </span>run<span class="w"> </span><span class="sb">`</span>npm<span class="w"> </span>fund<span class="sb">`</span><span class="w"> </span><span class="k">for</span><span class="w"> </span>details
+
+found<span class="w"> </span><span class="m">0</span><span class="w"> </span>vulnerabilities
+
+
+Initialized<span class="w"> </span>a<span class="w"> </span>git<span class="w"> </span>repository.
+
+Installing<span class="w"> </span>template<span class="w"> </span>dependencies<span class="w"> </span>using<span class="w"> </span>npm...
+npm<span class="w"> </span>WARN<span class="w"> </span>tsutils@3.17.1<span class="w"> </span>requires<span class="w"> </span>a<span class="w"> </span>peer<span class="w"> </span>of<span class="w"> </span>typescript@&gt;<span class="o">=</span><span class="m">2</span>.8.0<span class="w"> </span><span class="o">||</span><span class="w"> </span>&gt;<span class="o">=</span><span class="w"> </span><span class="m">3</span>.2.0-dev<span class="w"> </span><span class="o">||</span><span class="w"> </span>&gt;<span class="o">=</span><span class="w"> </span><span class="m">3</span>.3.0-dev<span class="w"> </span><span class="o">||</span><span class="w"> </span>&gt;<span class="o">=</span><span class="w"> </span><span class="m">3</span>.4.0-dev<span class="w"> </span><span class="o">||</span><span class="w"> </span>&gt;<span class="o">=</span><span class="w"> </span><span class="m">3</span>.5.0-dev<span class="w"> </span><span class="o">||</span><span class="w"> </span>&gt;<span class="o">=</span><span class="w"> </span><span class="m">3</span>.6.0-dev<span class="w"> </span><span class="o">||</span><span class="w"> </span>&gt;<span class="o">=</span><span class="w"> </span><span class="m">3</span>.6.0-beta<span class="w"> </span><span class="o">||</span><span class="w"> </span>&gt;<span class="o">=</span><span class="w"> </span><span class="m">3</span>.7.0-dev<span class="w"> </span><span class="o">||</span><span class="w"> </span>&gt;<span class="o">=</span><span class="w"> </span><span class="m">3</span>.7.0-beta<span class="w"> </span>but<span class="w"> </span>none<span class="w"> </span>is<span class="w"> </span>installed.<span class="w"> </span>You<span class="w"> </span>must<span class="w"> </span>install<span class="w"> </span>peer<span class="w"> </span>dependencies<span class="w"> </span>yourself.
+
++<span class="w"> </span>web-vitals@0.2.4
++<span class="w"> </span>@testing-library/react@11.1.2
++<span class="w"> </span>@testing-library/user-event@12.2.2
++<span class="w"> </span>@testing-library/jest-dom@5.11.6
+added<span class="w"> </span><span class="m">29</span><span class="w"> </span>packages<span class="w"> </span>from<span class="w"> </span><span class="m">77</span><span class="w"> </span>contributors<span class="w"> </span>and<span class="w"> </span>audited<span class="w"> </span><span class="m">1958</span><span class="w"> </span>packages<span class="w"> </span><span class="k">in</span><span class="w"> </span><span class="m">15</span>.605s
+
+<span class="m">118</span><span class="w"> </span>packages<span class="w"> </span>are<span class="w"> </span>looking<span class="w"> </span><span class="k">for</span><span class="w"> </span>funding
+<span class="w">  </span>run<span class="w"> </span><span class="sb">`</span>npm<span class="w"> </span>fund<span class="sb">`</span><span class="w"> </span><span class="k">for</span><span class="w"> </span>details
+
+found<span class="w"> </span><span class="m">0</span><span class="w"> </span>vulnerabilities
+
+Removing<span class="w"> </span>template<span class="w"> </span>package<span class="w"> </span>using<span class="w"> </span>npm...
+
+npm<span class="w"> </span>WARN<span class="w"> </span>tsutils@3.17.1<span class="w"> </span>requires<span class="w"> </span>a<span class="w"> </span>peer<span class="w"> </span>of<span class="w"> </span>typescript@&gt;<span class="o">=</span><span class="m">2</span>.8.0<span class="w"> </span><span class="o">||</span><span class="w"> </span>&gt;<span class="o">=</span><span class="w"> </span><span class="m">3</span>.2.0-dev<span class="w"> </span><span class="o">||</span><span class="w"> </span>&gt;<span class="o">=</span><span class="w"> </span><span class="m">3</span>.3.0-dev<span class="w"> </span><span class="o">||</span><span class="w"> </span>&gt;<span class="o">=</span><span class="w"> </span><span class="m">3</span>.4.0-dev<span class="w"> </span><span class="o">||</span><span class="w"> </span>&gt;<span class="o">=</span><span class="w"> </span><span class="m">3</span>.5.0-dev<span class="w"> </span><span class="o">||</span><span class="w"> </span>&gt;<span class="o">=</span><span class="w"> </span><span class="m">3</span>.6.0-dev<span class="w"> </span><span class="o">||</span><span class="w"> </span>&gt;<span class="o">=</span><span class="w"> </span><span class="m">3</span>.6.0-beta<span class="w"> </span><span class="o">||</span><span class="w"> </span>&gt;<span class="o">=</span><span class="w"> </span><span class="m">3</span>.7.0-dev<span class="w"> </span><span class="o">||</span><span class="w"> </span>&gt;<span class="o">=</span><span class="w"> </span><span class="m">3</span>.7.0-beta<span class="w"> </span>but<span class="w"> </span>none<span class="w"> </span>is<span class="w"> </span>installed.<span class="w"> </span>You<span class="w"> </span>must<span class="w"> </span>install<span class="w"> </span>peer<span class="w"> </span>dependencies<span class="w"> </span>yourself.
+
+removed<span class="w"> </span><span class="m">1</span><span class="w"> </span>package<span class="w"> </span>and<span class="w"> </span>audited<span class="w"> </span><span class="m">1957</span><span class="w"> </span>packages<span class="w"> </span><span class="k">in</span><span class="w"> </span><span class="m">10</span>.859s
+
+<span class="m">118</span><span class="w"> </span>packages<span class="w"> </span>are<span class="w"> </span>looking<span class="w"> </span><span class="k">for</span><span class="w"> </span>funding
+<span class="w">  </span>run<span class="w"> </span><span class="sb">`</span>npm<span class="w"> </span>fund<span class="sb">`</span><span class="w"> </span><span class="k">for</span><span class="w"> </span>details
+
+found<span class="w"> </span><span class="m">0</span><span class="w"> </span>vulnerabilities
+
+
+Created<span class="w"> </span>git<span class="w"> </span>commit.
+
+Success!<span class="w"> </span>Created<span class="w"> </span>rps-e2e<span class="w"> </span>at<span class="w"> </span>path/to/rps-e2e
+Inside<span class="w"> </span>that<span class="w"> </span>directory,<span class="w"> </span>you<span class="w"> </span>can<span class="w"> </span>run<span class="w"> </span>several<span class="w"> </span>commands:
+
+<span class="w">  </span>npm<span class="w"> </span>start
+<span class="w">    </span>Starts<span class="w"> </span>the<span class="w"> </span>development<span class="w"> </span>server.
+
+<span class="w">  </span>npm<span class="w"> </span>run<span class="w"> </span>build
+<span class="w">    </span>Bundles<span class="w"> </span>the<span class="w"> </span>app<span class="w"> </span>into<span class="w"> </span>static<span class="w"> </span>files<span class="w"> </span><span class="k">for</span><span class="w"> </span>production.
+
+<span class="w">  </span>npm<span class="w"> </span><span class="nb">test</span>
+<span class="w">    </span>Starts<span class="w"> </span>the<span class="w"> </span><span class="nb">test</span><span class="w"> </span>runner.
+
+<span class="w">  </span>npm<span class="w"> </span>run<span class="w"> </span>eject
+<span class="w">    </span>Removes<span class="w"> </span>this<span class="w"> </span>tool<span class="w"> </span>and<span class="w"> </span>copies<span class="w"> </span>build<span class="w"> </span>dependencies,<span class="w"> </span>configuration<span class="w"> </span>files
+<span class="w">    </span>and<span class="w"> </span>scripts<span class="w"> </span>into<span class="w"> </span>the<span class="w"> </span>app<span class="w"> </span>directory.<span class="w"> </span>If<span class="w"> </span>you<span class="w"> </span><span class="k">do</span><span class="w"> </span>this,<span class="w"> </span>you<span class="w"> </span>can’t<span class="w"> </span>go<span class="w"> </span>back!
+
+We<span class="w"> </span>suggest<span class="w"> </span>that<span class="w"> </span>you<span class="w"> </span>begin<span class="w"> </span>by<span class="w"> </span>typing:
+
+<span class="w">  </span><span class="nb">cd</span><span class="w"> </span>rps-e2e
+<span class="w">  </span>npm<span class="w"> </span>start
+
+Happy<span class="w"> </span>hacking!
+</code></pre></div>
+
+<p>There's a <em>lot</em> of output here, so I've skipped some of it, but you should see four main stages:</p>
+<ol>
+<li>Install <code>create-react-app</code> using <code>npx</code>;</li>
+<li>Install the specified template (we're using the default, <code>cra-template</code>) and the main React and <code>react-scripts</code> dependencies;</li>
+<li>Install the dependencies the template defines (mostly <code>@testing-library</code> utilities in this case); and finally</li>
+<li>Uninstall the template.</li>
+</ol>
+<p>This also takes care of the initial steps like creating a directory, a git repository (with <code>node_modules/</code> already ignored for us) and an NPM package. This time, before getting to the unit test level with Jest (which CRA has already set up for us), let's enter the project directory and install Cypress for our end-to-end tests:</p>
+<div class="highlight"><pre><span></span><code>$<span class="w"> </span><span class="nb">cd</span><span class="w"> </span>rps-e2e/
+
+$<span class="w"> </span>npm<span class="w"> </span>install<span class="w"> </span>cypress
+
+&gt;<span class="w"> </span>cypress@5.6.0<span class="w"> </span>postinstall<span class="w"> </span>path/to/rps-e2e/node_modules/cypress
+&gt;<span class="w"> </span>node<span class="w"> </span>index.js<span class="w"> </span>--exec<span class="w"> </span>install
+
+Installing<span class="w"> </span>Cypress<span class="w"> </span><span class="o">(</span>version:<span class="w"> </span><span class="m">5</span>.6.0<span class="o">)</span>
+
+<span class="w">  </span>✔<span class="w">  </span>Downloaded<span class="w"> </span>Cypress
+<span class="w">  </span>✔<span class="w">  </span>Unzipped<span class="w"> </span>Cypress
+<span class="w">  </span>✔<span class="w">  </span>Finished<span class="w"> </span>Installation<span class="w"> </span>path/to/Cypress/5.6.0
+
+You<span class="w"> </span>can<span class="w"> </span>now<span class="w"> </span>open<span class="w"> </span>Cypress<span class="w"> </span>by<span class="w"> </span>running:<span class="w"> </span>node_modules/.bin/cypress<span class="w"> </span>open
+
+https://on.cypress.io/installing-cypress
+
+npm<span class="w"> </span>WARN<span class="w"> </span>tsutils@3.17.1<span class="w"> </span>requires<span class="w"> </span>a<span class="w"> </span>peer<span class="w"> </span>of<span class="w"> </span>typescript@&gt;<span class="o">=</span><span class="m">2</span>.8.0<span class="w"> </span><span class="o">||</span><span class="w"> </span>&gt;<span class="o">=</span><span class="w"> </span><span class="m">3</span>.2.0-dev<span class="w"> </span><span class="o">||</span><span class="w"> </span>&gt;<span class="o">=</span><span class="w"> </span><span class="m">3</span>.3.0-dev<span class="w"> </span><span class="o">||</span><span class="w"> </span>&gt;<span class="o">=</span><span class="w"> </span><span class="m">3</span>.4.0-dev<span class="w"> </span><span class="o">||</span><span class="w"> </span>&gt;<span class="o">=</span><span class="w"> </span><span class="m">3</span>.5.0-dev<span class="w"> </span><span class="o">||</span><span class="w"> </span>&gt;<span class="o">=</span><span class="w"> </span><span class="m">3</span>.6.0-dev<span class="w"> </span><span class="o">||</span><span class="w"> </span>&gt;<span class="o">=</span><span class="w"> </span><span class="m">3</span>.6.0-beta<span class="w"> </span><span class="o">||</span><span class="w"> </span>&gt;<span class="o">=</span><span class="w"> </span><span class="m">3</span>.7.0-dev<span class="w"> </span><span class="o">||</span><span class="w"> </span>&gt;<span class="o">=</span><span class="w"> </span><span class="m">3</span>.7.0-beta<span class="w"> </span>but<span class="w"> </span>none<span class="w"> </span>is<span class="w"> </span>installed.<span class="w"> </span>You<span class="w"> </span>must<span class="w"> </span>install<span class="w"> </span>peer<span class="w"> </span>dependencies<span class="w"> </span>yourself.
+
++<span class="w"> </span>cypress@5.6.0
+added<span class="w"> </span><span class="m">121</span><span class="w"> </span>packages<span class="w"> </span>from<span class="w"> </span><span class="m">76</span><span class="w"> </span>contributors<span class="w"> </span>and<span class="w"> </span>audited<span class="w"> </span><span class="m">2078</span><span class="w"> </span>packages<span class="w"> </span><span class="k">in</span><span class="w"> </span><span class="m">190</span>.365s
+
+<span class="m">120</span><span class="w"> </span>packages<span class="w"> </span>are<span class="w"> </span>looking<span class="w"> </span><span class="k">for</span><span class="w"> </span>funding
+<span class="w">  </span>run<span class="w"> </span><span class="sb">`</span>npm<span class="w"> </span>fund<span class="sb">`</span><span class="w"> </span><span class="k">for</span><span class="w"> </span>details
+
+found<span class="w"> </span><span class="m">0</span><span class="w"> </span>vulnerabilities
+</code></pre></div>
+
+<p>Cypress is slightly more complex than the other packages we've used; it downloads and installs the main application as a post-install step. This is installed globally, so if you have another package somewhere that's using Cypress you may see <code>Cypress &lt;version&gt; is installed in path/to/Cypress/&lt;version&gt;</code> instead. That's fine, the rest should still work. Note also that CRA installs everything as a regular dependency rather than a development dependency, so I didn't use <code>--save-dev</code>.</p>
+<h2>Create E2E suite [2/8]</h2>
+<p>Now we need to set up the basic Cypress configuration. Let's follow the suggestion in that output and open up the Cypress UI.</p>
+<p><code>./node_modules/.bin/</code> is where NPM puts all of the <em>executables</em> that your installed packages define. For example, if you look in that directory for this project or the previous <code>rps-tdd/</code> project, you'll see <code>jest</code> in there; that's what gets called when we <code>npm run test</code> if the script is <code>"test": "jest"</code>. Most often you'll be running these via scripts defined in your package file, but you can also run them directly if needed.</p>
+<p>In this case we only need to run <code>cypress open</code> once, so let's do it like this:</p>
+<div class="highlight"><pre><span></span><code>$<span class="w"> </span>./node_modules/.bin/cypress<span class="w"> </span>open
+It<span class="w"> </span>looks<span class="w"> </span>like<span class="w"> </span>this<span class="w"> </span>is<span class="w"> </span>your<span class="w"> </span>first<span class="w"> </span><span class="nb">time</span><span class="w"> </span>using<span class="w"> </span>Cypress:<span class="w"> </span><span class="m">5</span>.6.0
+
+<span class="w">  </span>✔<span class="w">  </span>Verified<span class="w"> </span>Cypress!<span class="w"> </span>path/to/Cypress/5.6.0/Cypress.app
+
+Opening<span class="w"> </span>Cypress...
+</code></pre></div>
+
+<p>This should open the Cypress GUI:</p>
+<p><img alt="Screenshot of the Cypress GUI" src="https://blog.jonrshar.pe/images/cypress-gui.png"></p>
+<p>It will also create a <code>cypress.json</code> configuration file (initally just an empty object, you can see the configuration options <a href="https://docs.cypress.io/guides/references/configuration.html">in the docs</a>) and a <code>cypress/</code> directory containing, among other things, a bunch of example tests.</p>
+<p>You can take a look at the examples if you like. Once you're ready to move on, though, let's quit the UI then get rid of the examples:</p>
+<div class="highlight"><pre><span></span><code>$<span class="w"> </span>rm<span class="w"> </span>-rf<span class="w"> </span>./cypress/integration/examples/<span class="w"> </span>./cypress/fixtures/example.json
+</code></pre></div>
+
+<p>add a script to run those tests (note we're now using <code>run</code>, rather than <code>open</code> - you can read more about the commands <a href="https://docs.cypress.io/guides/guides/command-line.html">in the docs</a>) into the package file:</p>
+<div class="highlight"><pre><span></span><code><span class="w">  </span><span class="nt">&quot;scripts&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">&quot;e2e&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;cypress run&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;start&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;react-scripts start&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;build&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;react-scripts build&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;test&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;react-scripts test&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;eject&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;react-scripts eject&quot;</span>
+<span class="w">  </span><span class="p">},</span>
+</code></pre></div>
+
+<p>and run our (missing!) tests:</p>
+<div class="highlight"><pre><span></span><code>$<span class="w"> </span>npm<span class="w"> </span>run<span class="w"> </span>e2e
+
+&gt;<span class="w"> </span>rps-e2e@0.1.0<span class="w"> </span>e2e<span class="w"> </span>path/to/rps-e2e
+&gt;<span class="w"> </span>cypress<span class="w"> </span>run
+
+Can<span class="err">&#39;</span>t<span class="w"> </span>run<span class="w"> </span>because<span class="w"> </span>no<span class="w"> </span>spec<span class="w"> </span>files<span class="w"> </span>were<span class="w"> </span>found.
+
+We<span class="w"> </span>searched<span class="w"> </span><span class="k">for</span><span class="w"> </span>any<span class="w"> </span>files<span class="w"> </span>inside<span class="w"> </span>of<span class="w"> </span>this<span class="w"> </span>folder:
+
+path/to/rps-e2e/cypress/integration
+npm<span class="w"> </span>ERR!<span class="w"> </span>code<span class="w"> </span>ELIFECYCLE
+npm<span class="w"> </span>ERR!<span class="w"> </span>errno<span class="w"> </span><span class="m">1</span>
+npm<span class="w"> </span>ERR!<span class="w"> </span>rps-e2e@0.1.0<span class="w"> </span>e2e:<span class="w"> </span><span class="sb">`</span>cypress<span class="w"> </span>run<span class="sb">`</span>
+npm<span class="w"> </span>ERR!<span class="w"> </span>Exit<span class="w"> </span>status<span class="w"> </span><span class="m">1</span>
+npm<span class="w"> </span>ERR!<span class="w"> </span>
+npm<span class="w"> </span>ERR!<span class="w"> </span>Failed<span class="w"> </span>at<span class="w"> </span>the<span class="w"> </span>rps-e2e@0.1.0<span class="w"> </span>e2e<span class="w"> </span>script.
+npm<span class="w"> </span>ERR!<span class="w"> </span>This<span class="w"> </span>is<span class="w"> </span>probably<span class="w"> </span>not<span class="w"> </span>a<span class="w"> </span>problem<span class="w"> </span>with<span class="w"> </span>npm.<span class="w"> </span>There<span class="w"> </span>is<span class="w"> </span>likely<span class="w"> </span>additional<span class="w"> </span>logging<span class="w"> </span>output<span class="w"> </span>above.
+
+npm<span class="w"> </span>ERR!<span class="w"> </span>A<span class="w"> </span><span class="nb">complete</span><span class="w"> </span>log<span class="w"> </span>of<span class="w"> </span>this<span class="w"> </span>run<span class="w"> </span>can<span class="w"> </span>be<span class="w"> </span>found<span class="w"> </span><span class="k">in</span>:
+npm<span class="w"> </span>ERR!<span class="w">     </span>path/to/.npm/_logs/2020-11-16T22_23_48_697Z-debug.log
+</code></pre></div>
+
+<p>Cypress refuses to run at all if it can't find any test files, so let's create an empty test file using <code>touch</code> and re-run our now-present (but still empty) test suite:</p>
+<div class="highlight"><pre><span></span><code>$<span class="w"> </span>touch<span class="w"> </span>./cypress/integration/e2e.test.js
+
+$<span class="w"> </span>npm<span class="w"> </span>run<span class="w"> </span>e2e
+
+&gt;<span class="w"> </span>rps-e2e@0.1.0<span class="w"> </span>e2e<span class="w"> </span>path/to/rps-e2e
+&gt;<span class="w"> </span>cypress<span class="w"> </span><span class="nv">run</span>
+
+
+<span class="o">====================================================================================================</span>
+
+<span class="w">  </span><span class="o">(</span>Run<span class="w"> </span>Starting<span class="o">)</span>
+
+<span class="w">  </span>┌────────────────────────────────────────────────────────────────────────────────────────────────┐
+<span class="w">  </span>│<span class="w"> </span>Cypress:<span class="w">    </span><span class="m">5</span>.6.0<span class="w">                                                                              </span>│
+<span class="w">  </span>│<span class="w"> </span>Browser:<span class="w">    </span>Electron<span class="w"> </span><span class="m">85</span><span class="w"> </span><span class="o">(</span>headless<span class="o">)</span><span class="w">                                                             </span>│
+<span class="w">  </span>│<span class="w"> </span>Specs:<span class="w">      </span><span class="m">1</span><span class="w"> </span>found<span class="w"> </span><span class="o">(</span>e2e.test.js<span class="o">)</span><span class="w">                                                              </span>│
+<span class="w">  </span>└────────────────────────────────────────────────────────────────────────────────────────────────┘
+
+
+────────────────────────────────────────────────────────────────────────────────────────────────────
+
+<span class="w">  </span>Running:<span class="w">  </span>e2e.test.js<span class="w">                                                                     </span><span class="o">(</span><span class="m">1</span><span class="w"> </span>of<span class="w"> </span><span class="m">1</span><span class="o">)</span>
+
+
+<span class="w">  </span><span class="m">0</span><span class="w"> </span>passing<span class="w"> </span><span class="o">(</span>4ms<span class="o">)</span>
+
+
+<span class="w">  </span><span class="o">(</span>Results<span class="o">)</span>
+
+<span class="w">  </span>┌────────────────────────────────────────────────────────────────────────────────────────────────┐
+<span class="w">  </span>│<span class="w"> </span>Tests:<span class="w">        </span><span class="m">0</span><span class="w">                                                                                </span>│
+<span class="w">  </span>│<span class="w"> </span>Passing:<span class="w">      </span><span class="m">0</span><span class="w">                                                                                </span>│
+<span class="w">  </span>│<span class="w"> </span>Failing:<span class="w">      </span><span class="m">0</span><span class="w">                                                                                </span>│
+<span class="w">  </span>│<span class="w"> </span>Pending:<span class="w">      </span><span class="m">0</span><span class="w">                                                                                </span>│
+<span class="w">  </span>│<span class="w"> </span>Skipped:<span class="w">      </span><span class="m">0</span><span class="w">                                                                                </span>│
+<span class="w">  </span>│<span class="w"> </span>Screenshots:<span class="w">  </span><span class="m">0</span><span class="w">                                                                                </span>│
+<span class="w">  </span>│<span class="w"> </span>Video:<span class="w">        </span><span class="nb">true</span><span class="w">                                                                             </span>│
+<span class="w">  </span>│<span class="w"> </span>Duration:<span class="w">     </span><span class="m">0</span><span class="w"> </span>seconds<span class="w">                                                                        </span>│
+<span class="w">  </span>│<span class="w"> </span>Spec<span class="w"> </span>Ran:<span class="w">     </span>e2e.test.js<span class="w">                                                                      </span>│
+<span class="w">  </span>└────────────────────────────────────────────────────────────────────────────────────────────────┘
+
+
+<span class="w">  </span><span class="o">(</span>Video<span class="o">)</span>
+
+<span class="w">  </span>-<span class="w">  </span>Started<span class="w"> </span>processing:<span class="w">  </span>Compressing<span class="w"> </span>to<span class="w"> </span><span class="m">32</span><span class="w"> </span>CRF<span class="w">                                                     </span>
+<span class="w">  </span>-<span class="w">  </span>Finished<span class="w"> </span>processing:<span class="w"> </span>path/to/rps-e2e/cypress/videos/e2e.test.js.mp4<span class="w">                 </span><span class="o">(</span><span class="m">0</span><span class="w"> </span>seconds<span class="o">)</span><span class="w">                 </span>
+
+
+<span class="o">====================================================================================================</span>
+
+<span class="w">  </span><span class="o">(</span>Run<span class="w"> </span>Finished<span class="o">)</span>
+
+
+<span class="w">       </span>Spec<span class="w">                                              </span>Tests<span class="w">  </span>Passing<span class="w">  </span>Failing<span class="w">  </span>Pending<span class="w">  </span>Skipped<span class="w">  </span>
+<span class="w">  </span>┌────────────────────────────────────────────────────────────────────────────────────────────────┐
+<span class="w">  </span>│<span class="w"> </span>✔<span class="w">  </span>e2e.test.js<span class="w">                                </span>1ms<span class="w">        </span>-<span class="w">        </span>-<span class="w">        </span>-<span class="w">        </span>-<span class="w">        </span>-<span class="w"> </span>│
+<span class="w">  </span>└────────────────────────────────────────────────────────────────────────────────────────────────┘
+<span class="w">    </span>✔<span class="w">  </span>All<span class="w"> </span>specs<span class="w"> </span>passed!<span class="w">                          </span>1ms<span class="w">        </span>-<span class="w">        </span>-<span class="w">        </span>-<span class="w">        </span>-<span class="w">        </span>-<span class="w">  </span>
+</code></pre></div>
+
+<p>Unlike Jest, Cypress doesn't mind if there aren't any tests in the files and considers that a successful run. Note it also created a video of the run; Cypress can create both videos and screenshots to help with debugging tests. We don't want to track all of these in git, though, so add the following to <code>.gitignore</code>.</p>
+<div class="highlight"><pre><span></span><code># cypress
+cypress/screenshots/
+cypress/videos/
+</code></pre></div>
+
+<p>Before we write our first test, let's make a commit:</p>
+<div class="highlight"><pre><span></span><code>$<span class="w"> </span>git<span class="w"> </span>add<span class="w"> </span>.
+
+$<span class="w"> </span>git<span class="w"> </span>status
+On<span class="w"> </span>branch<span class="w"> </span>master
+Changes<span class="w"> </span>to<span class="w"> </span>be<span class="w"> </span>committed:
+<span class="w">  </span><span class="o">(</span>use<span class="w"> </span><span class="s2">&quot;git restore --staged &lt;file&gt;...&quot;</span><span class="w"> </span>to<span class="w"> </span>unstage<span class="o">)</span>
+<span class="w">    </span>modified:<span class="w">   </span>.gitignore
+<span class="w">    </span>new<span class="w"> </span>file:<span class="w">   </span>cypress.json
+<span class="w">    </span>new<span class="w"> </span>file:<span class="w">   </span>cypress/integration/e2e.test.js
+<span class="w">    </span>new<span class="w"> </span>file:<span class="w">   </span>cypress/plugins/index.js
+<span class="w">    </span>new<span class="w"> </span>file:<span class="w">   </span>cypress/support/commands.js
+<span class="w">    </span>new<span class="w"> </span>file:<span class="w">   </span>cypress/support/index.js
+<span class="w">    </span>modified:<span class="w">   </span>package-lock.json
+<span class="w">    </span>modified:<span class="w">   </span>package.json
+
+$<span class="w"> </span>git<span class="w"> </span>commit<span class="w"> </span>-m<span class="w"> </span><span class="s1">&#39;Install and configure Cypress&#39;</span>
+<span class="o">[</span>master<span class="w"> </span>9ced9b4<span class="o">]</span><span class="w"> </span>Install<span class="w"> </span>and<span class="w"> </span>configure<span class="w"> </span>Cypress
+<span class="w"> </span><span class="m">8</span><span class="w"> </span>files<span class="w"> </span>changed,<span class="w"> </span><span class="m">1023</span><span class="w"> </span>insertions<span class="o">(</span>+<span class="o">)</span>
+<span class="w"> </span>create<span class="w"> </span>mode<span class="w"> </span><span class="m">100644</span><span class="w"> </span>cypress.json
+<span class="w"> </span>create<span class="w"> </span>mode<span class="w"> </span><span class="m">100644</span><span class="w"> </span>cypress/integration/e2e.test.js
+<span class="w"> </span>create<span class="w"> </span>mode<span class="w"> </span><span class="m">100644</span><span class="w"> </span>cypress/plugins/index.js
+<span class="w"> </span>create<span class="w"> </span>mode<span class="w"> </span><span class="m">100644</span><span class="w"> </span>cypress/support/commands.js
+<span class="w"> </span>create<span class="w"> </span>mode<span class="w"> </span><span class="m">100644</span><span class="w"> </span>cypress/support/index.js
+</code></pre></div>
+
+<h2>Writing the E2E test [3/8]</h2>
+<p>For consistency with the unit tests, which use Testing Library by default in CRA, let's install <a href="https://testing-library.com/docs/cypress-testing-library/intro/">their Cypress utilities</a> via NPM:</p>
+<div class="highlight"><pre><span></span><code>$<span class="w"> </span>npm<span class="w"> </span>install<span class="w"> </span>@testing-library/cypress
+npm<span class="w"> </span>WARN<span class="w"> </span>tsutils@3.17.1<span class="w"> </span>requires<span class="w"> </span>a<span class="w"> </span>peer<span class="w"> </span>of<span class="w"> </span>typescript@&gt;<span class="o">=</span><span class="m">2</span>.8.0<span class="w"> </span><span class="o">||</span><span class="w"> </span>&gt;<span class="o">=</span><span class="w"> </span><span class="m">3</span>.2.0-dev<span class="w"> </span><span class="o">||</span><span class="w"> </span>&gt;<span class="o">=</span><span class="w"> </span><span class="m">3</span>.3.0-dev<span class="w"> </span><span class="o">||</span><span class="w"> </span>&gt;<span class="o">=</span><span class="w"> </span><span class="m">3</span>.4.0-dev<span class="w"> </span><span class="o">||</span><span class="w"> </span>&gt;<span class="o">=</span><span class="w"> </span><span class="m">3</span>.5.0-dev<span class="w"> </span><span class="o">||</span><span class="w"> </span>&gt;<span class="o">=</span><span class="w"> </span><span class="m">3</span>.6.0-dev<span class="w"> </span><span class="o">||</span><span class="w"> </span>&gt;<span class="o">=</span><span class="w"> </span><span class="m">3</span>.6.0-beta<span class="w"> </span><span class="o">||</span><span class="w"> </span>&gt;<span class="o">=</span><span class="w"> </span><span class="m">3</span>.7.0-dev<span class="w"> </span><span class="o">||</span><span class="w"> </span>&gt;<span class="o">=</span><span class="w"> </span><span class="m">3</span>.7.0-beta<span class="w"> </span>but<span class="w"> </span>none<span class="w"> </span>is<span class="w"> </span>installed.<span class="w"> </span>You<span class="w"> </span>must<span class="w"> </span>install<span class="w"> </span>peer<span class="w"> </span>dependencies<span class="w"> </span>yourself.
+
++<span class="w"> </span>@testing-library/cypress@7.0.1
+added<span class="w"> </span><span class="m">1</span><span class="w"> </span>package<span class="w"> </span>from<span class="w"> </span><span class="m">1</span><span class="w"> </span>contributor<span class="w"> </span>and<span class="w"> </span>audited<span class="w"> </span><span class="m">2079</span><span class="w"> </span>packages<span class="w"> </span><span class="k">in</span><span class="w"> </span><span class="m">16</span>.615s
+
+<span class="m">120</span><span class="w"> </span>packages<span class="w"> </span>are<span class="w"> </span>looking<span class="w"> </span><span class="k">for</span><span class="w"> </span>funding
+<span class="w">  </span>run<span class="w"> </span><span class="sb">`</span>npm<span class="w"> </span>fund<span class="sb">`</span><span class="w"> </span><span class="k">for</span><span class="w"> </span>details
+
+found<span class="w"> </span><span class="m">0</span><span class="w"> </span>vulnerabilities
+</code></pre></div>
+
+<p>and load it for the tests by adding the following import to <code>cypress/support/commands.js</code>:</p>
+<div class="highlight"><pre><span></span><code><span class="k">import</span><span class="w"> </span><span class="s1">&#39;@testing-library/cypress/add-commands&#39;</span><span class="p">;</span>
+</code></pre></div>
+
+<p>Now we want to actually visit our page. The best practice, <a href="https://docs.cypress.io/guides/references/best-practices.html#Setting-a-global-baseUrl">per the docs</a>, is to configure a global base URL and navigate relative to that, so let's add the default CRA URL (along with disabling the video recordings, to simplify the outputs) to <code>cypress.json</code>:</p>
+<div class="highlight"><pre><span></span><code><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;baseUrl&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;http://localhost:3000&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;video&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<p>Just like with Jest, Cypress provides an <code>it</code> function for registering a test, again taking the name of the test as a string and the body of the test as a function:</p>
+<div class="highlight"><pre><span></span><code><span class="nx">it</span><span class="p">(</span><span class="s2">&quot;should say left wins for rock vs. scissors&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">()</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="c1">// Arrange</span>
+<span class="w">  </span><span class="nx">cy</span><span class="p">.</span><span class="nx">visit</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">);</span>
+
+<span class="w">  </span><span class="c1">// Act</span>
+<span class="w">  </span><span class="nx">cy</span><span class="p">.</span><span class="nx">findByLabelText</span><span class="p">(</span><span class="s2">&quot;Left&quot;</span><span class="p">).</span><span class="nx">select</span><span class="p">(</span><span class="s2">&quot;rock&quot;</span><span class="p">);</span>
+<span class="w">  </span><span class="nx">cy</span><span class="p">.</span><span class="nx">findByLabelText</span><span class="p">(</span><span class="s2">&quot;Right&quot;</span><span class="p">).</span><span class="nx">select</span><span class="p">(</span><span class="s2">&quot;scissors&quot;</span><span class="p">);</span>
+<span class="w">  </span><span class="nx">cy</span><span class="p">.</span><span class="nx">findByText</span><span class="p">(</span><span class="s2">&quot;Throw&quot;</span><span class="p">).</span><span class="nx">click</span><span class="p">();</span>
+
+<span class="w">  </span><span class="c1">// Assert</span>
+<span class="w">  </span><span class="nx">cy</span><span class="p">.</span><span class="nx">findByTestId</span><span class="p">(</span><span class="s2">&quot;outcome&quot;</span><span class="p">).</span><span class="nx">should</span><span class="p">(</span><span class="s2">&quot;contain.text&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;Left wins!&quot;</span><span class="p">);</span>
+<span class="p">});</span>
+</code></pre></div>
+
+<p><em>(If your IDE seems unhappy with <code>cy</code>, just ignore it for now, but check out the bonus section on Linting at the end of the article.)</em></p>
+<p>This is basically the same expectation as the first unit test case we wrote last time, but at the end-to-end level. <code>cy</code> is a global object that provides access to various Cypress methods; this is a pretty big API (and we've added more things to it from Testing Library!) so to translate:</p>
+<ul>
+<li><code>cy.visit("/");</code> - visit the root path, based on the base URL we already set. This should take us to the home page of our site;</li>
+<li><code>cy.findByLabelText("Left").select("rock");</code> - find a control with the label "Left" and select the "rock" option;</li>
+<li><code>cy.findByLabelText("Right").select("scissors");</code> - find a control with the label "Right" and select the "scissors" option;</li>
+<li><code>cy.findByText("Throw").click();</code> - find a button that says "Throw" and click it; and</li>
+<li><code>cy.findByTestId("outcome").should("contain.text", "Left wins!");</code> - check that the outcome being being displayed contains the expected text <code>Left wins!</code>, using a Chai DOM assertion <a href="https://docs.cypress.io/guides/references/assertions.html">exposed by Cypress</a>.</li>
+</ul>
+<p><strong>Note</strong> that we look for the outcome in an element with the appropriate <em>test ID</em>; using stable attribute selectors is another <a href="https://docs.cypress.io/guides/references/best-practices.html#Selecting-Elements">Cypress best practice</a> and Testing Library gives us functions to easily access such elements, assuming the attribute is named <code>data-testid</code> (although this is configurable). In this case, we'd expect an element like:</p>
+<div class="highlight"><pre><span></span><code><span class="p">&lt;</span><span class="nt">div</span> <span class="na">data-testid</span><span class="o">=</span><span class="s">&quot;outcome&quot;</span><span class="p">&gt;</span>Hello, world!<span class="p">&lt;/</span><span class="nt">div</span><span class="p">&gt;</span>
+</code></pre></div>
+
+<p>As before, <em>none of this exists yet</em>, so we can easily talk about how this user interface should work without the friction of having to implement it. Maybe the user should enter free text instead of selecting from a list? Maybe it should automatically show the outcome when the second input is provided, rather than requiring a button click? Maybe there should be names for the users instead of left and right? This is making us think in concrete terms about how the users should interact with the system, early in the process. In this case, we're describing something like: </p>
+<p><img alt="Wireframe of the proposed RPS UI" src="https://blog.jonrshar.pe/images/rps-ui.png"></p>
+<p><small><em>Created with <a href="https://www.lofiwireframekit.com/">lofiwireframekit.com</a>.</em></small></p>
+<p>Before we continue, think about how you might actually implement that UI in React - what components would you have, how would they interact, where would the state live? Note your ideas down, we'll revisit them later.</p>
+<p>Just like with Jest, call the shot then run the tests:</p>
+<div class="highlight"><pre><span></span><code>$<span class="w"> </span>npm<span class="w"> </span>run<span class="w"> </span>e2e
+
+&gt;<span class="w"> </span>rps-e2e@0.1.0<span class="w"> </span>e2e<span class="w"> </span>path/to/rps-e2e
+&gt;<span class="w"> </span>cypress<span class="w"> </span>run
+
+Cypress<span class="w"> </span>could<span class="w"> </span>not<span class="w"> </span>verify<span class="w"> </span>that<span class="w"> </span>this<span class="w"> </span>server<span class="w"> </span>is<span class="w"> </span>running:
+
+<span class="w">  </span>&gt;<span class="w"> </span>http://localhost:3000
+
+We<span class="w"> </span>are<span class="w"> </span>verifying<span class="w"> </span>this<span class="w"> </span>server<span class="w"> </span>because<span class="w"> </span>it<span class="w"> </span>has<span class="w"> </span>been<span class="w"> </span>configured<span class="w"> </span>as<span class="w"> </span>your<span class="w"> </span><span class="sb">`</span>baseUrl<span class="sb">`</span>.
+
+Cypress<span class="w"> </span>automatically<span class="w"> </span>waits<span class="w"> </span><span class="k">until</span><span class="w"> </span>your<span class="w"> </span>server<span class="w"> </span>is<span class="w"> </span>accessible<span class="w"> </span>before<span class="w"> </span>running<span class="w"> </span>tests.
+
+We<span class="w"> </span>will<span class="w"> </span>try<span class="w"> </span>connecting<span class="w"> </span>to<span class="w"> </span>it<span class="w"> </span><span class="m">3</span><span class="w"> </span>more<span class="w"> </span>times...
+We<span class="w"> </span>will<span class="w"> </span>try<span class="w"> </span>connecting<span class="w"> </span>to<span class="w"> </span>it<span class="w"> </span><span class="m">2</span><span class="w"> </span>more<span class="w"> </span>times...
+We<span class="w"> </span>will<span class="w"> </span>try<span class="w"> </span>connecting<span class="w"> </span>to<span class="w"> </span>it<span class="w"> </span><span class="m">1</span><span class="w"> </span>more<span class="w"> </span>time...
+
+Cypress<span class="w"> </span>failed<span class="w"> </span>to<span class="w"> </span>verify<span class="w"> </span>that<span class="w"> </span>your<span class="w"> </span>server<span class="w"> </span>is<span class="w"> </span>running.
+
+Please<span class="w"> </span>start<span class="w"> </span>this<span class="w"> </span>server<span class="w"> </span>and<span class="w"> </span><span class="k">then</span><span class="w"> </span>run<span class="w"> </span>Cypress<span class="w"> </span>again.
+npm<span class="w"> </span>ERR!<span class="w"> </span>code<span class="w"> </span>ELIFECYCLE
+npm<span class="w"> </span>ERR!<span class="w"> </span>errno<span class="w"> </span><span class="m">1</span>
+npm<span class="w"> </span>ERR!<span class="w"> </span>rps-e2e@0.1.0<span class="w"> </span>e2e:<span class="w"> </span><span class="sb">`</span>cypress<span class="w"> </span>run<span class="sb">`</span>
+npm<span class="w"> </span>ERR!<span class="w"> </span>Exit<span class="w"> </span>status<span class="w"> </span><span class="m">1</span>
+npm<span class="w"> </span>ERR!<span class="w"> </span>
+npm<span class="w"> </span>ERR!<span class="w"> </span>Failed<span class="w"> </span>at<span class="w"> </span>the<span class="w"> </span>rps-e2e@0.1.0<span class="w"> </span>e2e<span class="w"> </span>script.
+npm<span class="w"> </span>ERR!<span class="w"> </span>This<span class="w"> </span>is<span class="w"> </span>probably<span class="w"> </span>not<span class="w"> </span>a<span class="w"> </span>problem<span class="w"> </span>with<span class="w"> </span>npm.<span class="w"> </span>There<span class="w"> </span>is<span class="w"> </span>likely<span class="w"> </span>additional<span class="w"> </span>logging<span class="w"> </span>output<span class="w"> </span>above.
+
+npm<span class="w"> </span>ERR!<span class="w"> </span>A<span class="w"> </span><span class="nb">complete</span><span class="w"> </span>log<span class="w"> </span>of<span class="w"> </span>this<span class="w"> </span>run<span class="w"> </span>can<span class="w"> </span>be<span class="w"> </span>found<span class="w"> </span><span class="k">in</span>:
+npm<span class="w"> </span>ERR!<span class="w">     </span>path/to/.npm/_logs/2020-11-03T21_01_26_636Z-debug.log
+</code></pre></div>
+
+<p>Cypress is unhappy because we're <em>not actually running the app</em>, so it can't find the specified base URL. As a simple fix, open an extra command line, navigate to the working directory and run <code>npm start</code>. Once the default CRA home screen shows up in your browser, call the shot then run the E2E tests again in your first command line:</p>
+<div class="highlight"><pre><span></span><code>$<span class="w"> </span>npm<span class="w"> </span>run<span class="w"> </span>e2e
+
+&gt;<span class="w"> </span>rps-e2e@0.1.0<span class="w"> </span>e2e<span class="w"> </span>path/to/rps-e2e
+&gt;<span class="w"> </span>cypress<span class="w"> </span><span class="nv">run</span>
+
+
+<span class="o">==========================================================================================</span>
+
+<span class="w">  </span><span class="o">(</span>Run<span class="w"> </span>Starting<span class="o">)</span>
+
+<span class="w">  </span>┌────────────────────────────────────────────────────────────────────────────────────────────────┐
+<span class="w">  </span>│<span class="w"> </span>Cypress:<span class="w">    </span><span class="m">5</span>.6.0<span class="w">                                                                              </span>│
+<span class="w">  </span>│<span class="w"> </span>Browser:<span class="w">    </span>Electron<span class="w"> </span><span class="m">85</span><span class="w"> </span><span class="o">(</span>headless<span class="o">)</span><span class="w">                                                             </span>│
+<span class="w">  </span>│<span class="w"> </span>Specs:<span class="w">      </span><span class="m">1</span><span class="w"> </span>found<span class="w"> </span><span class="o">(</span>e2e.test.js<span class="o">)</span><span class="w">                                                              </span>│
+<span class="w">  </span>└────────────────────────────────────────────────────────────────────────────────────────────────┘
+
+
+────────────────────────────────────────────────────────────────────────────────────────────────────
+
+<span class="w">  </span>Running:<span class="w">  </span>e2e.test.js<span class="w">                                                                     </span><span class="o">(</span><span class="m">1</span><span class="w"> </span>of<span class="w"> </span><span class="m">1</span><span class="o">)</span>
+
+
+<span class="w">  </span><span class="m">1</span><span class="o">)</span><span class="w"> </span>should<span class="w"> </span>say<span class="w"> </span>left<span class="w"> </span>wins<span class="w"> </span><span class="k">for</span><span class="w"> </span>rock<span class="w"> </span>vs.<span class="w"> </span>scissors
+
+<span class="w">  </span><span class="m">0</span><span class="w"> </span>passing<span class="w"> </span><span class="o">(</span>6s<span class="o">)</span>
+<span class="w">  </span><span class="m">1</span><span class="w"> </span>failing
+
+<span class="w">  </span><span class="m">1</span><span class="o">)</span><span class="w"> </span>should<span class="w"> </span>say<span class="w"> </span>left<span class="w"> </span>wins<span class="w"> </span><span class="k">for</span><span class="w"> </span>rock<span class="w"> </span>vs.<span class="w"> </span>scissors:
+<span class="w">     </span>TestingLibraryElementError:<span class="w"> </span>Timed<span class="w"> </span>out<span class="w"> </span>retrying:<span class="w"> </span>Unable<span class="w"> </span>to<span class="w"> </span>find<span class="w"> </span>a<span class="w"> </span>label<span class="w"> </span>with<span class="w"> </span>the<span class="w"> </span>text<span class="w"> </span>of:<span class="w"> </span>Left
+<span class="w">      </span>at<span class="w"> </span>Object.getElementError<span class="w"> </span><span class="o">(</span>http://localhost:3000/__cypress/tests?p<span class="o">=</span>cypress/support/index.js:1690:17<span class="o">)</span>
+<span class="w">      </span>at<span class="w"> </span>getAllByLabelText<span class="w"> </span><span class="o">(</span>http://localhost:3000/__cypress/tests?p<span class="o">=</span>cypress/support/index.js:2820:25<span class="o">)</span>
+<span class="w">      </span>at<span class="w"> </span><span class="nb">eval</span><span class="w"> </span><span class="o">(</span>http://localhost:3000/__cypress/tests?p<span class="o">=</span>cypress/support/index.js:2564:24<span class="o">)</span>
+<span class="w">      </span>at<span class="w"> </span><span class="nb">eval</span><span class="w"> </span><span class="o">(</span>http://localhost:3000/__cypress/tests?p<span class="o">=</span>cypress/support/index.js:2615:25<span class="o">)</span>
+<span class="w">      </span>at<span class="w"> </span>baseCommandImpl<span class="w"> </span><span class="o">(</span>http://localhost:3000/__cypress/tests?p<span class="o">=</span>cypress/support/index.js:1148:16<span class="o">)</span>
+<span class="w">      </span>at<span class="w"> </span>commandImpl<span class="w"> </span><span class="o">(</span>http://localhost:3000/__cypress/tests?p<span class="o">=</span>cypress/support/index.js:1151:40<span class="o">)</span>
+<span class="w">      </span>at<span class="w"> </span>getValue<span class="w"> </span><span class="o">(</span>http://localhost:3000/__cypress/tests?p<span class="o">=</span>cypress/support/index.js:1175:23<span class="o">)</span>
+<span class="w">      </span>at<span class="w"> </span>resolveValue<span class="w"> </span><span class="o">(</span>http://localhost:3000/__cypress/tests?p<span class="o">=</span>cypress/support/index.js:1215:35<span class="o">)</span>
+
+
+
+
+<span class="w">  </span><span class="o">(</span>Results<span class="o">)</span>
+
+<span class="w">  </span>┌────────────────────────────────────────────────────────────────────────────────────────────────┐
+<span class="w">  </span>│<span class="w"> </span>Tests:<span class="w">        </span><span class="m">1</span><span class="w">                                                                                </span>│
+<span class="w">  </span>│<span class="w"> </span>Passing:<span class="w">      </span><span class="m">0</span><span class="w">                                                                                </span>│
+<span class="w">  </span>│<span class="w"> </span>Failing:<span class="w">      </span><span class="m">1</span><span class="w">                                                                                </span>│
+<span class="w">  </span>│<span class="w"> </span>Pending:<span class="w">      </span><span class="m">0</span><span class="w">                                                                                </span>│
+<span class="w">  </span>│<span class="w"> </span>Skipped:<span class="w">      </span><span class="m">0</span><span class="w">                                                                                </span>│
+<span class="w">  </span>│<span class="w"> </span>Screenshots:<span class="w">  </span><span class="m">1</span><span class="w">                                                                                </span>│
+<span class="w">  </span>│<span class="w"> </span>Video:<span class="w">        </span><span class="nb">false</span><span class="w">                                                                            </span>│
+<span class="w">  </span>│<span class="w"> </span>Duration:<span class="w">     </span><span class="m">5</span><span class="w"> </span>seconds<span class="w">                                                                        </span>│
+<span class="w">  </span>│<span class="w"> </span>Spec<span class="w"> </span>Ran:<span class="w">     </span>e2e.test.js<span class="w">                                                                      </span>│
+<span class="w">  </span>└────────────────────────────────────────────────────────────────────────────────────────────────┘
+
+
+<span class="w">  </span><span class="o">(</span>Screenshots<span class="o">)</span>
+
+<span class="w">  </span>-<span class="w">  </span>path/to/rps-e2e/cypress/screenshots/e2e.test.js/should<span class="w"> </span>say<span class="w"> </span>left<span class="w"> </span>wins<span class="w"> </span><span class="k">for</span><span class="w"> </span>rock<span class="w"> </span>vs<span class="w">     </span><span class="o">(</span>1280x720<span class="o">)</span>
+<span class="w">     </span>.<span class="w"> </span>scissors<span class="w"> </span><span class="o">(</span>failed<span class="o">)</span>.png
+
+<span class="o">==========================================================================================</span>
+
+<span class="w">  </span><span class="o">(</span>Run<span class="w"> </span>Finished<span class="o">)</span>
+
+
+<span class="w">       </span>Spec<span class="w">                                              </span>Tests<span class="w">  </span>Passing<span class="w">  </span>Failing<span class="w">  </span>Pending<span class="w">  </span>Skipped
+<span class="w">  </span>┌────────────────────────────────────────────────────────────────────────────────────────────────┐
+<span class="w">  </span>│<span class="w"> </span>✖<span class="w">  </span>e2e.test.js<span class="w">                              </span><span class="m">00</span>:05<span class="w">        </span><span class="m">1</span><span class="w">        </span>-<span class="w">        </span><span class="m">1</span><span class="w">        </span>-<span class="w">        </span>-<span class="w"> </span>│
+<span class="w">  </span>└────────────────────────────────────────────────────────────────────────────────────────────────┘
+<span class="w">    </span>✖<span class="w">  </span><span class="m">1</span><span class="w"> </span>of<span class="w"> </span><span class="m">1</span><span class="w"> </span>failed<span class="w"> </span><span class="o">(</span><span class="m">100</span>%<span class="o">)</span><span class="w">                     </span><span class="m">00</span>:05<span class="w">        </span><span class="m">1</span><span class="w">        </span>-<span class="w">        </span><span class="m">1</span><span class="w">        </span>-<span class="w">        </span>-
+
+npm<span class="w"> </span>ERR!<span class="w"> </span>code<span class="w"> </span>ELIFECYCLE
+npm<span class="w"> </span>ERR!<span class="w"> </span>errno<span class="w"> </span><span class="m">1</span>
+npm<span class="w"> </span>ERR!<span class="w"> </span>rps-e2e@0.1.0<span class="w"> </span>e2e:<span class="w"> </span><span class="sb">`</span>cypress<span class="w"> </span>run<span class="sb">`</span>
+npm<span class="w"> </span>ERR!<span class="w"> </span>Exit<span class="w"> </span>status<span class="w"> </span><span class="m">1</span>
+npm<span class="w"> </span>ERR!
+npm<span class="w"> </span>ERR!<span class="w"> </span>Failed<span class="w"> </span>at<span class="w"> </span>the<span class="w"> </span>rps-e2e@0.1.0<span class="w"> </span>e2e<span class="w"> </span>script.
+npm<span class="w"> </span>ERR!<span class="w"> </span>This<span class="w"> </span>is<span class="w"> </span>probably<span class="w"> </span>not<span class="w"> </span>a<span class="w"> </span>problem<span class="w"> </span>with<span class="w"> </span>npm.<span class="w"> </span>There<span class="w"> </span>is<span class="w"> </span>likely<span class="w"> </span>additional<span class="w"> </span>logging<span class="w"> </span>output<span class="w"> </span>above.
+
+npm<span class="w"> </span>ERR!<span class="w"> </span>A<span class="w"> </span><span class="nb">complete</span><span class="w"> </span>log<span class="w"> </span>of<span class="w"> </span>this<span class="w"> </span>run<span class="w"> </span>can<span class="w"> </span>be<span class="w"> </span>found<span class="w"> </span><span class="k">in</span>:
+npm<span class="w"> </span>ERR!<span class="w">     </span>path/to/.npm/_logs/2020-11-16T23_01_32_468Z-debug.log
+</code></pre></div>
+
+<p>OK, we've moved on a step - the test is now failing because it can't find the element on the page. So far we haven't actually added anything to the page, so that makes sense, it's just showing the default CRA info (you can see this in the screenshot Cypress took, check it out!)</p>
+<p>This is going to be our guiding star for the rest of the exercise, so let's make a commit to store this state:</p>
+<div class="highlight"><pre><span></span><code>$<span class="w"> </span>git<span class="w"> </span>add<span class="w"> </span>.
+
+$<span class="w"> </span>git<span class="w"> </span>status
+On<span class="w"> </span>branch<span class="w"> </span>master
+Changes<span class="w"> </span>to<span class="w"> </span>be<span class="w"> </span>committed:
+<span class="w">  </span><span class="o">(</span>use<span class="w"> </span><span class="s2">&quot;git restore --staged &lt;file&gt;...&quot;</span><span class="w"> </span>to<span class="w"> </span>unstage<span class="o">)</span>
+<span class="w">    </span>modified:<span class="w">   </span>cypress.json
+<span class="w">    </span>modified:<span class="w">   </span>cypress/integration/e2e.test.js
+<span class="w">    </span>modified:<span class="w">   </span>cypress/support/commands.js
+<span class="w">    </span>modified:<span class="w">   </span>package-lock.json
+<span class="w">    </span>modified:<span class="w">   </span>package.json
+
+
+$<span class="w"> </span>git<span class="w"> </span>commit<span class="w"> </span>-m<span class="w"> </span><span class="s1">&#39;Implement E2E test&#39;</span>
+<span class="o">[</span>master<span class="w"> </span>d08217b<span class="o">]</span><span class="w"> </span>Implement<span class="w"> </span>E2E<span class="w"> </span><span class="nb">test</span>
+<span class="w"> </span><span class="m">5</span><span class="w"> </span>files<span class="w"> </span>changed,<span class="w"> </span><span class="m">27</span><span class="w"> </span>insertions<span class="o">(</span>+<span class="o">)</span>,<span class="w"> </span><span class="m">1</span><span class="w"> </span>deletion<span class="o">(</span>-<span class="o">)</span>
+</code></pre></div>
+
+<h2>Moving to the integration level [4/8]</h2>
+<p>We're working our way from the outside in, and we have a failing E2E test, so let's write an <em>integration</em> test in Jest. Replace the content of <code>./src/App.test.js</code> with the following:</p>
+<div class="highlight"><pre><span></span><code><span class="kn">import</span> <span class="p">{</span> <span class="n">render</span> <span class="p">}</span> <span class="kn">from</span> <span class="s2">&quot;@testing-library/react&quot;</span><span class="p">;</span>
+<span class="kn">import</span> <span class="nn">userEvent</span> <span class="kn">from</span> <span class="s2">&quot;@testing-library/user-event&quot;</span><span class="p">;</span>
+
+<span class="kn">import</span> <span class="nn">App</span> <span class="kn">from</span> <span class="s2">&quot;./App&quot;</span><span class="p">;</span>
+
+<span class="n">describe</span><span class="p">(</span><span class="s2">&quot;App component&quot;</span><span class="p">,</span> <span class="p">()</span> <span class="o">=&gt;</span> <span class="p">{</span>
+  <span class="n">it</span><span class="p">(</span><span class="s2">&quot;displays right wins when appropriate&quot;</span><span class="p">,</span> <span class="p">()</span> <span class="o">=&gt;</span> <span class="p">{</span>
+    <span class="o">//</span> <span class="n">Arrange</span>
+    <span class="n">const</span> <span class="p">{</span> <span class="n">getByLabelText</span><span class="p">,</span> <span class="n">getByTestId</span><span class="p">,</span> <span class="n">getByText</span> <span class="p">}</span> <span class="o">=</span> <span class="n">render</span><span class="p">(</span><span class="o">&lt;</span><span class="n">App</span> <span class="o">/&gt;</span><span class="p">);</span>
+
+    <span class="o">//</span> <span class="n">Act</span>
+    <span class="n">userEvent</span><span class="o">.</span><span class="n">selectOptions</span><span class="p">(</span><span class="n">getByLabelText</span><span class="p">(</span><span class="s2">&quot;Left&quot;</span><span class="p">),</span> <span class="s2">&quot;paper&quot;</span><span class="p">);</span>
+    <span class="n">userEvent</span><span class="o">.</span><span class="n">selectOptions</span><span class="p">(</span><span class="n">getByLabelText</span><span class="p">(</span><span class="s2">&quot;Right&quot;</span><span class="p">),</span> <span class="s2">&quot;scissors&quot;</span><span class="p">);</span>
+    <span class="n">userEvent</span><span class="o">.</span><span class="n">click</span><span class="p">(</span><span class="n">getByText</span><span class="p">(</span><span class="s2">&quot;Throw&quot;</span><span class="p">));</span>
+
+    <span class="o">//</span> <span class="n">Assert</span>
+    <span class="n">expect</span><span class="p">(</span><span class="n">getByTestId</span><span class="p">(</span><span class="s2">&quot;outcome&quot;</span><span class="p">))</span><span class="o">.</span><span class="n">toHaveTextContent</span><span class="p">(</span><span class="s2">&quot;Right wins!&quot;</span><span class="p">);</span>
+  <span class="p">});</span>
+<span class="p">});</span>
+</code></pre></div>
+
+<p>The way we express the steps might be slightly different, but note that the <em>logic</em> is exactly the same as we tested at the end-to-end level:</p>
+<ul>
+<li><code>const { getByLabelText, getByTestId, getByText } = render(&lt;App /&gt;);</code> - render the <code>App</code> component, equivalent to visiting the page, and <em>destructure</em> the methods we need from the returned object;</li>
+<li><code>userEvent.selectOptions(getByLabelText("Left"), "paper");</code> - find a control with the label "Left" and select the "rock" option;</li>
+<li><code>userEvent.selectOptions(getByLabelText("Right"), "scissors");</code> - find a control with the label "Right" and select the "scissors" option;</li>
+<li><code>userEvent.click(getByText("Throw"));</code> - find a button that says "Throw" and click it; and</li>
+<li><code>expect(getByTestId("outcome")).toHaveTextContent("Right wins!");</code> - check that the outcome being being displayed contains the expected text <code>Left wins!</code>.</li>
+</ul>
+<p>Call the shot and run the test (note I'm using the environment variable <code>CI=true</code> to run the tests once and exit; you can use the default <code>npm test</code> to enter watch mode if you'd prefer):</p>
+<div class="highlight"><pre><span></span><code><span class="n">$</span><span class="w"> </span><span class="n">CI</span><span class="o">=</span><span class="nb">true</span><span class="w"> </span><span class="n">npm</span><span class="w"> </span><span class="n">test</span>
+
+<span class="o">&gt;</span><span class="w"> </span><span class="n">rps</span><span class="o">-</span><span class="n">e2e</span><span class="mf">@0.1.0</span><span class="w"> </span><span class="n">test</span><span class="w"> </span><span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="n">rps</span><span class="o">-</span><span class="n">e2e</span>
+<span class="o">&gt;</span><span class="w"> </span><span class="n">react</span><span class="o">-</span><span class="n">scripts</span><span class="w"> </span><span class="n">test</span>
+
+<span class="n">FAIL</span><span class="w"> </span><span class="n">src</span><span class="o">/</span><span class="n">App</span><span class="p">.</span><span class="n">test</span><span class="p">.</span><span class="n">js</span>
+<span class="w">  </span><span class="n">App</span><span class="w"> </span><span class="n">component</span>
+<span class="w">    </span><span class="err">✕</span><span class="w"> </span><span class="n">displays</span><span class="w"> </span><span class="n">right</span><span class="w"> </span><span class="n">wins</span><span class="w"> </span><span class="n">when</span><span class="w"> </span><span class="n">appropriate</span><span class="w"> </span><span class="p">(</span><span class="mi">54</span><span class="w"> </span><span class="n">ms</span><span class="p">)</span>
+
+<span class="w">  </span><span class="err">●</span><span class="w"> </span><span class="n">App</span><span class="w"> </span><span class="n">component</span><span class="w"> </span><span class="err">›</span><span class="w"> </span><span class="n">displays</span><span class="w"> </span><span class="n">right</span><span class="w"> </span><span class="n">wins</span><span class="w"> </span><span class="n">when</span><span class="w"> </span><span class="n">appropriate</span>
+
+<span class="w">    </span><span class="nl">TestingLibraryElementError</span><span class="p">:</span><span class="w"> </span><span class="n">Unable</span><span class="w"> </span><span class="n">to</span><span class="w"> </span><span class="n">find</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="n">label</span><span class="w"> </span><span class="n">with</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">text</span><span class="w"> </span><span class="n">of</span><span class="o">:</span><span class="w"> </span><span class="n">Left</span>
+
+<span class="w">    </span><span class="o">&lt;</span><span class="n">body</span><span class="o">&gt;</span>
+<span class="w">      </span><span class="o">&lt;</span><span class="n">div</span><span class="o">&gt;</span>
+<span class="w">        </span><span class="o">&lt;</span><span class="n">div</span>
+<span class="w">          </span><span class="k">class</span><span class="o">=</span><span class="s">&quot;App&quot;</span>
+<span class="w">        </span><span class="o">&gt;</span>
+<span class="w">          </span><span class="o">&lt;</span><span class="n">header</span>
+<span class="w">            </span><span class="k">class</span><span class="o">=</span><span class="s">&quot;App-header&quot;</span>
+<span class="w">          </span><span class="o">&gt;</span>
+<span class="w">            </span><span class="o">&lt;</span><span class="n">img</span>
+<span class="w">              </span><span class="n">alt</span><span class="o">=</span><span class="s">&quot;logo&quot;</span>
+<span class="w">              </span><span class="k">class</span><span class="o">=</span><span class="s">&quot;App-logo&quot;</span>
+<span class="w">              </span><span class="n">src</span><span class="o">=</span><span class="s">&quot;logo.svg&quot;</span>
+<span class="w">            </span><span class="o">/&gt;</span>
+<span class="w">            </span><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span>
+<span class="w">              </span><span class="n">Edit</span>
+<span class="w">              </span><span class="o">&lt;</span><span class="n">code</span><span class="o">&gt;</span>
+<span class="w">                </span><span class="n">src</span><span class="o">/</span><span class="n">App</span><span class="p">.</span><span class="n">js</span>
+<span class="w">              </span><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;</span>
+<span class="w">               </span><span class="n">and</span><span class="w"> </span><span class="n">save</span><span class="w"> </span><span class="n">to</span><span class="w"> </span><span class="n">reload</span><span class="p">.</span>
+<span class="w">            </span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+<span class="w">            </span><span class="o">&lt;</span><span class="n">a</span>
+<span class="w">              </span><span class="k">class</span><span class="o">=</span><span class="s">&quot;App-link&quot;</span>
+<span class="w">              </span><span class="n">href</span><span class="o">=</span><span class="s">&quot;https://reactjs.org&quot;</span>
+<span class="w">              </span><span class="n">rel</span><span class="o">=</span><span class="s">&quot;noopener noreferrer&quot;</span>
+<span class="w">              </span><span class="n">target</span><span class="o">=</span><span class="s">&quot;_blank&quot;</span>
+<span class="w">            </span><span class="o">&gt;</span>
+<span class="w">              </span><span class="n">Learn</span><span class="w"> </span><span class="n">React</span>
+<span class="w">            </span><span class="o">&lt;/</span><span class="n">a</span><span class="o">&gt;</span>
+<span class="w">          </span><span class="o">&lt;/</span><span class="n">header</span><span class="o">&gt;</span>
+<span class="w">        </span><span class="o">&lt;/</span><span class="n">div</span><span class="o">&gt;</span>
+<span class="w">      </span><span class="o">&lt;/</span><span class="n">div</span><span class="o">&gt;</span>
+<span class="w">    </span><span class="o">&lt;/</span><span class="n">body</span><span class="o">&gt;</span>
+
+<span class="w">      </span><span class="mi">10</span><span class="w"> </span><span class="o">|</span>
+<span class="w">      </span><span class="mi">11</span><span class="w"> </span><span class="o">|</span><span class="w">     </span><span class="c1">// Act</span>
+<span class="w">    </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">12</span><span class="w"> </span><span class="o">|</span><span class="w">     </span><span class="n">userEvent</span><span class="p">.</span><span class="n">selectOptions</span><span class="p">(</span><span class="n">getByLabelText</span><span class="p">(</span><span class="s">&quot;Left&quot;</span><span class="p">),</span><span class="w"> </span><span class="s">&quot;paper&quot;</span><span class="p">);</span>
+<span class="w">         </span><span class="o">|</span><span class="w">                             </span><span class="o">^</span>
+<span class="w">      </span><span class="mi">13</span><span class="w"> </span><span class="o">|</span><span class="w">     </span><span class="n">userEvent</span><span class="p">.</span><span class="n">selectOptions</span><span class="p">(</span><span class="n">getByLabelText</span><span class="p">(</span><span class="s">&quot;Right&quot;</span><span class="p">),</span><span class="w"> </span><span class="s">&quot;scissors&quot;</span><span class="p">);</span>
+<span class="w">      </span><span class="mi">14</span><span class="w"> </span><span class="o">|</span><span class="w">     </span><span class="n">userEvent</span><span class="p">.</span><span class="n">click</span><span class="p">(</span><span class="n">getByText</span><span class="p">(</span><span class="s">&quot;Throw&quot;</span><span class="p">));</span>
+<span class="w">      </span><span class="mi">15</span><span class="w"> </span><span class="o">|</span>
+
+<span class="w">      </span><span class="n">at</span><span class="w"> </span><span class="n">Object</span><span class="p">.</span><span class="n">getElementError</span><span class="w"> </span><span class="p">(</span><span class="n">node_modules</span><span class="o">/</span><span class="p">@</span><span class="n">testing</span><span class="o">-</span><span class="n">library</span><span class="o">/</span><span class="n">dom</span><span class="o">/</span><span class="n">dist</span><span class="o">/</span><span class="n">config</span><span class="p">.</span><span class="n">js</span><span class="o">:</span><span class="mi">37</span><span class="o">:</span><span class="mi">19</span><span class="p">)</span>
+<span class="w">      </span><span class="n">at</span><span class="w"> </span><span class="n">getAllByLabelText</span><span class="w"> </span><span class="p">(</span><span class="n">node_modules</span><span class="o">/</span><span class="p">@</span><span class="n">testing</span><span class="o">-</span><span class="n">library</span><span class="o">/</span><span class="n">dom</span><span class="o">/</span><span class="n">dist</span><span class="o">/</span><span class="n">queries</span><span class="o">/</span><span class="n">label</span><span class="o">-</span><span class="n">text</span><span class="p">.</span><span class="n">js</span><span class="o">:</span><span class="mi">115</span><span class="o">:</span><span class="mi">38</span><span class="p">)</span>
+<span class="w">      </span><span class="n">at</span><span class="w"> </span><span class="n">node_modules</span><span class="o">/</span><span class="p">@</span><span class="n">testing</span><span class="o">-</span><span class="n">library</span><span class="o">/</span><span class="n">dom</span><span class="o">/</span><span class="n">dist</span><span class="o">/</span><span class="n">query</span><span class="o">-</span><span class="n">helpers</span><span class="p">.</span><span class="n">js</span><span class="o">:</span><span class="mi">62</span><span class="o">:</span><span class="mi">17</span>
+<span class="w">      </span><span class="n">at</span><span class="w"> </span><span class="n">getByLabelText</span><span class="w"> </span><span class="p">(</span><span class="n">node_modules</span><span class="o">/</span><span class="p">@</span><span class="n">testing</span><span class="o">-</span><span class="n">library</span><span class="o">/</span><span class="n">dom</span><span class="o">/</span><span class="n">dist</span><span class="o">/</span><span class="n">query</span><span class="o">-</span><span class="n">helpers</span><span class="p">.</span><span class="n">js</span><span class="o">:</span><span class="mi">106</span><span class="o">:</span><span class="mi">19</span><span class="p">)</span>
+<span class="w">      </span><span class="n">at</span><span class="w"> </span><span class="n">Object</span><span class="p">.</span><span class="o">&lt;</span><span class="n">anonymous</span><span class="o">&gt;</span><span class="w"> </span><span class="p">(</span><span class="n">src</span><span class="o">/</span><span class="n">App</span><span class="p">.</span><span class="n">test</span><span class="p">.</span><span class="n">js</span><span class="o">:</span><span class="mi">12</span><span class="o">:</span><span class="mi">29</span><span class="p">)</span>
+
+<span class="n">Test</span><span class="w"> </span><span class="n">Suites</span><span class="o">:</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="n">failed</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="n">total</span>
+<span class="nl">Tests</span><span class="p">:</span><span class="w">       </span><span class="mi">1</span><span class="w"> </span><span class="n">failed</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="n">total</span>
+<span class="nl">Snapshots</span><span class="p">:</span><span class="w">   </span><span class="mi">0</span><span class="w"> </span><span class="n">total</span>
+<span class="nl">Time</span><span class="p">:</span><span class="w">        </span><span class="mf">1.91</span><span class="w"> </span><span class="n">s</span><span class="p">,</span><span class="w"> </span><span class="n">estimated</span><span class="w"> </span><span class="mi">4</span><span class="w"> </span><span class="n">s</span>
+<span class="n">Ran</span><span class="w"> </span><span class="n">all</span><span class="w"> </span><span class="n">test</span><span class="w"> </span><span class="n">suites</span><span class="p">.</span>
+<span class="n">npm</span><span class="w"> </span><span class="n">ERR</span><span class="o">!</span><span class="w"> </span><span class="n">Test</span><span class="w"> </span><span class="n">failed</span><span class="p">.</span><span class="w">  </span><span class="n">See</span><span class="w"> </span><span class="n">above</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">more</span><span class="w"> </span><span class="n">details</span><span class="p">.</span>
+</code></pre></div>
+
+<p>Compare the error messages; they're failing on the same problem:</p>
+<ul>
+<li><strong>E2E</strong>: <code>TestingLibraryElementError: Timed out retrying: Unable to find a label with the text of: Left</code></li>
+<li><strong>Integration</strong>: <code>TestingLibraryElementError: Unable to find a label with the text of: Left</code></li>
+</ul>
+<p>Instead of a screenshot we get the rendered HTML, but it shows a similar thing - the default CRA content is still being shown. You should also see that running this test was <strong>much faster</strong> than starting up the app and running Cypress. Lower level tests tend to:</p>
+<ol>
+<li>be <em>more coupled to the implementation</em> (this one knows our app is using React, which Cypress had no idea about); but</li>
+<li>have a <em>shorter feedback loop</em> (by orders of magnitude, the integration test itself took 54ms vs. 4s for the E2E).</li>
+</ol>
+<p>Let's save this new state:</p>
+<div class="highlight"><pre><span></span><code>$<span class="w"> </span>git<span class="w"> </span>add<span class="w"> </span>.
+
+$<span class="w"> </span>git<span class="w"> </span>status
+On<span class="w"> </span>branch<span class="w"> </span>master
+Changes<span class="w"> </span>to<span class="w"> </span>be<span class="w"> </span>committed:
+<span class="w">  </span><span class="o">(</span>use<span class="w"> </span><span class="s2">&quot;git restore --staged &lt;file&gt;...&quot;</span><span class="w"> </span>to<span class="w"> </span>unstage<span class="o">)</span>
+<span class="w">    </span>modified:<span class="w">   </span>src/App.test.js
+
+$<span class="w"> </span>git<span class="w"> </span>commit<span class="w"> </span>-m<span class="w"> </span><span class="s1">&#39;Implement integration test&#39;</span>
+<span class="o">[</span>master<span class="w"> </span>8a6217f<span class="o">]</span><span class="w"> </span>Implement<span class="w"> </span>integration<span class="w"> </span><span class="nb">test</span>
+<span class="w"> </span><span class="m">1</span><span class="w"> </span>file<span class="w"> </span>changed,<span class="w"> </span><span class="m">19</span><span class="w"> </span>insertions<span class="o">(</span>+<span class="o">)</span>,<span class="w"> </span><span class="m">8</span><span class="w"> </span>deletions<span class="o">(</span>-<span class="o">)</span>
+<span class="w"> </span>rewrite<span class="w"> </span>src/App.test.js<span class="w"> </span><span class="o">(</span><span class="m">89</span>%<span class="o">)</span>
+</code></pre></div>
+
+<p>Before we move in one last level, to the unit tests, let's think about how our app might be structured. Again note that we can have this discussion before actually writing anything, because the need to identify our test boundaries is driving us to think about the architecture. We have two main concerns here:</p>
+<ol>
+<li>the <em>business logic</em>, determining a winner given two weapons (we tested and implemented this in the previous article) - this can be implemented as a <em>service</em>; and</li>
+<li>the <em>user interface</em>, taking user input and showing the winner - this can be implemented as <em>components</em>.</li>
+</ol>
+<p>React apps tend to have a root <code>App</code> component, which we could use as a coordinator here. It will:</p>
+<ul>
+<li>render a form with our input controls (two <code>&lt;select&gt;</code>s and a <code>&lt;button&gt;</code>);</li>
+<li>communicate with the service (RPS logic we already have); and</li>
+<li>display the outcome.</li>
+</ul>
+<p>We can model this as follows:</p>
+<div class="highlight"><pre><span></span><code><span class="w">   </span><span class="n">App</span><span class="w"> </span><span class="o">&lt;--&gt;</span><span class="w"> </span><span class="kr">Service</span>
+<span class="w">  </span><span class="o">/</span><span class="w">   </span><span class="err">\</span>
+<span class="n">Form</span><span class="w">  </span><span class="n">Outcome</span>
+</code></pre></div>
+
+<p>We already have an integration test covering these parts working together, but we can create unit tests for the service and the low-level components.</p>
+<h2>At your service [5/8]</h2>
+<p>We already have this! You should still have a function named <code>rps</code> from the previous article, along with a suite of tests. Place the function in a file named <code>./src/rpsService.js</code> and export it:</p>
+<div class="highlight"><pre><span></span><code><span class="k">export</span><span class="w"> </span><span class="kd">function</span><span class="w"> </span><span class="nx">rps</span><span class="p">(</span><span class="nx">left</span><span class="p">,</span><span class="w"> </span><span class="nx">right</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="c1">// ...</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<p>then place the test suite in a file named <code>./src/rpsService.test.js</code> along with an import:</p>
+<div class="highlight"><pre><span></span><code><span class="k">import</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">rps</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s2">&quot;./rpsService&quot;</span><span class="p">;</span>
+
+<span class="nx">describe</span><span class="p">(</span><span class="s2">&quot;rock, paper, scissors&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">()</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="c1">// ...</span>
+<span class="p">});</span>
+</code></pre></div>
+
+<p>All of the same tests should pass happily in the new context. Once all of the service tests are passing (although <code>./src/App.test.js</code> will still fail), commit it:</p>
+<div class="highlight"><pre><span></span><code>$<span class="w"> </span>git<span class="w"> </span>add<span class="w"> </span>.
+
+$<span class="w"> </span>git<span class="w"> </span>status
+On<span class="w"> </span>branch<span class="w"> </span>master
+Changes<span class="w"> </span>to<span class="w"> </span>be<span class="w"> </span>committed:
+<span class="w">  </span><span class="o">(</span>use<span class="w"> </span><span class="s2">&quot;git restore --staged &lt;file&gt;...&quot;</span><span class="w"> </span>to<span class="w"> </span>unstage<span class="o">)</span>
+<span class="w">    </span>new<span class="w"> </span>file:<span class="w">   </span>src/rpsService.js
+<span class="w">    </span>new<span class="w"> </span>file:<span class="w">   </span>src/rpsService.test.js
+
+
+$<span class="w"> </span>git<span class="w"> </span>commit<span class="w"> </span>-m<span class="w"> </span><span class="s1">&#39;Migrate tested service logic&#39;</span>
+<span class="o">[</span>master<span class="w"> </span>b03135e<span class="o">]</span><span class="w"> </span>Migrate<span class="w"> </span>tested<span class="w"> </span>service<span class="w"> </span>logic
+<span class="w"> </span><span class="m">2</span><span class="w"> </span>files<span class="w"> </span>changed,<span class="w"> </span><span class="m">75</span><span class="w"> </span>insertions<span class="o">(</span>+<span class="o">)</span>
+<span class="w"> </span>create<span class="w"> </span>mode<span class="w"> </span><span class="m">100644</span><span class="w"> </span>src/rpsService.js
+<span class="w"> </span>create<span class="w"> </span>mode<span class="w"> </span><span class="m">100644</span><span class="w"> </span>src/rpsService.test.js
+</code></pre></div>
+
+<h2>Component unit tests [6/8]</h2>
+<p>The <code>Outcome</code> component is going to be very simple, as it only has to display the text we want given a result, so let's start with that. Add the following to <code>./src/Outcome.test.js</code>:</p>
+<div class="highlight"><pre><span></span><code><span class="kn">import</span> <span class="p">{</span> <span class="n">render</span> <span class="p">}</span> <span class="kn">from</span> <span class="s2">&quot;@testing-library/react&quot;</span><span class="p">;</span>
+
+<span class="kn">import</span> <span class="nn">Outcome</span> <span class="kn">from</span> <span class="s2">&quot;./Outcome&quot;</span><span class="p">;</span>
+
+<span class="n">describe</span><span class="p">(</span><span class="s2">&quot;App component&quot;</span><span class="p">,</span> <span class="p">()</span> <span class="o">=&gt;</span> <span class="p">{</span>
+  <span class="n">it</span><span class="p">(</span><span class="s2">&quot;displays &#39;Right wins!&#39; when right wins&quot;</span><span class="p">,</span> <span class="p">()</span> <span class="o">=&gt;</span> <span class="p">{</span>
+    <span class="n">const</span> <span class="p">{</span> <span class="n">getByTestId</span> <span class="p">}</span> <span class="o">=</span> <span class="n">render</span><span class="p">(</span><span class="o">&lt;</span><span class="n">Outcome</span> <span class="n">result</span><span class="o">=</span><span class="s2">&quot;right&quot;</span> <span class="o">/&gt;</span><span class="p">);</span>
+    <span class="n">expect</span><span class="p">(</span><span class="n">getByTestId</span><span class="p">(</span><span class="s2">&quot;outcome&quot;</span><span class="p">))</span><span class="o">.</span><span class="n">toHaveTextContent</span><span class="p">(</span><span class="s2">&quot;Right wins!&quot;</span><span class="p">);</span>
+  <span class="p">});</span>
+<span class="p">});</span>
+</code></pre></div>
+
+<p>Once again we can talk about the interface before we're tied to an implementation. In this case, I've assumed the component will have a single prop named <code>result</code>, that matches the value returned from the service, and will render an element with <code>data-testid="outcome"</code>, to match our higher-level tests, with the expected text.</p>
+<p>Call the shot and run the test. Initially it will fail because Jest <code>Cannot find module './Outcome' from 'src/Outcome.test.js'</code> - that should make sense, we haven't created that file yet. Go through the process of making small changes and re-running the test until it passes, with the <em>simplest possible implementation</em>. Remember to call the shot before each test run, and aim to change the error you get step by step rather than just jumping to the passing test.</p>
+<p>At this point, you should have something like:</p>
+<div class="highlight"><pre><span></span><code>function<span class="w"> </span>Outcome()<span class="w"> </span>{
+<span class="w">  </span>return<span class="w"> </span><span class="nt">&lt;div</span><span class="w"> </span><span class="na">data-testid=</span><span class="s">&quot;outcome&quot;</span><span class="nt">&gt;</span>Right<span class="w"> </span>wins!<span class="nt">&lt;/div&gt;</span>;
+}
+
+export<span class="w"> </span>default<span class="w"> </span>Outcome;
+</code></pre></div>
+
+<p>If you have any logic in your component, go back! It's too complicated, remember to write the simplest code that passes the tests and let additional test cases force you to add complexity.</p>
+<p>Make a commit to save your progress, with a message like <em>"Implement Outcome for right winning"</em>. Now repeat the process for each of the following tests, one at a time: add the test case; call the shot; get it passing; refactor as desired; make a commit with a sensible message.</p>
+<ol>
+<li>
+<p>Left wins:</p>
+<div class="highlight"><pre><span></span><code><span class="n">it</span><span class="p">(</span><span class="s2">&quot;displays &#39;Left wins!&#39; when left wins&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">()</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">getByTestId</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">render</span><span class="p">(</span><span class="o">&lt;</span><span class="n">Outcome</span><span class="w"> </span><span class="n">result</span><span class="o">=</span><span class="s2">&quot;left&quot;</span><span class="w"> </span><span class="o">/&gt;</span><span class="p">);</span>
+<span class="w">  </span><span class="n">expect</span><span class="p">(</span><span class="n">getByTestId</span><span class="p">(</span><span class="s2">&quot;outcome&quot;</span><span class="p">))</span><span class="o">.</span><span class="n">toHaveTextContent</span><span class="p">(</span><span class="s2">&quot;Left wins!&quot;</span><span class="p">);</span>
+<span class="p">});</span>
+</code></pre></div>
+
+</li>
+<li>
+<p>Draw:</p>
+<div class="highlight"><pre><span></span><code><span class="n">it</span><span class="p">(</span><span class="s2">&quot;displays &#39;Draw!&#39; when there&#39;s a draw&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">()</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">getByTestId</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">render</span><span class="p">(</span><span class="o">&lt;</span><span class="n">Outcome</span><span class="w"> </span><span class="n">result</span><span class="o">=</span><span class="s2">&quot;draw&quot;</span><span class="w"> </span><span class="o">/&gt;</span><span class="p">);</span>
+<span class="w">  </span><span class="n">expect</span><span class="p">(</span><span class="n">getByTestId</span><span class="p">(</span><span class="s2">&quot;outcome&quot;</span><span class="p">))</span><span class="o">.</span><span class="n">toHaveTextContent</span><span class="p">(</span><span class="s2">&quot;Draw!&quot;</span><span class="p">);</span>
+<span class="p">});</span>
+</code></pre></div>
+
+</li>
+</ol>
+<p>Once all three tests are passing, we can move on to the next component. Add the following to <code>./src/Form.test.js</code>:</p>
+<div class="highlight"><pre><span></span><code><span class="kn">import</span> <span class="p">{</span> <span class="n">render</span> <span class="p">}</span> <span class="kn">from</span> <span class="s2">&quot;@testing-library/react&quot;</span><span class="p">;</span>
+<span class="kn">import</span> <span class="nn">userEvent</span> <span class="kn">from</span> <span class="s2">&quot;@testing-library/user-event&quot;</span><span class="p">;</span>
+
+<span class="kn">import</span> <span class="nn">Form</span> <span class="kn">from</span> <span class="s2">&quot;./Form&quot;</span><span class="p">;</span>
+
+<span class="n">describe</span><span class="p">(</span><span class="s2">&quot;Form component&quot;</span><span class="p">,</span> <span class="p">()</span> <span class="o">=&gt;</span> <span class="p">{</span>
+  <span class="n">it</span><span class="p">(</span><span class="s2">&quot;emits a pair of selections when the form is submitted&quot;</span><span class="p">,</span> <span class="k">async</span> <span class="p">()</span> <span class="o">=&gt;</span> <span class="p">{</span>
+    <span class="n">const</span> <span class="n">left</span> <span class="o">=</span> <span class="s2">&quot;scissors&quot;</span><span class="p">;</span>
+    <span class="n">const</span> <span class="n">right</span> <span class="o">=</span> <span class="s2">&quot;paper&quot;</span><span class="p">;</span>
+    <span class="n">const</span> <span class="n">onSubmit</span> <span class="o">=</span> <span class="n">jest</span><span class="o">.</span><span class="n">fn</span><span class="p">();</span>
+    <span class="n">const</span> <span class="p">{</span> <span class="n">getByLabelText</span><span class="p">,</span> <span class="n">getByText</span> <span class="p">}</span> <span class="o">=</span> <span class="n">render</span><span class="p">(</span><span class="o">&lt;</span><span class="n">Form</span> <span class="n">onSubmit</span><span class="o">=</span><span class="p">{</span><span class="n">onSubmit</span><span class="p">}</span> <span class="o">/&gt;</span><span class="p">);</span>
+
+    <span class="n">userEvent</span><span class="o">.</span><span class="n">selectOptions</span><span class="p">(</span><span class="n">getByLabelText</span><span class="p">(</span><span class="s2">&quot;Left&quot;</span><span class="p">),</span> <span class="n">left</span><span class="p">);</span>
+    <span class="n">userEvent</span><span class="o">.</span><span class="n">selectOptions</span><span class="p">(</span><span class="n">getByLabelText</span><span class="p">(</span><span class="s2">&quot;Right&quot;</span><span class="p">),</span> <span class="n">right</span><span class="p">);</span>
+    <span class="n">userEvent</span><span class="o">.</span><span class="n">click</span><span class="p">(</span><span class="n">getByText</span><span class="p">(</span><span class="s2">&quot;Throw&quot;</span><span class="p">));</span>
+
+    <span class="n">expect</span><span class="p">(</span><span class="n">onSubmit</span><span class="p">)</span><span class="o">.</span><span class="n">toHaveBeenCalledWith</span><span class="p">([</span><span class="n">left</span><span class="p">,</span> <span class="n">right</span><span class="p">]);</span>
+  <span class="p">});</span>
+<span class="p">});</span>
+</code></pre></div>
+
+<p>This looks quite a lot like the end-to-end and integration tests, but with a more limited scope - we only care that the user input is taken correctly, not that the appropriate winner is determined. This is part of the process of <em>decomposing</em> the problem into smaller (and easier-to-solve) pieces, which is the reason I think starting with the end-to-end tests makes sense.</p>
+<p>It also introduces a Jest <em>"mock function"</em>, a <a href="https://tanzu.vmware.com/content/pivotal-engineering-journal/the-test-double-rule-of-thumb-2">test double</a> we can pass to the <code>Form</code> component in place of a real function prop. The expectation here is that this mock function gets called with the appropriate values, as this is how the data will be passed up to the <code>App</code> component.</p>
+<p>Again this gives us an opportunity to talk about the API details of the component before it even exists. Perhaps it should return an object <code>{ left, right }</code> instead of an array <code>[left, right]</code>? Is <code>onSubmit</code> the best name for the prop? It's easier to have these discussions when changing the API is a matter of changing your mind rather than changing the code.</p>
+<p>Repeat the usual process until you get this test passing. Covering the details of how to implement something like this in React are a bit beyond the scope of this article, but one way is to create some <a href="https://reactjs.org/docs/forms.html#controlled-components">controlled components</a> that update the component's state. Once it passes, make another commit:</p>
+<div class="highlight"><pre><span></span><code>$<span class="w"> </span>git<span class="w"> </span>add<span class="w"> </span>.
+
+$<span class="w"> </span>git<span class="w"> </span>status
+On<span class="w"> </span>branch<span class="w"> </span>master
+Changes<span class="w"> </span>to<span class="w"> </span>be<span class="w"> </span>committed:
+<span class="w">  </span><span class="o">(</span>use<span class="w"> </span><span class="s2">&quot;git restore --staged &lt;file&gt;...&quot;</span><span class="w"> </span>to<span class="w"> </span>unstage<span class="o">)</span>
+<span class="w">    </span>new<span class="w"> </span>file:<span class="w">   </span>src/Form.js
+<span class="w">    </span>new<span class="w"> </span>file:<span class="w">   </span>src/Form.test.js
+
+
+$<span class="w"> </span>git<span class="w"> </span>commit<span class="w"> </span>-m<span class="w"> </span><span class="s1">&#39;Implement Form component&#39;</span>
+<span class="o">[</span>master<span class="w"> </span>eca31d7<span class="o">]</span><span class="w"> </span>Implement<span class="w"> </span>Form<span class="w"> </span>component
+<span class="w"> </span><span class="m">2</span><span class="w"> </span>files<span class="w"> </span>changed,<span class="w"> </span><span class="m">46</span><span class="w"> </span>insertions<span class="o">(</span>+<span class="o">)</span>
+<span class="w"> </span>create<span class="w"> </span>mode<span class="w"> </span><span class="m">100644</span><span class="w"> </span>src/Form.js
+<span class="w"> </span>create<span class="w"> </span>mode<span class="w"> </span><span class="m">100644</span><span class="w"> </span>src/Form.test.js
+</code></pre></div>
+
+<h2>Putting it all back together [7/8]</h2>
+<p>Now we have a bunch of well-tested components and a service, but our integration and E2E tests are still failing, so it's time to bring everything together. Given that we already have two layers of testing for <code>./src/App.js</code> and most of the work is done elsewhere let's not add unit tests too; something like the following should be enough to get everything passing:</p>
+<div class="highlight"><pre><span></span><code><span class="kn">import</span> <span class="p">{</span> <span class="n">useState</span> <span class="p">}</span> <span class="kn">from</span> <span class="s2">&quot;react&quot;</span><span class="p">;</span>
+
+<span class="kn">import</span> <span class="nn">Form</span> <span class="kn">from</span> <span class="s2">&quot;./Form&quot;</span><span class="p">;</span>
+<span class="kn">import</span> <span class="nn">Outcome</span> <span class="kn">from</span> <span class="s2">&quot;./Outcome&quot;</span><span class="p">;</span>
+<span class="kn">import</span> <span class="p">{</span> <span class="n">rps</span> <span class="p">}</span> <span class="kn">from</span> <span class="s2">&quot;./rpsService&quot;</span><span class="p">;</span>
+
+<span class="n">function</span> <span class="n">App</span><span class="p">()</span> <span class="p">{</span>
+  <span class="n">const</span> <span class="p">[</span><span class="n">result</span><span class="p">,</span> <span class="n">setResult</span><span class="p">]</span> <span class="o">=</span> <span class="n">useState</span><span class="p">();</span>
+
+  <span class="n">const</span> <span class="n">onThrow</span> <span class="o">=</span> <span class="p">([</span><span class="n">left</span><span class="p">,</span> <span class="n">right</span><span class="p">])</span> <span class="o">=&gt;</span> <span class="p">{</span>
+    <span class="n">setResult</span><span class="p">(</span><span class="n">rps</span><span class="p">(</span><span class="n">left</span><span class="p">,</span> <span class="n">right</span><span class="p">));</span>
+  <span class="p">}</span>
+
+  <span class="k">return</span> <span class="p">(</span>
+    <span class="o">&lt;</span><span class="n">div</span><span class="o">&gt;</span>
+      <span class="o">&lt;</span><span class="n">Form</span> <span class="n">onSubmit</span><span class="o">=</span><span class="p">{</span><span class="n">onThrow</span><span class="p">}</span> <span class="o">/&gt;</span>
+      <span class="p">{</span><span class="n">result</span> <span class="o">&amp;&amp;</span> <span class="o">&lt;</span><span class="n">Outcome</span> <span class="n">result</span><span class="o">=</span><span class="p">{</span><span class="n">result</span><span class="p">}</span> <span class="o">/&gt;</span><span class="p">}</span>
+    <span class="o">&lt;/</span><span class="n">div</span><span class="o">&gt;</span>
+  <span class="p">);</span>
+<span class="p">}</span>
+
+<span class="n">export</span> <span class="n">default</span> <span class="n">App</span><span class="p">;</span>
+</code></pre></div>
+
+<p>Call the shot and run the whole suite:</p>
+<div class="highlight"><pre><span></span><code>$<span class="w"> </span><span class="nv">CI</span><span class="o">=</span><span class="nb">true</span><span class="w"> </span>npm<span class="w"> </span><span class="nb">test</span>
+
+&gt;<span class="w"> </span>rps-e2e@0.1.0<span class="w"> </span><span class="nb">test</span><span class="w"> </span>path/to/rps-e2e
+&gt;<span class="w"> </span>react-scripts<span class="w"> </span><span class="nb">test</span>
+
+PASS<span class="w"> </span>src/Outcome.test.js
+PASS<span class="w"> </span>src/App.test.js
+PASS<span class="w"> </span>src/Form.test.js
+PASS<span class="w"> </span>src/rpsService.test.js
+
+Test<span class="w"> </span>Suites:<span class="w"> </span><span class="m">4</span><span class="w"> </span>passed,<span class="w"> </span><span class="m">4</span><span class="w"> </span>total
+Tests:<span class="w">       </span><span class="m">14</span><span class="w"> </span>passed,<span class="w"> </span><span class="m">14</span><span class="w"> </span>total
+Snapshots:<span class="w">   </span><span class="m">0</span><span class="w"> </span>total
+Time:<span class="w">        </span><span class="m">6</span>.826<span class="w"> </span>s
+Ran<span class="w"> </span>all<span class="w"> </span><span class="nb">test</span><span class="w"> </span>suites.
+</code></pre></div>
+
+<p>All of the unit tests should now be passing, so call the final shot and run the end-to-end test:</p>
+<div class="highlight"><pre><span></span><code>$<span class="w"> </span>npm<span class="w"> </span>run<span class="w"> </span>e2e
+
+&gt;<span class="w"> </span>rps-e2e@0.1.0<span class="w"> </span>e2e<span class="w"> </span>path/to/rps-e2e
+&gt;<span class="w"> </span>cypress<span class="w"> </span><span class="nv">run</span>
+
+
+<span class="o">==========================================================================================</span>
+
+<span class="w">  </span><span class="o">(</span>Run<span class="w"> </span>Starting<span class="o">)</span>
+
+<span class="w">  </span>┌────────────────────────────────────────────────────────────────────────────────────────────────┐
+<span class="w">  </span>│<span class="w"> </span>Cypress:<span class="w">    </span><span class="m">5</span>.6.0<span class="w">                                                                              </span>│
+<span class="w">  </span>│<span class="w"> </span>Browser:<span class="w">    </span>Electron<span class="w"> </span><span class="m">85</span><span class="w"> </span><span class="o">(</span>headless<span class="o">)</span><span class="w">                                                             </span>│
+<span class="w">  </span>│<span class="w"> </span>Specs:<span class="w">      </span><span class="m">1</span><span class="w"> </span>found<span class="w"> </span><span class="o">(</span>e2e.test.js<span class="o">)</span><span class="w">                                                              </span>│
+<span class="w">  </span>└────────────────────────────────────────────────────────────────────────────────────────────────┘
+
+
+────────────────────────────────────────────────────────────────────────────────────────────────────
+
+<span class="w">  </span>Running:<span class="w">  </span>e2e.test.js<span class="w">                                                                     </span><span class="o">(</span><span class="m">1</span><span class="w"> </span>of<span class="w"> </span><span class="m">1</span><span class="o">)</span>
+
+
+<span class="w">  </span>✓<span class="w"> </span>should<span class="w"> </span>say<span class="w"> </span>left<span class="w"> </span>wins<span class="w"> </span><span class="k">for</span><span class="w"> </span>rock<span class="w"> </span>vs.<span class="w"> </span>scissors<span class="w"> </span><span class="o">(</span>1116ms<span class="o">)</span>
+
+<span class="w">  </span><span class="m">1</span><span class="w"> </span>passing<span class="w"> </span><span class="o">(</span>1s<span class="o">)</span>
+
+
+<span class="w">  </span><span class="o">(</span>Results<span class="o">)</span>
+
+<span class="w">  </span>┌────────────────────────────────────────────────────────────────────────────────────────────────┐
+<span class="w">  </span>│<span class="w"> </span>Tests:<span class="w">        </span><span class="m">1</span><span class="w">                                                                                </span>│
+<span class="w">  </span>│<span class="w"> </span>Passing:<span class="w">      </span><span class="m">1</span><span class="w">                                                                                </span>│
+<span class="w">  </span>│<span class="w"> </span>Failing:<span class="w">      </span><span class="m">0</span><span class="w">                                                                                </span>│
+<span class="w">  </span>│<span class="w"> </span>Pending:<span class="w">      </span><span class="m">0</span><span class="w">                                                                                </span>│
+<span class="w">  </span>│<span class="w"> </span>Skipped:<span class="w">      </span><span class="m">0</span><span class="w">                                                                                </span>│
+<span class="w">  </span>│<span class="w"> </span>Screenshots:<span class="w">  </span><span class="m">0</span><span class="w">                                                                                </span>│
+<span class="w">  </span>│<span class="w"> </span>Video:<span class="w">        </span><span class="nb">false</span><span class="w">                                                                            </span>│
+<span class="w">  </span>│<span class="w"> </span>Duration:<span class="w">     </span><span class="m">1</span><span class="w"> </span>second<span class="w">                                                                         </span>│
+<span class="w">  </span>│<span class="w"> </span>Spec<span class="w"> </span>Ran:<span class="w">     </span>e2e.test.js<span class="w">                                                                      </span>│
+<span class="w">  </span>└────────────────────────────────────────────────────────────────────────────────────────────────┘
+<span class="o">{</span>
+
+
+<span class="o">==========================================================================================</span>
+
+<span class="w">  </span><span class="o">(</span>Run<span class="w"> </span>Finished<span class="o">)</span>
+
+
+<span class="w">       </span>Spec<span class="w">                                              </span>Tests<span class="w">  </span>Passing<span class="w">  </span>Failing<span class="w">  </span>Pending<span class="w">  </span>Skipped
+<span class="w">  </span>┌────────────────────────────────────────────────────────────────────────────────────────────────┐
+<span class="w">  </span>│<span class="w"> </span>✔<span class="w">  </span>e2e.test.js<span class="w">                              </span><span class="m">00</span>:01<span class="w">        </span><span class="m">1</span><span class="w">        </span><span class="m">1</span><span class="w">        </span>-<span class="w">        </span>-<span class="w">        </span>-<span class="w"> </span>│
+<span class="w">  </span>└────────────────────────────────────────────────────────────────────────────────────────────────┘
+<span class="w">    </span>✔<span class="w">  </span>All<span class="w"> </span>specs<span class="w"> </span>passed!<span class="w">                        </span><span class="m">00</span>:01<span class="w">        </span><span class="m">1</span><span class="w">        </span><span class="m">1</span><span class="w">        </span>-<span class="w">        </span>-<span class="w">        </span>-
+</code></pre></div>
+
+<p>That's it! We've created a simple UI for our RPS implementation, test-driving it from the outside in. Create a commit to save this work:</p>
+<div class="highlight"><pre><span></span><code>$<span class="w"> </span>git<span class="w"> </span>add<span class="w"> </span>.
+
+$<span class="w"> </span>git<span class="w"> </span>status
+On<span class="w"> </span>branch<span class="w"> </span>master
+Changes<span class="w"> </span>to<span class="w"> </span>be<span class="w"> </span>committed:
+<span class="w">  </span><span class="o">(</span>use<span class="w"> </span><span class="s2">&quot;git restore --staged &lt;file&gt;...&quot;</span><span class="w"> </span>to<span class="w"> </span>unstage<span class="o">)</span>
+<span class="w">    </span>modified:<span class="w">   </span>src/App.js
+
+
+$<span class="w"> </span>git<span class="w"> </span>commit<span class="w"> </span>-m<span class="w"> </span><span class="s1">&#39;Complete RPS UI implementation&#39;</span>
+<span class="o">[</span>master<span class="w"> </span>c6cd9a8<span class="o">]</span><span class="w"> </span>Complete<span class="w"> </span>RPS<span class="w"> </span>UI<span class="w"> </span>implementation
+<span class="w"> </span><span class="m">1</span><span class="w"> </span>file<span class="w"> </span>changed,<span class="w"> </span><span class="m">22</span><span class="w"> </span>insertions<span class="o">(</span>+<span class="o">)</span>,<span class="w"> </span><span class="m">25</span><span class="w"> </span>deletions<span class="o">(</span>-<span class="o">)</span>
+<span class="w"> </span>rewrite<span class="w"> </span>src/App.js<span class="w"> </span><span class="o">(</span><span class="m">90</span>%<span class="o">)</span>
+</code></pre></div>
+
+<p>Now reflect on the exercise - how does the implementation compare to what you'd initially imagined? What felt good or bad about the process?</p>
+<p>You can see my copy of this exercise at <a href="https://github.com/textbook/rps-e2e">https://github.com/textbook/rps-e2e</a>.</p>
+<h2>Exercises [8/8]</h2>
+<p>Here are some additional exercises you can run through:</p>
+<ol>
+<li>
+<p>Repeat the process from the beginning and try to come up with a different implementation (including running through the core service logic, rather than copying it over). Was your new route easier or harder?</p>
+</li>
+<li>
+<p>I mentioned various alternatives to the user interface we implemented, e.g. allowing free text input. Pick one of my suggestions (or come up with your own) and implement it from the outside in.</p>
+</li>
+<li>
+<p>If you implemented additional weapons in your <code>rps</code> implementation, extend the UI to support them. If not, maybe this is a good time to revisit it!</p>
+</li>
+<li>
+<p>The UI is pretty basic - we've tested the <em>functionality</em> but said nothing about how it should look. Improve the styling while keeping the tests passing.</p>
+</li>
+<li>
+<p>Repeat the exercise without writing <em>any</em> unit-level tests; use the same end-to-end test then drive everything else from the integration level. What does this make easier and harder?</p>
+</li>
+<li>
+<p>There are a bunch of unhappy paths and un-/under-specified/edge cases in this implementation. For example:</p>
+<ul>
+<li>
+<p>Which weapons should be selected by default? If "none", what should happen when the Throw button is clicked and one or both weapons are still unselected?</p>
+</li>
+<li>
+<p>What should happen if one of the weapons is changed after the Throw button is clicked?</p>
+</li>
+<li>
+<p>What should happen when the page is refreshed?</p>
+</li>
+</ul>
+<p>Pick one or more of these. Which part(s) of the React app (currently <code>App</code>, <code>Form</code>, <code>Outcome</code> or <code>rpsService</code>) should be responsible for dealing with it? Write an E2E test case for the scenario, then use integration and/or unit tests to test drive the implementation in whichever part you choose.</p>
+</li>
+<li>
+<p>Pick another simple TDD task (e.g. FizzBuzz, BMI calculator, ...) and use these techniques to test drive a React UI for it.</p>
+</li>
+</ol>
+<p>I'd recommend creating a new git branch for each one you try (e.g. use <code>git checkout -b &lt;name&gt;</code>) and making commits as appropriate.</p>
+<blockquote>
+<p><strong>Once you're ready to move on</strong>, check out <a href="https://blog.jonrshar.pe/2021/Apr/10/js-tdd-api.html">the next article</a> in this series where we'll learn about more about how to deal with sources of data outside of our control.</p>
+</blockquote>
+<h2>Linting [Bonus]</h2>
+<p>Depending on your setup, you may have noticed that your IDE was warning that <code>cy</code> is undefined; the default CRA linting settings include the <code>no-undef</code> rule and there's nothing to tell ESLint that <code>cy</code> is going to be defined. To be able to easily run the linter, add another script to the package file:</p>
+<div class="highlight"><pre><span></span><code><span class="w">  </span><span class="nt">&quot;scripts&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">&quot;e2e&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;cypress run&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;lint&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;eslint cypress/ src/&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;start&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;react-scripts start&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;build&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;react-scripts build&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;test&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;react-scripts test&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;eject&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;react-scripts eject&quot;</span>
+<span class="w">  </span><span class="p">},</span>
+</code></pre></div>
+
+<p>You can now run this to see the problem:</p>
+<div class="highlight"><pre><span></span><code>npm<span class="w"> </span>run<span class="w"> </span>lint
+
+&gt;<span class="w"> </span>rps-e2e@0.1.0<span class="w"> </span>lint<span class="w"> </span>path/to/rps-e2e
+&gt;<span class="w"> </span>eslint<span class="w"> </span>cypress/<span class="w"> </span>src/
+
+
+path/to/rps-e2e/cypress/integration/e2e.test.js
+<span class="w">  </span><span class="m">2</span>:3<span class="w">  </span>error<span class="w">  </span><span class="s1">&#39;cy&#39;</span><span class="w"> </span>is<span class="w"> </span>not<span class="w"> </span>defined<span class="w">  </span>no-undef
+<span class="w">  </span><span class="m">3</span>:3<span class="w">  </span>error<span class="w">  </span><span class="s1">&#39;cy&#39;</span><span class="w"> </span>is<span class="w"> </span>not<span class="w"> </span>defined<span class="w">  </span>no-undef
+<span class="w">  </span><span class="m">4</span>:3<span class="w">  </span>error<span class="w">  </span><span class="s1">&#39;cy&#39;</span><span class="w"> </span>is<span class="w"> </span>not<span class="w"> </span>defined<span class="w">  </span>no-undef
+<span class="w">  </span><span class="m">6</span>:3<span class="w">  </span>error<span class="w">  </span><span class="s1">&#39;cy&#39;</span><span class="w"> </span>is<span class="w"> </span>not<span class="w"> </span>defined<span class="w">  </span>no-undef
+<span class="w">  </span><span class="m">8</span>:3<span class="w">  </span>error<span class="w">  </span><span class="s1">&#39;cy&#39;</span><span class="w"> </span>is<span class="w"> </span>not<span class="w"> </span>defined<span class="w">  </span>no-undef
+
+✖<span class="w"> </span><span class="m">5</span><span class="w"> </span>problems<span class="w"> </span><span class="o">(</span><span class="m">5</span><span class="w"> </span>errors,<span class="w"> </span><span class="m">0</span><span class="w"> </span>warnings<span class="o">)</span>
+
+npm<span class="w"> </span>ERR!<span class="w"> </span>code<span class="w"> </span>ELIFECYCLE
+npm<span class="w"> </span>ERR!<span class="w"> </span>errno<span class="w"> </span><span class="m">1</span>
+npm<span class="w"> </span>ERR!<span class="w"> </span>rps-e2e@0.1.0<span class="w"> </span>lint:<span class="w"> </span><span class="sb">`</span>eslint<span class="w"> </span>cypress/<span class="w"> </span>src/<span class="sb">`</span>
+npm<span class="w"> </span>ERR!<span class="w"> </span>Exit<span class="w"> </span>status<span class="w"> </span><span class="m">1</span>
+npm<span class="w"> </span>ERR!<span class="w"> </span>
+npm<span class="w"> </span>ERR!<span class="w"> </span>Failed<span class="w"> </span>at<span class="w"> </span>the<span class="w"> </span>rps-e2e@0.1.0<span class="w"> </span>lint<span class="w"> </span>script.
+npm<span class="w"> </span>ERR!<span class="w"> </span>This<span class="w"> </span>is<span class="w"> </span>probably<span class="w"> </span>not<span class="w"> </span>a<span class="w"> </span>problem<span class="w"> </span>with<span class="w"> </span>npm.<span class="w"> </span>There<span class="w"> </span>is<span class="w"> </span>likely<span class="w"> </span>additional<span class="w"> </span>logging<span class="w"> </span>output<span class="w"> </span>above.
+
+npm<span class="w"> </span>ERR!<span class="w"> </span>A<span class="w"> </span><span class="nb">complete</span><span class="w"> </span>log<span class="w"> </span>of<span class="w"> </span>this<span class="w"> </span>run<span class="w"> </span>can<span class="w"> </span>be<span class="w"> </span>found<span class="w"> </span><span class="k">in</span>:
+npm<span class="w"> </span>ERR!<span class="w">     </span>path/to/.npm/_logs/2020-11-03T22_41_51_438Z-debug.log
+</code></pre></div>
+
+<p>To fix this, we can add an ESLint plugin that knows about the Cypress globals:</p>
+<div class="highlight"><pre><span></span><code>$<span class="w"> </span>npm<span class="w"> </span>install<span class="w"> </span>eslint-plugin-cypress
+npm<span class="w"> </span>WARN<span class="w"> </span>tsutils@3.17.1<span class="w"> </span>requires<span class="w"> </span>a<span class="w"> </span>peer<span class="w"> </span>of<span class="w"> </span>typescript@&gt;<span class="o">=</span><span class="m">2</span>.8.0<span class="w"> </span><span class="o">||</span><span class="w"> </span>&gt;<span class="o">=</span><span class="w"> </span><span class="m">3</span>.2.0-dev<span class="w"> </span><span class="o">||</span><span class="w"> </span>&gt;<span class="o">=</span><span class="w"> </span><span class="m">3</span>.3.0-dev<span class="w"> </span><span class="o">||</span><span class="w"> </span>&gt;<span class="o">=</span><span class="w"> </span><span class="m">3</span>.4.0-dev<span class="w"> </span><span class="o">||</span><span class="w"> </span>&gt;<span class="o">=</span><span class="w"> </span><span class="m">3</span>.5.0-dev<span class="w"> </span><span class="o">||</span><span class="w"> </span>&gt;<span class="o">=</span><span class="w"> </span><span class="m">3</span>.6.0-dev<span class="w"> </span><span class="o">||</span><span class="w"> </span>&gt;<span class="o">=</span><span class="w"> </span><span class="m">3</span>.6.0-beta<span class="w"> </span><span class="o">||</span><span class="w"> </span>&gt;<span class="o">=</span><span class="w"> </span><span class="m">3</span>.7.0-dev<span class="w"> </span><span class="o">||</span><span class="w"> </span>&gt;<span class="o">=</span><span class="w"> </span><span class="m">3</span>.7.0-beta<span class="w"> </span>but<span class="w"> </span>none<span class="w"> </span>is<span class="w"> </span>installed.<span class="w"> </span>You<span class="w"> </span>must<span class="w"> </span>install<span class="w"> </span>peer<span class="w"> </span>dependencies<span class="w"> </span>yourself.
+
++<span class="w"> </span>eslint-plugin-cypress@2.11.2
+added<span class="w"> </span><span class="m">1</span><span class="w"> </span>package<span class="w"> </span>from<span class="w"> </span><span class="m">1</span><span class="w"> </span>contributor<span class="w"> </span>and<span class="w"> </span>audited<span class="w"> </span><span class="m">2080</span><span class="w"> </span>packages<span class="w"> </span><span class="k">in</span><span class="w"> </span><span class="m">15</span>.918s
+
+<span class="m">120</span><span class="w"> </span>packages<span class="w"> </span>are<span class="w"> </span>looking<span class="w"> </span><span class="k">for</span><span class="w"> </span>funding
+<span class="w">  </span>run<span class="w"> </span><span class="sb">`</span>npm<span class="w"> </span>fund<span class="sb">`</span><span class="w"> </span><span class="k">for</span><span class="w"> </span>details
+
+found<span class="w"> </span><span class="m">0</span><span class="w"> </span>vulnerabilities
+</code></pre></div>
+
+<p>We could just add this plugin at the top level, but it's better to be specific - <code>cy</code> will only be in scope for the files in the <code>cypress/</code> directory, so we can set an ESLint <em>override</em> for those files in <code>package.json</code>:</p>
+<div class="highlight"><pre><span></span><code><span class="w">  </span><span class="nt">&quot;eslintConfig&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">&quot;extends&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">      </span><span class="s2">&quot;react-app&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="s2">&quot;react-app/jest&quot;</span>
+<span class="w">    </span><span class="p">],</span>
+<span class="w">    </span><span class="nt">&quot;overrides&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">      </span><span class="p">{</span>
+<span class="w">        </span><span class="nt">&quot;extends&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">          </span><span class="s2">&quot;plugin:cypress/recommended&quot;</span>
+<span class="w">        </span><span class="p">],</span>
+<span class="w">        </span><span class="nt">&quot;files&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">          </span><span class="s2">&quot;cypress/**/*.js&quot;</span>
+<span class="w">        </span><span class="p">]</span>
+<span class="w">      </span><span class="p">}</span>
+<span class="w">    </span><span class="p">]</span>
+<span class="w">  </span><span class="p">},</span>
+</code></pre></div>
+
+<p>Now <code>npm run lint</code> should be fine.</p></div>
+    <div class="comments">
+      <h2>Comments !</h2>
+      <div id="disqus_thread"></div>
+      <script type="text/javascript">
+        var disqus_shortname = 'textbook-dev';
+        var disqus_identifier = '2020/Nov/22/js-tdd-e2e.html';
+        var disqus_url = 'https://blog.jonrshar.pe/2020/Nov/22/js-tdd-e2e.html';
+        (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//textbook-dev.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+      </script>
+      <noscript>Please enable JavaScript to view the comments.</noscript>
+    </div>
+
+  </article>
+</section>
+
+<script type="application/ld+json">
+  {"articleSection": "development", "author": {"@type": "Person", "name": "Jonathan Sharpe"}, "datePublished": "2020-11-22T15:30:00+00:00", "headline": "JS TDD E2E", "mainEntityOfPage": {"@type": "WebPage", "@id": "https://blog.jonrshar.pe/2020/Nov/22/js-tdd-e2e.html"}, "@context": "http://schema.org", "@type": "BlogPosting", "dateModified": "2021-04-10T20:30:00+01:00", "description": "Test-driven JavaScript development done right - part 2", "image": {"@type": "ImageObject", "url": "https://blog.jonrshar.pe/images/cypress-gui.png"}}
+</script>
+    </div>
+
+    <div class="column is-one-quarter-desktop is-one-third-tablet is-hidden-print">
+      <aside class="menu">
+<div id="mc_embed_signup">
+  <form
+      action="https://jonrshar.us15.list-manage.com/subscribe/post?u=7ada11180797f3af73228bf0b&amp;id=d172abcbd2"
+      method="post" id="mc-embedded-subscribe-form"
+      name="mc-embedded-subscribe-form" class="validate" target="_blank"
+      novalidate>
+
+    <h2 class="menu-label">Mailing List</h2>
+
+    <div id="mc_embed_signup_scroll">
+      <div class="field mc-field-group">
+        <label for="mce-EMAIL" class="label is-small">Email</label>
+        <div class="field-body">
+          <div class="field">
+            <p class="control has-icons-left">
+              <input type="email" name="EMAIL" class="input required email is-small"
+                     id="mce-EMAIL" placeholder="Email address">
+              <span class="icon is-small is-left">
+              <i class="fa fa-envelope"></i>
+            </span>
+            </p>
+          </div>
+        </div>
+      </div>
+      <div class="field">
+        <label for="mce-FNAME" class="label is-small">Name</label>
+        <div class="field-body">
+          <div class="field is-grouped">
+            <p class="control is-expanded">
+              <input class="input is-small" type="text" value="" name="FNAME"
+                     id="mce-FNAME" placeholder="First">
+            </p>
+            <p class="control is-expanded">
+              <input class="input is-small" type="text" value="" name="LNAME"
+                     id="mce-LNAME" placeholder="Last">
+            </p>
+          </div>
+        </div>
+      </div>
+      <div class="field is-grouped">
+        <p class="control">
+          <input type="submit" name="subscribe" value="Subscribe"
+                 class="button is-small is-success" id="mc-embedded-subscribe">
+        </p>
+          <p class="control">
+            <span class="help">
+              Powered by
+              <a href="http://eepurl.com/cNv6Rb"
+                 title="MailChimp - email marketing made easy and fun">
+                MailChimp
+              </a>
+            </span>
+          </p>
+      </div>
+
+      <div id="mce-responses" class="clear">
+        <div class="response help is-danger" id="mce-error-response"
+             style="display:none"></div>
+        <div class="response help is-success" id="mce-success-response"
+             style="display:none"></div>
+      </div>
+
+      <div style="position: absolute; left: -5000px;" aria-hidden="true">
+        <input type="text" name="b_7ada11180797f3af73228bf0b_d172abcbd2"
+               tabindex="-1" value="">
+      </div>
+    </div>
+  </form>
+</div>
+
+          <p class="menu-label">Other Pages</p>
+          <ul class="menu-list">
+                <li><a                        href="https://blog.jonrshar.pe/pages/about.html">
+                  <span class="icon is-small"><i class="fa fa-book"></i></span>
+                  <span class="link-text">About</span>
+                </a></li>
+          </ul>
+          <p class="menu-label">Links</p>
+          <ul class="menu-list">
+              <li><a href="http://engineering.pivotal.io/">
+                <span class="icon is-small"><i class="fa fa-globe fa-fw"></i></span>
+                <span class="link-text">Pivotal Engineering Journal</span>
+              </a></li>
+              <li><a href="http://blog.cleancoder.com/">
+                <span class="icon is-small"><i class="fa fa-globe fa-fw"></i></span>
+                <span class="link-text">The Clean Code Blog</span>
+              </a></li>
+              <li><a href="https://codeascraft.com/">
+                <span class="icon is-small"><i class="fa fa-globe fa-fw"></i></span>
+                <span class="link-text">Code as Craft</span>
+              </a></li>
+              <li><a href="http://corgibytes.com/blog/">
+                <span class="icon is-small"><i class="fa fa-globe fa-fw"></i></span>
+                <span class="link-text">Corgibytes Blog</span>
+              </a></li>
+          </ul>
+<p class="menu-label">Social</p>
+<ul class="menu-list">
+    <li><a href="https://github.com/textbook">
+      <span class="icon is-small">
+          <i class="fa fa-github fa-fw"></i>
+      </span>
+      <span class="link-text">GitHub</span>
+    </a></li>
+    <li><a href="http://stackoverflow.com/users/3001761/jonrsharpe">
+      <span class="icon is-small">
+          <i class="fa fa-stack-overflow fa-fw"></i>
+      </span>
+      <span class="link-text">Stack Overflow</span>
+    </a></li>
+    <li><a href="https://twitter.com/jonrsharpe">
+      <span class="icon is-small">
+          <i class="fa fa-twitter fa-fw"></i>
+      </span>
+      <span class="link-text">Twitter</span>
+    </a></li>
+    <li><a href="https://500px.com/jonrsharpe">
+      <span class="icon is-small">
+          <i class="fa fa-500px fa-fw"></i>
+      </span>
+      <span class="link-text">500px</span>
+    </a></li>
+
+    <li><a href="https://blog.jonrshar.pe/feeds/all.atom.xml"
+           type="application/atom+xml" rel="alternate">
+      <span class="icon is-small"><i class="fa fa-rss"></i></span>
+      <span class="link-text">Atom Feed</span>
+    </a></li>
+
+</ul>          <p class="menu-label">License</p>
+          
+<ul class="menu-list">
+  <li>
+    <a rel="license" href="http://creativecommons.org/licenses/by-sa/4.0/">
+      <span class="icon is-small">
+        <i class="fa fa-creative-commons fa-fw"></i>
+      </span>
+      <span>CC BY-SA 4.0</span>
+    </a>
+  </li>
+</ul>
+
+      </aside>
+    </div>
+  </div>
+</div>
+
+<footer class="footer">
+  <div class="container has-text-centered">
+ <p class="subtitle">These are my opinions - if you don't like them, I have others</p>    <div class="credits">
+      <span><a href="https://github.com/textbook/bulrush">Bulrush</a> theme for
+        <a href="https://blog.getpelican.com/">Pelican</a></span>
+      <span><span class="icon is-small"><i class="fa fa-html5"></i></span> HTML 5</span>
+      <span><span class="icon is-small"><i class="fa fa-css3"></i></span> CSS 3</span>
+      <span>Made with <a href="https://bulma.io">Bulma</a></span>
+    </div>
+  </div>
+  <div class="github-fork-ribbon-wrapper is-hidden-mobile is-hidden-print">
+    <div class="github-fork-ribbon">
+      <a href="https://github.com/textbook/textbook.github.io">
+        <i class="fa fa-github fa-fw"></i>
+        Fork me on GitHub
+      </a>
+    </div>
+  </div>
+</footer>
+
+    <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-64837080-1']);
+    _gaq.push(['_trackPageview']);
+    (function() {
+        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+        ga.src = 'https://ssl.google-analytics.com/ga.js';
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+    </script>
+<script type="text/javascript">
+    var disqus_shortname = 'textbook-dev';
+    (function () {
+        var s = document.createElement('script'); s.async = true;
+        s.type = 'text/javascript';
+        s.src = 'https://' + disqus_shortname + '.disqus.com/count.js';
+        (document.getElementsByTagName('HEAD')[0] || document.getElementsByTagName('BODY')[0]).appendChild(s);
+    }());
+</script>
+<script type="text/javascript">
+  document.getElementById('navToggle').addEventListener('click', function () {
+    var nav = document.getElementById('navMenu');
+    var className = nav.getAttribute('class');
+    if (className == 'navbar-menu') {
+      nav.className = 'navbar-menu is-active';
+    } else {
+      nav.className = 'navbar-menu';
+    }
+  });
+</script>
+</body>
+</html>
