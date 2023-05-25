@@ -1,5 +1,6 @@
 Title: JS TDD Ohm
 Date: 2023-05-23 14:00
+Modified: 2023-05-25 11:45
 Tags: javascript, tdd, xp
 Authors: Jonathan Sharpe
 Summary: Test-driven JavaScript development done right - part 4
@@ -51,7 +52,7 @@ How do we prioritise which representations we should focus on to start with? We 
 - Colin the customer: Colin wants to buy and build one of the kits, which will include the manifest and the components with their _bands_; and
 - Parul the packer: When Colin orders a kit, Parul is responsible for selecting the components based on the manifest, boxing them up and shipping them out.
 
-Parul and Debbie both work with resistors and other electrical components on a very regular basis, so they probably don't need reminding what the bands mean, and if not there are various non-software interventions we could use to make their lives easier (for example, the boxes Parul is selecting components from could have a picture of the relevant bands and the shorthand printed in large letters to add selection and refilling). But it might be a while since Colin built his last kit (or he may even be a first-time customer), so that's the persona most likely to need help and therefore the highest value software would focus on the conversion between bands and shorthand, especially when you consider that the company will have far more Colins (thousands) than Paruls (ten) or Debbies (one).
+Parul and Debbie both work with resistors and other electrical components on a very regular basis, so they probably don't need reminding what the bands mean, and if not there are various non-software interventions we could use to make their lives easier (for example, the boxes Parul is selecting components from could have a picture of the relevant bands and the shorthand printed in large letters to aid selection and refilling). But it might be a while since Colin built his last kit (or he may even be a first-time customer), so that's the persona most likely to need help and therefore the highest value software would focus on the conversion between bands and shorthand, especially when you consider that the company will have far more Colins (thousands) than Paruls (ten) or Debbies (one).
 
 ---
 
@@ -1054,7 +1055,7 @@ Once you're happy, make a final commit - we're done!
 Here are some follow-up tasks for further practice (remember to **test-drive** anything you work on):
 
 1. Predict and then check happens if you make a request where the bands aren't recognised colours (e.g. `GET /resistance?bands=fuschia&bands=goldenrod&bands=octarine`) and/or there are multiple tolerance bands. Did you predict correctly? Do you think it's the _right_ behaviour - do you consider that request to be _semantically_ or _structurally_ invalid, and does the current implementation reflect that? If you think it should behave differently, update accordingly.
-1. Return to step 4 and try out some different orders for introducting the three-band cases - did I suggest the right route, how much difference does it make?
+1. Return to step 4 and try out some different orders for introducing the three-band cases - did I suggest the right route, how much difference does it make?
 1. Design and develop a different HTTP API (i.e. changing any or all of the request method, request path, use of query parameters or structure of the response body).
 1. As well as the _value_, _multiplier_ and _tolerance_ bands, resistors may have a _temperature coefficient_ band - implement support for this.
 1. There's a set of [preferred numbers] that resistors are generally designed to (e.g. for the default ±20% tolerance you'd get resistors only in multiples of 1.0, 1.5, 2.2, 3.3, 4.7 or 6.8) - introduce a "strict" mode in which non-preferred resistors are invalid inputs.

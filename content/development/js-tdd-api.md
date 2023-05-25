@@ -1,6 +1,6 @@
 Title: JS TDD API
 Date: 2021-04-10 20:30
-Modified: 2021-04-13 17:30
+Modified: 2023-05-25 11:45
 Tags: javascript, tdd, xp
 Authors: Jonathan Sharpe
 Summary: Test-driven JavaScript development done right - part 3
@@ -648,7 +648,7 @@ $ git commit -m 'Implement Opponent component'
  create mode 100644 src/Opponent.test.js
 ```
 
-Now we need a service. We _could_ write another integration-style test, using the fixture data from MSW, for example. That seems a bit repetitive, as we're already using MSW at the integration level, so this is a good opportunity to introduce another testing technique for these unit tests. As mentioned above we don't want to mock an interface we don't own, but we could introduce a new interface that we _do_ own and mock that. This is often referred to as a _"facade"_ because (like [these false buildings] hiding part of the London Undeground) it's a thin layer that's easy to fake. For example, you could create this simple function in `src/api.js`:
+Now we need a service. We _could_ write another integration-style test, using the fixture data from MSW, for example. That seems a bit repetitive, as we're already using MSW at the integration level, so this is a good opportunity to introduce another testing technique for these unit tests. As mentioned above we don't want to mock an interface we don't own, but we could introduce a new interface that we _do_ own and mock that. This is often referred to as a _"facade"_ because (like [these false buildings] hiding part of the London Underground) it's a thin layer that's easy to fake. For example, you could create this simple function in `src/api.js`:
 
 ```javascript
 export const fetchJson = (url) => fetch(url).then((res) => res.json());
