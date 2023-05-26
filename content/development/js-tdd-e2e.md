@@ -1,6 +1,6 @@
 Title: JS TDD E2E
 Date: 2020-11-22 15:30
-Modified: 2021-04-10 20:30
+Modified: 2023-05-26 10:30
 Tags: javascript, tdd, xp
 Authors: Jonathan Sharpe
 Summary: Test-driven JavaScript development done right - part 2
@@ -1034,7 +1034,7 @@ Here are some additional exercises you can run through:
 
 I'd recommend creating a new git branch for each one you try (e.g. use `git checkout -b <name>`) and making commits as appropriate.
 
-> **Once you're ready to move on**, check out [the next article] in this series where we'll learn about more about how to deal with sources of data outside of our control.
+> **Once you're ready to move on**, check out [the next article] in this series where we'll learn more about how to deal with sources of data outside of our control.
 
 ## Linting [Bonus]
 

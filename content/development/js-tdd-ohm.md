@@ -1,6 +1,6 @@
 Title: JS TDD Ohm
 Date: 2023-05-23 14:00
-Modified: 2023-05-25 11:45
+Modified: 2023-05-26 10:30
 Tags: javascript, tdd, xp
 Authors: Jonathan Sharpe
 Summary: Test-driven JavaScript development done right - part 4
@@ -1054,7 +1054,7 @@ Once you're happy, make a final commit - we're done!
 
 Here are some follow-up tasks for further practice (remember to **test-drive** anything you work on):
 
-1. Predict and then check happens if you make a request where the bands aren't recognised colours (e.g. `GET /resistance?bands=fuschia&bands=goldenrod&bands=octarine`) and/or there are multiple tolerance bands. Did you predict correctly? Do you think it's the _right_ behaviour - do you consider that request to be _semantically_ or _structurally_ invalid, and does the current implementation reflect that? If you think it should behave differently, update accordingly.
+1. Predict and then check happens if you make a request where the bands aren't recognised colours (e.g. `GET /resistance?bands=fuchsia&bands=goldenrod&bands=octarine`) and/or there are multiple tolerance bands. Did you predict correctly? Do you think it's the _right_ behaviour - do you consider that request to be _semantically_ or _structurally_ invalid, and does the current implementation reflect that? If you think it should behave differently, update accordingly.
 1. Return to step 4 and try out some different orders for introducing the three-band cases - did I suggest the right route, how much difference does it make?
 1. Design and develop a different HTTP API (i.e. changing any or all of the request method, request path, use of query parameters or structure of the response body).
 1. As well as the _value_, _multiplier_ and _tolerance_ bands, resistors may have a _temperature coefficient_ band - implement support for this.
@@ -1062,6 +1062,8 @@ Here are some follow-up tasks for further practice (remember to **test-drive** a
 1. Write a CLI to expose the core functionality on the command line (access any arguments via `process.argv`; you can use Node's built-in [`parseArgs`][node parseargs], available from v16.17/v18.3, to help you out if you want to allow some non-positional arguments e.g. `node cli.js red green blue --strict`).
 1. Write a React app that consumes the HTTP API to allow a user to interactively determine the shorthand for a given set of bands - as you do so you may realise you need to change the API to support the UI, feel free to do so and read up on _consumer-driven_ API development.
 1. Try writing the tests with a different HTTP client (e.g. Axios, fetch) instead of Supertest.
+
+I'd recommend creating a new git branch for each one you try (e.g. use `git checkout -b <name>`) and making commits as appropriate.
 
 [curl]: https://en.wikipedia.org/wiki/CURL
 [electronic colour code]: https://en.wikipedia.org/wiki/Electronic_color_code
