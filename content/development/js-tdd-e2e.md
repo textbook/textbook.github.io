@@ -1,6 +1,6 @@
 Title: JS TDD E2E
 Date: 2020-11-22 15:30
-Modified: 2023-05-26 10:30
+Modified: 2023-06-27 10:30
 Tags: javascript, tdd, xp
 Authors: Jonathan Sharpe
 Summary: Test-driven JavaScript development done right - part 2
@@ -67,7 +67,7 @@ Note that I'll use the following names to refer to the different levels:
 The prerequisites here are the same as the previous article:
 
 - *nix command line: already provided on macOS and Linux; if you're using Windows try [WSL] or [Git BASH];
-- [Node] \(10+ recommended, Jest 26 [dropped support] for Node 8; run `node -v` to check) and NPM; and
+- [Node] \(16+ recommended, Jest 29 [dropped support] for Node 12; run `node -v` to check) and NPM; and
 - Familiarity with ES6 JavaScript syntax.
 
 In addition, given the domain for this post, you'll need:
@@ -83,55 +83,44 @@ Again please carefully _read everything_, and for newer developers I'd recommend
 To begin, let's create a new React app in our workspace using CRA:
 
 ```bash
-$ npx create-react-app@latest --use-npm rps-e2e
-npx: installed 92 in 12.05s
+$ npx create-react-app@latest rps-e2e
 
 Creating a new React app in path/to/rps-e2e.
 
 Installing packages. This might take a couple of minutes.
 Installing react, react-dom, and react-scripts with cra-template...
 
-...
 
-+ cra-template@1.1.0
-+ react-scripts@4.0.0
-+ react@17.0.1
-+ react-dom@17.0.1
-added 1929 packages from 748 contributors and audited 1929 packages in 142.186s
+added 1427 packages in 32s
 
-118 packages are looking for funding
+226 packages are looking for funding
   run `npm fund` for details
-
-found 0 vulnerabilities
-
 
 Initialized a git repository.
 
 Installing template dependencies using npm...
-npm WARN tsutils@3.17.1 requires a peer of typescript@>=2.8.0 || >= 3.2.0-dev || >= 3.3.0-dev || >= 3.4.0-dev || >= 3.5.0-dev || >= 3.6.0-dev || >= 3.6.0-beta || >= 3.7.0-dev || >= 3.7.0-beta but none is installed. You must install peer dependencies yourself.
 
-+ web-vitals@0.2.4
-+ @testing-library/react@11.1.2
-+ @testing-library/user-event@12.2.2
-+ @testing-library/jest-dom@5.11.6
-added 29 packages from 77 contributors and audited 1958 packages in 15.605s
+added 74 packages, and changed 1 package in 3s
 
-118 packages are looking for funding
+235 packages are looking for funding
   run `npm fund` for details
-
-found 0 vulnerabilities
-
 Removing template package using npm...
 
-npm WARN tsutils@3.17.1 requires a peer of typescript@>=2.8.0 || >= 3.2.0-dev || >= 3.3.0-dev || >= 3.4.0-dev || >= 3.5.0-dev || >= 3.6.0-dev || >= 3.6.0-beta || >= 3.7.0-dev || >= 3.7.0-beta but none is installed. You must install peer dependencies yourself.
 
-removed 1 package and audited 1957 packages in 10.859s
+removed 1 package, and audited 1501 packages in 2s
 
-118 packages are looking for funding
+235 packages are looking for funding
   run `npm fund` for details
 
-found 0 vulnerabilities
+74 vulnerabilities (69 moderate, 5 high)
 
+To address issues that do not require attention, run:
+  npm audit fix
+
+To address all issues (including breaking changes), run:
+  npm audit fix --force
+
+Run `npm audit` for details.
 
 Created git commit.
 
@@ -159,77 +148,69 @@ We suggest that you begin by typing:
 Happy hacking!
 ```
 
-There's a _lot_ of output here, so I've skipped some of it, but you should see four main stages:
+There's a _lot_ of output here, but you should see four main stages:
 
  1. Install `create-react-app` using `npx`;
  2. Install the specified template (we're using the default, `cra-template`) and the main React and `react-scripts` dependencies;
  3. Install the dependencies the template defines (mostly `@testing-library` utilities in this case); and finally
  4. Uninstall the template.
 
-This also takes care of the initial steps like creating a directory, a git repository (with `node_modules/` already ignored for us) and an NPM package. This time, before getting to the unit test level with Jest (which CRA has already set up for us), let's enter the project directory and install Cypress for our end-to-end tests:
+This also takes care of the initial steps like creating a directory, a git repository (with `node_modules/` already ignored for us) and an NPM package. This time, before getting to the unit test level with Jest (which CRA has already set up for us), let's enter the project directory and install Cypress, for our end-to-end tests, as well as the latest version of Testing Library's packages (CRA installs v13 by default) and [their Cypress utilities][Cypress Testing Library]:
 
 ```bash
 $ cd rps-e2e/
 
-$ npm install cypress
+$ npm install cypress @testing-library/{cypress,react,user-event}@latest
 
-> cypress@5.6.0 postinstall path/to/rps-e2e/node_modules/cypress
-> node index.js --exec install
+added 119 packages, removed 8 packages, changed 2 packages, and audited 1612 packages in 7s
 
-Installing Cypress (version: 5.6.0)
-
-  ✔  Downloaded Cypress
-  ✔  Unzipped Cypress
-  ✔  Finished Installation path/to/Cypress/5.6.0
-
-You can now open Cypress by running: node_modules/.bin/cypress open
-
-https://on.cypress.io/installing-cypress
-
-npm WARN tsutils@3.17.1 requires a peer of typescript@>=2.8.0 || >= 3.2.0-dev || >= 3.3.0-dev || >= 3.4.0-dev || >= 3.5.0-dev || >= 3.6.0-dev || >= 3.6.0-beta || >= 3.7.0-dev || >= 3.7.0-beta but none is installed. You must install peer dependencies yourself.
-
-+ cypress@5.6.0
-added 121 packages from 76 contributors and audited 2078 packages in 190.365s
-
-120 packages are looking for funding
+251 packages are looking for funding
   run `npm fund` for details
 
-found 0 vulnerabilities
+74 vulnerabilities (69 moderate, 5 high)
+
+To address issues that do not require attention, run:
+  npm audit fix
+
+To address all issues (including breaking changes), run:
+  npm audit fix --force
+
+Run `npm audit` for details.
 ```
 
-Cypress is slightly more complex than the other packages we've used; it downloads and installs the main application as a post-install step. This is installed globally, so if you have another package somewhere that's using Cypress you may see `Cypress <version> is installed in path/to/Cypress/<version>` instead. That's fine, the rest should still work. Note also that CRA installs everything as a regular dependency rather than a development dependency, so I didn't use `--save-dev`.
+Don't worry about the vulnerability reports (and definitely **do not** run `npm audit fix --force` without understanding exactly what it does - that can break the dependency tree entirely), more information is available on the CRA issues list [here][npm audit]. Note that CRA installs everything as a regular dependency rather than a development dependency, so I didn't use `--save-dev`.
 
 ## Create E2E suite [2/8]
 
-Now we need to set up the basic Cypress configuration. Let's follow the suggestion in that output and open up the Cypress UI.
+Now we need to set up the basic Cypress configuration. To do this, we'll open up the Cypress UI.
 
 `./node_modules/.bin/` is where NPM puts all of the _executables_ that your installed packages define. For example, if you look in that directory for this project or the previous `rps-tdd/` project, you'll see `jest` in there; that's what gets called when we `npm run test` if the script is `"test": "jest"`. Most often you'll be running these via scripts defined in your package file, but you can also run them directly if needed.
 
 In this case we only need to run `cypress open` once, so let's do it like this:
 
 ```bash
-$ ./node_modules/.bin/cypress open
-It looks like this is your first time using Cypress: 5.6.0
+$ npx cypress open
+It looks like this is your first time using Cypress: 12.16.0
 
-  ✔  Verified Cypress! path/to/Cypress/5.6.0/Cypress.app
+✔  Verified Cypress! path/to/Cypress/12.16.0/Cypress…
 
 Opening Cypress...
 
+DevTools listening on ws://127.0.0.1:50213/devtools/browser/788298a9-c866-4f0a-b212-bcf59b335b60
+Couldn't find tsconfig.json. tsconfig-paths will be skipped
 ```
 
 This should open the Cypress GUI:
 
 ![Screenshot of the Cypress GUI]({static}/images/cypress-gui.png)
 
-It will also create a `cypress.json` configuration file (initally just an empty object, you can see the configuration options [in the docs][cypress config]) and a `cypress/` directory containing, among other things, a bunch of example tests.
-
-You can take a look at the examples if you like. Once you're ready to move on, though, let's quit the UI then get rid of the examples:
+Click "E2E Testing", which will also create a `cypress.config.js` configuration file (mostly just an empty object, you can see the configuration options [in the docs][cypress config]) and a `cypress/` directory. Quit the UI then get rid of the example fixture:
 
 ```bash
-$ rm -rf ./cypress/integration/examples/ ./cypress/fixtures/example.json
+$ rm ./cypress/fixtures/example.json
 ```
 
-add a script to run those tests (note we're now using `run`, rather than `open` - you can read more about the commands [in the docs][cypress cli]) into the package file:
+Add a script to run the E2E tests (note we're now using `run`, rather than `open` - you can read more about the commands [in the docs][cypress cli]) into the package file:
     
 ```json
   "scripts": {
@@ -245,56 +226,65 @@ and run our (missing!) tests:
 
 ```bash
 $ npm run e2e
-    
-> rps-e2e@0.1.0 e2e path/to/rps-e2e
+
+> rps-e2e@0.1.0 e2e
 > cypress run
-    
+
+
+DevTools listening on ws://127.0.0.1:50454/devtools/browser/9877dd09-85f3-4703-b3f4-8849b8f72424
+Couldn't find tsconfig.json. tsconfig-paths will be skipped
 Can't run because no spec files were found.
-    
-We searched for any files inside of this folder:
-    
-path/to/rps-e2e/cypress/integration
-npm ERR! code ELIFECYCLE
-npm ERR! errno 1
-npm ERR! rps-e2e@0.1.0 e2e: `cypress run`
-npm ERR! Exit status 1
-npm ERR! 
-npm ERR! Failed at the rps-e2e@0.1.0 e2e script.
-npm ERR! This is probably not a problem with npm. There is likely additional logging output above.
-    
-npm ERR! A complete log of this run can be found in:
-npm ERR!     path/to/.npm/_logs/2020-11-16T22_23_48_697Z-debug.log
+
+We searched for specs matching this glob pattern:
+
+  > path/to/rps-e2e/cypress/e2e/**/*.cy.{js,jsx,ts,tsx}
 ```
 
 Cypress refuses to run at all if it can't find any test files, so let's create an empty test file using `touch` and re-run our now-present (but still empty) test suite:
 
 ```bash
-$ touch ./cypress/integration/e2e.test.js
+$ mkdir ./cypress/e2e/
+
+$ touch ./cypress/e2e/journey.cy.js
 
 $ npm run e2e
 
-> rps-e2e@0.1.0 e2e path/to/rps-e2e
+> rps-e2e@0.1.0 e2e
 > cypress run
 
+
+DevTools listening on ws://127.0.0.1:50484/devtools/browser/f3150f98-9a5d-4843-85bf-ad581eacc1ae
+Couldn't find tsconfig.json. tsconfig-paths will be skipped
 
 ====================================================================================================
 
   (Run Starting)
 
   ┌────────────────────────────────────────────────────────────────────────────────────────────────┐
-  │ Cypress:    5.6.0                                                                              │
-  │ Browser:    Electron 85 (headless)                                                             │
-  │ Specs:      1 found (e2e.test.js)                                                              │
+  │ Cypress:        12.16.0                                                                        │
+  │ Browser:        Electron 106 (headless)                                                        │
+  │ Node Version:   v16.20.0 (path/to/node).                                                       │
+  │ Specs:          1 found (journey.cy.js)                                                        │
+  │ Searched:       cypress/e2e/**/*.cy.{js,jsx,ts,tsx}                                            │
   └────────────────────────────────────────────────────────────────────────────────────────────────┘
 
 
 ────────────────────────────────────────────────────────────────────────────────────────────────────
                                                                                                     
-  Running:  e2e.test.js                                                                     (1 of 1)
+  Running:  journey.cy.js                                                                   (1 of 1)
 
 
-  0 passing (4ms)
+  0 passing (1ms)
 
+Warning: We failed capturing this video.
+
+This error will not affect or change the exit code.
+
+TimeoutError: operation timed out
+    at afterTimeout (path/to/Cypress/12.16.0/Cypress.app/Contents/Resources/app/node_modules/bluebird/js/release/timers.js:46:19)
+    at Timeout.timeoutTimeout [as _onTimeout] (path/to/Cypress/12.16.0/Cypress.app/Contents/Resources/app/node_modules/bluebird/js/release/timers.js:76:13)
+    at listOnTimeout (node:internal/timers:559:17)
+    at process.processTimers (node:internal/timers:502:7)
 
   (Results)
 
@@ -305,16 +295,10 @@ $ npm run e2e
   │ Pending:      0                                                                                │
   │ Skipped:      0                                                                                │
   │ Screenshots:  0                                                                                │
-  │ Video:        true                                                                             │
+  │ Video:        false                                                                            │
   │ Duration:     0 seconds                                                                        │
-  │ Spec Ran:     e2e.test.js                                                                      │
+  │ Spec Ran:     journey.cy.js                                                                    │
   └────────────────────────────────────────────────────────────────────────────────────────────────┘
-
-
-  (Video)
-
-  -  Started processing:  Compressing to 32 CRF                                                     
-  -  Finished processing: path/to/rps-e2e/cypress/videos/e2e.test.js.mp4                 (0 seconds)                 
 
 
 ====================================================================================================
@@ -324,15 +308,17 @@ $ npm run e2e
 
        Spec                                              Tests  Passing  Failing  Pending  Skipped  
   ┌────────────────────────────────────────────────────────────────────────────────────────────────┐
-  │ ✔  e2e.test.js                                1ms        -        -        -        -        - │
+  │ ✔  journey.cy.js                              0ms        -        -        -        -        - │
   └────────────────────────────────────────────────────────────────────────────────────────────────┘
-    ✔  All specs passed!                          1ms        -        -        -        -        -  
+    ✔  All specs passed!                          0ms        -        -        -        -        -  
+
 ```
 
-Unlike Jest, Cypress doesn't mind if there aren't any tests in the files and considers that a successful run. Note it also created a video of the run; Cypress can create both videos and screenshots to help with debugging tests. We don't want to track all of these in git, though, so add the following to `.gitignore`.
+Unlike Jest, Cypress doesn't mind if there aren't any tests in the files and considers that a successful run. Note it also tried to create a video of the run; Cypress can create both videos and screenshots to help with debugging tests, as well as storing any files downloaded as part of a test. We don't want to track all of these in git, though, so add the following to `.gitignore`.
 
 ```ignore
 # cypress
+cypress/downloads/
 cypress/screenshots/
 cypress/videos/
 ```
@@ -343,58 +329,46 @@ Before we write our first test, let's make a commit:
 $ git add .
 
 $ git status
-On branch master
+On branch main
 Changes to be committed:
   (use "git restore --staged <file>..." to unstage)
-	modified:   .gitignore
-	new file:   cypress.json
-	new file:   cypress/integration/e2e.test.js
-	new file:   cypress/plugins/index.js
-	new file:   cypress/support/commands.js
-	new file:   cypress/support/index.js
-	modified:   package-lock.json
-	modified:   package.json
+        modified:   .gitignore
+        new file:   cypress.config.js
+        new file:   cypress/e2e/journey.cy.js
+        new file:   cypress/support/commands.js
+        new file:   cypress/support/e2e.js
+        modified:   package-lock.json
+        modified:   package.json
 
-$ git commit -m 'Install and configure Cypress'
-[master 9ced9b4] Install and configure Cypress
- 8 files changed, 1023 insertions(+)
- create mode 100644 cypress.json
- create mode 100644 cypress/integration/e2e.test.js
- create mode 100644 cypress/plugins/index.js
+$ git commit --message 'Install and configure Cypress'
+[main 7da2ace] Install and configure Cypress
+ 7 files changed, 2401 insertions(+), 252 deletions(-)
+ create mode 100644 cypress.config.js
+ create mode 100644 cypress/e2e/journey.cy.js
  create mode 100644 cypress/support/commands.js
- create mode 100644 cypress/support/index.js
+ create mode 100644 cypress/support/e2e.js
 ```
 
 ## Writing the E2E test [3/8]
 
-For consistency with the unit tests, which use Testing Library by default in CRA, let's install [their Cypress utilities][Cypress Testing Library] via NPM:
-
-```bash
-$ npm install @testing-library/cypress
-npm WARN tsutils@3.17.1 requires a peer of typescript@>=2.8.0 || >= 3.2.0-dev || >= 3.3.0-dev || >= 3.4.0-dev || >= 3.5.0-dev || >= 3.6.0-dev || >= 3.6.0-beta || >= 3.7.0-dev || >= 3.7.0-beta but none is installed. You must install peer dependencies yourself.
-
-+ @testing-library/cypress@7.0.1
-added 1 package from 1 contributor and audited 2079 packages in 16.615s
-
-120 packages are looking for funding
-  run `npm fund` for details
-
-found 0 vulnerabilities
-```
-
-and load it for the tests by adding the following import to `cypress/support/commands.js`:
+Let's load Cypress Testing Library for the tests by adding the following import to `cypress/support/commands.js`:
 
 ```javascript
 import '@testing-library/cypress/add-commands';
 ```
 
-Now we want to actually visit our page. The best practice, [per the docs][cypress base url], is to configure a global base URL and navigate relative to that, so let's add the default CRA URL (along with disabling the video recordings, to simplify the outputs) to `cypress.json`:
+Now we want to actually visit our page. The best practice, [per the docs][cypress base url], is to configure a global base URL and navigate relative to that, so let's add the default CRA URL (along with disabling the video recordings, to simplify the outputs) to `cypress.config.js`:
 
-```json
-{
-  "baseUrl": "http://localhost:3000",
-  "video": false
-}
+```diff
+ module.exports = defineConfig({
+   e2e: {
++    baseUrl: "http://localhost:3000",
+     setupNodeEvents(on, config) {
+       // implement node event listeners here
+     },
++    video: false,
+   },
+ });
 ```
 
 Just like with Jest, Cypress provides an `it` function for registering a test, again taking the name of the test as a string and the body of the test as a function:
@@ -443,14 +417,17 @@ Just like with Jest, call the shot then run the tests:
 ```bash
 $ npm run e2e
 
-> rps-e2e@0.1.0 e2e path/to/rps-e2e
+> rps-e2e@0.1.0 e2e
 > cypress run
 
+
+DevTools listening on ws://127.0.0.1:50699/devtools/browser/0ed01742-886c-4a1b-9abe-eccf1e79372e
+Couldn't find tsconfig.json. tsconfig-paths will be skipped
 Cypress could not verify that this server is running:
 
   > http://localhost:3000
 
-We are verifying this server because it has been configured as your `baseUrl`.
+We are verifying this server because it has been configured as your baseUrl.
 
 Cypress automatically waits until your server is accessible before running tests.
 
@@ -461,58 +438,176 @@ We will try connecting to it 1 more time...
 Cypress failed to verify that your server is running.
 
 Please start this server and then run Cypress again.
-npm ERR! code ELIFECYCLE
-npm ERR! errno 1
-npm ERR! rps-e2e@0.1.0 e2e: `cypress run`
-npm ERR! Exit status 1
-npm ERR! 
-npm ERR! Failed at the rps-e2e@0.1.0 e2e script.
-npm ERR! This is probably not a problem with npm. There is likely additional logging output above.
-
-npm ERR! A complete log of this run can be found in:
-npm ERR!     path/to/.npm/_logs/2020-11-03T21_01_26_636Z-debug.log
 ```
 
-Cypress is unhappy because we're _not actually running the app_, so it can't find the specified base URL. As a simple fix, open an extra command line, navigate to the working directory and run `npm start`. Once the default CRA home screen shows up in your browser, call the shot then run the E2E tests again in your first command line:
+Cypress is unhappy because we're _not actually running the app_, so it can't find the specified base URL. As a simple fix, open an extra command line, navigate to the working directory and run `npm start`. For more information on CRA's future, see [this issue][cra future].
+
+**Note**: at this point you may see an error like:
+
+```
+One of your dependencies, babel-preset-react-app, is importing the
+"@babel/plugin-proposal-private-property-in-object" package without
+declaring it in its dependencies. This is currently working because
+"@babel/plugin-proposal-private-property-in-object" is already in your
+node_modules folder for unrelated reasons, but it may break at any time.
+
+babel-preset-react-app is part of the create-react-app project, which
+is not maintianed anymore. It is thus unlikely that this bug will
+ever be fixed. Add "@babel/plugin-proposal-private-property-in-object" to
+your devDependencies to work around this error. This will make this message
+go away.
+```
+
+if you do, just `npm install @babel/plugin-proposal-private-property-in-object` and continue.
+
+Once the default CRA home screen shows up in your browser, call the shot then run the E2E tests again in your first command line:
 
 ```bash
 $ npm run e2e
 
-> rps-e2e@0.1.0 e2e path/to/rps-e2e
+> rps-e2e@0.1.0 e2e
 > cypress run
 
 
-==========================================================================================
+DevTools listening on ws://127.0.0.1:50726/devtools/browser/7ea7c9ee-025d-4b38-b5b6-74bdd9b08adf
+Couldn't find tsconfig.json. tsconfig-paths will be skipped
+
+====================================================================================
 
   (Run Starting)
 
   ┌────────────────────────────────────────────────────────────────────────────────────────────────┐
-  │ Cypress:    5.6.0                                                                              │
-  │ Browser:    Electron 85 (headless)                                                             │
-  │ Specs:      1 found (e2e.test.js)                                                              │
+  │ Cypress:        12.16.0                                                                        │
+  │ Browser:        Electron 106 (headless)                                                        │
+  │ Node Version:   v16.20.0 (path/to/node).                                                       │
+  │ Specs:          1 found (journey.cy.js)                                                        │
+  │ Searched:       cypress/e2e/**/*.cy.{js,jsx,ts,tsx}                                            │
   └────────────────────────────────────────────────────────────────────────────────────────────────┘
 
 
 ────────────────────────────────────────────────────────────────────────────────────────────────────
-
-  Running:  e2e.test.js                                                                     (1 of 1)
+                                                                                                    
+  Running:  journey.cy.js                                                                   (1 of 1)
 
 
   1) should say left wins for rock vs. scissors
 
-  0 passing (6s)
+  0 passing (4s)
   1 failing
 
   1) should say left wins for rock vs. scissors:
-     TestingLibraryElementError: Timed out retrying: Unable to find a label with the text of: Left
-      at Object.getElementError (http://localhost:3000/__cypress/tests?p=cypress/support/index.js:1690:17)
-      at getAllByLabelText (http://localhost:3000/__cypress/tests?p=cypress/support/index.js:2820:25)
-      at eval (http://localhost:3000/__cypress/tests?p=cypress/support/index.js:2564:24)
-      at eval (http://localhost:3000/__cypress/tests?p=cypress/support/index.js:2615:25)
-      at baseCommandImpl (http://localhost:3000/__cypress/tests?p=cypress/support/index.js:1148:16)
-      at commandImpl (http://localhost:3000/__cypress/tests?p=cypress/support/index.js:1151:40)
-      at getValue (http://localhost:3000/__cypress/tests?p=cypress/support/index.js:1175:23)
-      at resolveValue (http://localhost:3000/__cypress/tests?p=cypress/support/index.js:1215:35)
+     AssertionError: Timed out retrying after 4000ms: Unable to find a label with the text of: Left
+
+Ignored nodes: comments, script, style
+<html
+  lang="en"
+>
+  <head>
+     
+    
+    
+    <meta
+      charset="utf-8"
+    />
+    
+    
+    <link
+      href="/favicon.ico"
+      rel="icon"
+    />
+    
+    
+    <meta
+      content="width=device-width, initial-scale=1"
+      name="viewport"
+    />
+    
+    
+    <meta
+      content="#000000"
+      name="theme-color"
+    />
+    
+    
+    <meta
+      content="Web site created using create-react-app"
+      name="description"
+    />
+    
+    
+    <link
+      href="/logo192.png"
+      rel="apple-touch-icon"
+    />
+    
+    
+    
+    
+    <link
+      href="/manifest.json"
+      rel="manifest"
+    />
+    
+    
+    
+    
+    <title>
+      React App
+    </title>
+    
+  
+  </head>
+  
+  
+  <body>
+    
+    
+    <noscript>
+      You need to enable JavaScript to run this app.
+    </noscript>
+    
+    
+    <div
+      id="root"
+    >
+      <div
+        class="App"
+      >
+        <header
+          class="App-header"
+        >
+          <img
+            alt="logo"
+            class="App-logo"
+            src="/static/media/logo.6ce24c58023cc2f8fd88fe9d219db6c6.svg"
+          />
+          <p>
+            Edit 
+            <code>
+              src/App.js
+            </code>
+             and save to reload.
+          </p>
+          <a
+            class="App-link"
+            href="https://reactjs.org"
+            rel="noopener noreferrer"
+            target="_blank"
+          >
+            Learn React
+          </a>
+        </header>
+      </div>
+    </div>
+    
+    
+    
+  
+
+
+  </body>
+</html>...
+      at Context.eval (webpack:///./cypress/e2e/journey.cy.js:6:5)
 
 
 
@@ -527,37 +622,28 @@ $ npm run e2e
   │ Skipped:      0                                                                                │
   │ Screenshots:  1                                                                                │
   │ Video:        false                                                                            │
-  │ Duration:     5 seconds                                                                        │
-  │ Spec Ran:     e2e.test.js                                                                      │
+  │ Duration:     4 seconds                                                                        │
+  │ Spec Ran:     journey.cy.js                                                                    │
   └────────────────────────────────────────────────────────────────────────────────────────────────┘
 
 
   (Screenshots)
 
-  -  path/to/rps-e2e/cypress/screenshots/e2e.test.js/should say left wins for rock vs     (1280x720)
-     . scissors (failed).png
+  -  path/to/rps-e2e/cypress/screenshots/journey.cy.js/should say left wins for rock      (1280x720)
+     vs. scissors (failed).png                                     
 
-==========================================================================================
+
+====================================================================================
 
   (Run Finished)
 
 
-       Spec                                              Tests  Passing  Failing  Pending  Skipped
+       Spec                                              Tests  Passing  Failing  Pending  Skipped  
   ┌────────────────────────────────────────────────────────────────────────────────────────────────┐
-  │ ✖  e2e.test.js                              00:05        1        -        1        -        - │
+  │ ✖  journey.cy.js                            00:04        1        -        1        -        - │
   └────────────────────────────────────────────────────────────────────────────────────────────────┘
-    ✖  1 of 1 failed (100%)                     00:05        1        -        1        -        -
+    ✖  1 of 1 failed (100%)                     00:04        1        -        1        -        -  
 
-npm ERR! code ELIFECYCLE
-npm ERR! errno 1
-npm ERR! rps-e2e@0.1.0 e2e: `cypress run`
-npm ERR! Exit status 1
-npm ERR!
-npm ERR! Failed at the rps-e2e@0.1.0 e2e script.
-npm ERR! This is probably not a problem with npm. There is likely additional logging output above.
-
-npm ERR! A complete log of this run can be found in:
-npm ERR!     path/to/.npm/_logs/2020-11-16T23_01_32_468Z-debug.log
 ```
 OK, we've moved on a step - the test is now failing because it can't find the element on the page. So far we haven't actually added anything to the page, so that makes sense, it's just showing the default CRA info (you can see this in the screenshot Cypress took, check it out!)
 
@@ -565,21 +651,19 @@ This is going to be our guiding star for the rest of the exercise, so let's make
 
 ```bash
 $ git add .
-
 $ git status
-On branch master
+On branch main
 Changes to be committed:
   (use "git restore --staged <file>..." to unstage)
-	modified:   cypress.json
-	modified:   cypress/integration/e2e.test.js
-	modified:   cypress/support/commands.js
-	modified:   package-lock.json
-	modified:   package.json
+        modified:   cypress.config.js
+        modified:   cypress/e2e/journey.cy.js
+        modified:   cypress/support/commands.js
+        modified:   package-lock.json
+        modified:   package.json
 
-
-$ git commit -m 'Implement E2E test'
-[master d08217b] Implement E2E test
- 5 files changed, 27 insertions(+), 1 deletion(-)
+$ git commit --message 'Implement E2E test'
+[main ee33a63] Implement E2E test
+ 5 files changed, 53 insertions(+), 8 deletions(-)
 ```
 
 ## Moving to the integration level [4/8]
@@ -587,51 +671,54 @@ $ git commit -m 'Implement E2E test'
 We're working our way from the outside in, and we have a failing E2E test, so let's write an _integration_ test in Jest. Replace the content of `./src/App.test.js` with the following:
 
 ```jsx
-import { render } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
 import App from "./App";
 
 describe("App component", () => {
-  it("displays right wins when appropriate", () => {
+  it("displays right wins when appropriate", async () => {
     // Arrange
-    const { getByLabelText, getByTestId, getByText } = render(<App />);
+    const user = userEvent.setup();
+    render(<App />);
 
     // Act
-    userEvent.selectOptions(getByLabelText("Left"), "paper");
-    userEvent.selectOptions(getByLabelText("Right"), "scissors");
-    userEvent.click(getByText("Throw"));
+    await user.selectOptions(screen.getByLabelText("Left"), "paper");
+    await user.selectOptions(screen.getByLabelText("Right"), "scissors");
+    await user.click(screen.getByText("Throw"));
 
     // Assert
-    expect(getByTestId("outcome")).toHaveTextContent("Right wins!");
+    expect(screen.getByTestId("outcome")).toHaveTextContent("Right wins!");
   });
 });
 ```
 
 The way we express the steps might be slightly different, but note that the _logic_ is exactly the same as we tested at the end-to-end level:
 
-- `const { getByLabelText, getByTestId, getByText } = render(<App />);` - render the `App` component, equivalent to visiting the page, and _destructure_ the methods we need from the returned object;
-- `userEvent.selectOptions(getByLabelText("Left"), "paper");` - find a control with the label "Left" and select the "rock" option;
-- `userEvent.selectOptions(getByLabelText("Right"), "scissors");` - find a control with the label "Right" and select the "scissors" option;
-- `userEvent.click(getByText("Throw"));` - find a button that says "Throw" and click it; and
-- `expect(getByTestId("outcome")).toHaveTextContent("Right wins!");` - check that the outcome being being displayed contains the expected text `Left wins!`.
+- `const user = userEvent.setup();` - start a user event session in the document to be tested;
+- `render(<App />);` - render the `App` component, equivalent to visiting the page;
+- `await user.selectOptions(screen.getByLabelText("Left"), "paper");` - find a control with the label "Left" and select the "paper" option;
+- `await user.selectOptions(screen.getByLabelText("Right"), "scissors");` - find a control with the label "Right" and select the "scissors" option;
+- `await user.click(screen.getByText("Throw"));` - find a button that says "Throw" and click it; and
+- `expect(screen.getByTestId("outcome")).toHaveTextContent("Right wins!");` - check that the outcome being being displayed contains the expected text `Right wins!`.
 
-Call the shot and run the test (note I'm using the environment variable `CI=true` to run the tests once and exit; you can use the default `npm test` to enter watch mode if you'd prefer):
+Call the shot and run the test (note I'm using the environment variable `CI=true` to run the tests once and exit; you can use the default `npm test` to enter watch mode if you'd prefer, or `npm test -- --watchAll false` as an alternative to setting `CI`):
 
 ```
 $ CI=true npm test
 
-> rps-e2e@0.1.0 test path/to/rps-e2e
+> rps-e2e@0.1.0 test
 > react-scripts test
 
 FAIL src/App.test.js
   App component
-    ✕ displays right wins when appropriate (54 ms)
+    ✕ displays right wins when appropriate (18 ms)
 
   ● App component › displays right wins when appropriate
 
     TestingLibraryElementError: Unable to find a label with the text of: Left
 
+    Ignored nodes: comments, script, style
     <body>
       <div>
         <div
@@ -646,7 +733,7 @@ FAIL src/App.test.js
               src="logo.svg"
             />
             <p>
-              Edit
+              Edit 
               <code>
                 src/App.js
               </code>
@@ -665,31 +752,34 @@ FAIL src/App.test.js
       </div>
     </body>
 
-      10 |
-      11 |     // Act
-    > 12 |     userEvent.selectOptions(getByLabelText("Left"), "paper");
-         |                             ^
-      13 |     userEvent.selectOptions(getByLabelText("Right"), "scissors");
-      14 |     userEvent.click(getByText("Throw"));
-      15 |
+      11 |
+      12 |     // Act
+    > 13 |     await user.selectOptions(screen.getByLabelText("Left"), "paper");
+         |                                     ^
+      14 |     await user.selectOptions(screen.getByLabelText("Right"), "scissors");
+      15 |     await user.click(screen.getByText("Throw"));
+      16 |
 
       at Object.getElementError (node_modules/@testing-library/dom/dist/config.js:37:19)
-      at getAllByLabelText (node_modules/@testing-library/dom/dist/queries/label-text.js:115:38)
-      at node_modules/@testing-library/dom/dist/query-helpers.js:62:17
-      at getByLabelText (node_modules/@testing-library/dom/dist/query-helpers.js:106:19)
-      at Object.<anonymous> (src/App.test.js:12:29)
+      at getAllByLabelText (node_modules/@testing-library/dom/dist/queries/label-text.js:111:38)
+      at node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+      at getByLabelText (node_modules/@testing-library/dom/dist/query-helpers.js:95:19)
+      at Object.<anonymous> (src/App.test.js:13:37)
+      at TestScheduler.scheduleTests (node_modules/@jest/core/build/TestScheduler.js:333:13)
+      at runJest (node_modules/@jest/core/build/runJest.js:404:19)
+      at _run10000 (node_modules/@jest/core/build/cli/index.js:320:7)
+      at runCLI (node_modules/@jest/core/build/cli/index.js:173:3)
 
 Test Suites: 1 failed, 1 total
 Tests:       1 failed, 1 total
 Snapshots:   0 total
-Time:        1.91 s, estimated 4 s
+Time:        0.709 s, estimated 1 s
 Ran all test suites.
-npm ERR! Test failed.  See above for more details.
 ```
 
 Compare the error messages; they're failing on the same problem:
 
-- **E2E**: `TestingLibraryElementError: Timed out retrying: Unable to find a label with the text of: Left`
+- **E2E**: `AssertionError: Timed out retrying after 4000ms: Unable to find a label with the text of: Left `
 - **Integration**: `TestingLibraryElementError: Unable to find a label with the text of: Left`
 
 Instead of a screenshot we get the rendered HTML, but it shows a similar thing - the default CRA content is still being shown. You should also see that running this test was **much faster** than starting up the app and running Cypress. Lower level tests tend to:
@@ -701,17 +791,15 @@ Let's save this new state:
 
 ```bash
 $ git add .
-
 $ git status
-On branch master
+On branch main
 Changes to be committed:
   (use "git restore --staged <file>..." to unstage)
-	modified:   src/App.test.js
+        modified:   src/App.test.js
 
-$ git commit -m 'Implement integration test'
-[master 8a6217f] Implement integration test
- 1 file changed, 19 insertions(+), 8 deletions(-)
- rewrite src/App.test.js (89%)
+$ git commit --message 'Implement integration test'
+[main 1585130] Implement integration test
+ 1 file changed, 18 insertions(+), 6 deletions(-)
 ```
 
 Before we move in one last level, to the unit tests, let's think about how our app might be structured. Again note that we can have this discussion before actually writing anything, because the need to identify our test boundaries is driving us to think about the architecture. We have two main concerns here:
@@ -759,17 +847,15 @@ All of the same tests should pass happily in the new context. Once all of the se
 
 ```bash
 $ git add .
-
 $ git status
-On branch master
+On branch main
 Changes to be committed:
   (use "git restore --staged <file>..." to unstage)
-	new file:   src/rpsService.js
-	new file:   src/rpsService.test.js
+        new file:   src/rpsService.js
+        new file:   src/rpsService.test.js
 
-
-$ git commit -m 'Migrate tested service logic'
-[master b03135e] Migrate tested service logic
+$ git commit --message 'Migrate tested service logic'
+[main 732e441] Migrate tested service logic
  2 files changed, 75 insertions(+)
  create mode 100644 src/rpsService.js
  create mode 100644 src/rpsService.test.js
@@ -780,14 +866,14 @@ $ git commit -m 'Migrate tested service logic'
 The `Outcome` component is going to be very simple, as it only has to display the text we want given a result, so let's start with that. Add the following to `./src/Outcome.test.js`:
 
 ```jsx
-import { render } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 
 import Outcome from "./Outcome";
 
 describe("App component", () => {
   it("displays 'Right wins!' when right wins", () => {
-    const { getByTestId } = render(<Outcome result="right" />);
-    expect(getByTestId("outcome")).toHaveTextContent("Right wins!");
+    render(<Outcome result="right" />);
+    expect(screen.getByTestId("outcome")).toHaveTextContent("Right wins!");
   });
 });
 ```
@@ -799,14 +885,12 @@ Call the shot and run the test. Initially it will fail because Jest `Cannot find
 At this point, you should have something like:
 
 ```jsx
-function Outcome() {
+export default function Outcome() {
   return <div data-testid="outcome">Right wins!</div>;
 }
-
-export default Outcome;
 ```
 
-If you have any logic in your component, go back! It's too complicated, remember to write the simplest code that passes the tests and let additional test cases force you to add complexity.
+If you have any logic in your component, go back! It's too complicated; remember to write the simplest code that passes the tests and let additional test cases force you to add complexity.
 
 Make a commit to save your progress, with a message like _"Implement Outcome for right winning"_. Now repeat the process for each of the following tests, one at a time: add the test case; call the shot; get it passing; refactor as desired; make a commit with a sensible message.
 
@@ -814,22 +898,22 @@ Make a commit to save your progress, with a message like _"Implement Outcome for
 
         :::jsx
         it("displays 'Left wins!' when left wins", () => {
-          const { getByTestId } = render(<Outcome result="left" />);
-          expect(getByTestId("outcome")).toHaveTextContent("Left wins!");
+          render(<Outcome result="left" />);
+          expect(screen.getByTestId("outcome")).toHaveTextContent("Left wins!");
         });
 
  2. Draw:
         
         :::jsx
         it("displays 'Draw!' when there's a draw", () => {
-          const { getByTestId } = render(<Outcome result="draw" />);
-          expect(getByTestId("outcome")).toHaveTextContent("Draw!");
+          render(<Outcome result="draw" />);
+          expect(screen.getByTestId("outcome")).toHaveTextContent("Draw!");
         });
 
 Once all three tests are passing, we can move on to the next component. Add the following to `./src/Form.test.js`:
 
 ```jsx
-import { render } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
 import Form from "./Form";
@@ -839,15 +923,17 @@ describe("Form component", () => {
     const left = "scissors";
     const right = "paper";
     const onSubmit = jest.fn();
-    const { getByLabelText, getByText } = render(<Form onSubmit={onSubmit} />);
+    const user = userEvent.setup();
+    render(<Form onSubmit={onSubmit} />);
     
-    userEvent.selectOptions(getByLabelText("Left"), left);
-    userEvent.selectOptions(getByLabelText("Right"), right);
-    userEvent.click(getByText("Throw"));
+    await user.selectOptions(screen.getByLabelText("Left"), left);
+    await user.selectOptions(screen.getByLabelText("Right"), right);
+    await user.click(screen.getByText("Throw"));
 
     expect(onSubmit).toHaveBeenCalledWith([left, right]);
   });
 });
+Form.
 ```
 
 This looks quite a lot like the end-to-end and integration tests, but with a more limited scope - we only care that the user input is taken correctly, not that the appropriate winner is determined. This is part of the process of _decomposing_ the problem into smaller (and easier-to-solve) pieces, which is the reason I think starting with the end-to-end tests makes sense.
@@ -930,29 +1016,34 @@ All of the unit tests should now be passing, so call the final shot and run the 
 ```bash
 $ npm run e2e
 
-> rps-e2e@0.1.0 e2e path/to/rps-e2e
+> rps-e2e@0.1.0 e2e
 > cypress run
 
 
-==========================================================================================
+DevTools listening on ws://127.0.0.1:54317/devtools/browser/fb0390d2-e65c-4fa8-bf24-27d80cf3928e
+Couldn't find tsconfig.json. tsconfig-paths will be skipped
+
+====================================================================================
 
   (Run Starting)
 
   ┌────────────────────────────────────────────────────────────────────────────────────────────────┐
-  │ Cypress:    5.6.0                                                                              │
-  │ Browser:    Electron 85 (headless)                                                             │
-  │ Specs:      1 found (e2e.test.js)                                                              │
+  │ Cypress:        12.16.0                                                                        │
+  │ Browser:        Electron 106 (headless)                                                        │
+  │ Node Version:   v16.20.0 (path/to/node).                                                       │
+  │ Specs:          1 found (journey.cy.js)                                                        │
+  │ Searched:       cypress/e2e/**/*.cy.{js,jsx,ts,tsx}                                            │
   └────────────────────────────────────────────────────────────────────────────────────────────────┘
 
 
 ────────────────────────────────────────────────────────────────────────────────────────────────────
+                                                                                                    
+  Running:  journey.cy.js                                                                   (1 of 1)
 
-  Running:  e2e.test.js                                                                     (1 of 1)
 
+  ✓ should say left wins for rock vs. scissors (602ms)
 
-  ✓ should say left wins for rock vs. scissors (1116ms)
-
-  1 passing (1s)
+  1 passing (618ms)
 
 
   (Results)
@@ -965,22 +1056,21 @@ $ npm run e2e
   │ Skipped:      0                                                                                │
   │ Screenshots:  0                                                                                │
   │ Video:        false                                                                            │
-  │ Duration:     1 second                                                                         │
-  │ Spec Ran:     e2e.test.js                                                                      │
+  │ Duration:     0 seconds                                                                        │
+  │ Spec Ran:     journey.cy.js                                                                    │
   └────────────────────────────────────────────────────────────────────────────────────────────────┘
-{
 
 
-==========================================================================================
+====================================================================================
 
   (Run Finished)
 
 
-       Spec                                              Tests  Passing  Failing  Pending  Skipped
+       Spec                                              Tests  Passing  Failing  Pending  Skipped  
   ┌────────────────────────────────────────────────────────────────────────────────────────────────┐
-  │ ✔  e2e.test.js                              00:01        1        1        -        -        - │
+  │ ✔  journey.cy.js                            616ms        1        1        -        -        - │
   └────────────────────────────────────────────────────────────────────────────────────────────────┘
-    ✔  All specs passed!                        00:01        1        1        -        -        -
+    ✔  All specs passed!                        616ms        1        1        -        -        -  
 
 ```
 
@@ -1085,15 +1175,21 @@ To fix this, we can add an ESLint plugin that knows about the Cypress globals:
 
 ```bash
 $ npm install eslint-plugin-cypress
-npm WARN tsutils@3.17.1 requires a peer of typescript@>=2.8.0 || >= 3.2.0-dev || >= 3.3.0-dev || >= 3.4.0-dev || >= 3.5.0-dev || >= 3.6.0-dev || >= 3.6.0-beta || >= 3.7.0-dev || >= 3.7.0-beta but none is installed. You must install peer dependencies yourself.
 
-+ eslint-plugin-cypress@2.11.2
-added 1 package from 1 contributor and audited 2080 packages in 15.918s
+added 1 package, and audited 1621 packages in 4s
 
-120 packages are looking for funding
+251 packages are looking for funding
   run `npm fund` for details
 
-found 0 vulnerabilities
+74 vulnerabilities (69 moderate, 5 high)
+
+To address issues that do not require attention, run:
+  npm audit fix
+
+To address all issues (including breaking changes), run:
+  npm audit fix --force
+
+Run `npm audit` for details.
 ```
 
 We could just add this plugin at the top level, but it's better to be specific - `cy` will only be in scope for the files in the `cypress/` directory, so we can set an ESLint _override_ for those files in `package.json`:
@@ -1119,8 +1215,9 @@ We could just add this plugin at the top level, but it's better to be specific -
 
 Now `npm run lint` should be fine.
 
-  [controlled components]: https://reactjs.org/docs/forms.html#controlled-components
+  [controlled components]: https://react.dev/reference/react-dom/components/input#controlling-an-input-with-a-state-variable
   [cra]: https://create-react-app.dev/docs/getting-started
+  [cra future]: https://github.com/reactjs/react.dev/pull/5487#issuecomment-1409720741
   [Cypress]: https://cypress.io
   [cypress assertions]: https://docs.cypress.io/guides/references/assertions.html
   [cypress base url]: https://docs.cypress.io/guides/references/best-practices.html#Setting-a-global-baseUrl
@@ -1128,10 +1225,11 @@ Now `npm run lint` should be fine.
   [cypress config]: https://docs.cypress.io/guides/references/configuration.html
   [cypress selectors]: https://docs.cypress.io/guides/references/best-practices.html#Selecting-Elements
   [Cypress Testing Library]: https://testing-library.com/docs/cypress-testing-library/intro/
-  [dropped support]: https://jestjs.io/blog/2020/05/05/jest-26#other-breaking-changes-in-jest-26
+  [dropped support]: https://jestjs.io/docs/upgrading-to-jest29#compatibility
   [Git BASH]: https://gitforwindows.org/
   [github]: https://github.com/textbook/rps-e2e
   [Jest]: https://jestjs.io/
+  [npm audit]: https://github.com/facebook/create-react-app/issues/11174
   [Node]: https://nodejs.org/
   [Testing Library]: https://testing-library.com
   [test double]: https://tanzu.vmware.com/content/pivotal-engineering-journal/the-test-double-rule-of-thumb-2
