@@ -1,6 +1,6 @@
 Title: JS TDD FTW
 Date: 2020-08-31 16:00
-Modified: 2020-11-22 15:30
+Modified: 2023-07-19 11:30
 Tags: javascript, tdd, xp
 Authors: Jonathan Sharpe
 Summary: Test-driven JavaScript development done right - part 1
@@ -856,6 +856,12 @@ Practice makes perfect! Here are some additional exercises you can run through:
 
     This will set up Jest to watch your files and re-run the tests if anything changes. Arrange your screen so you can see these outputs while you're writing your code, and leave it running the whole time (if this means you can't make commits, don't worry about it). What impact does that immediate and continuous feedback have on your experience of working on the code?
 
+ 6. Run through the exercise with a different test framework, e.g.:
+
+    - [Mocha] with [Chai] assertions (note it's `expect(foo).to.equal(bar)` rather than `expect(foo).toBe(bar)`); or
+
+    - Node's built-in [test runner][node-test] and [assertions][node-assert] (note it's `assert.equal(foo, bar)` rather than `expect(foo).toBe(bar)`).
+
 > **Once you're ready to move on**, check out [the next article] in this series where we'll use _end-to-end_ and _integration_ testing to build out a React UI for this RPS logic.
 
 ## Installation explained [Bonus]
@@ -906,6 +912,7 @@ NPM checks whether there are any known vulnerabilities in the packages in your `
   [additional weapons]: https://en.wikipedia.org/wiki/Rock_paper_scissors#Additional_weapons
   [audit]: https://docs.npmjs.com/cli-commands/audit.html
   [call the shot]: https://markhneedham.com/blog/2010/07/28/tdd-call-your-shots/
+  [chai]: https://www.chaijs.com/
   [each]: https://jestjs.io/docs/en/api#testeachtablename-fn-timeout
   [dropped support]: https://jestjs.io/blog/2020/05/05/jest-26#other-breaking-changes-in-jest-26
   [fund]: https://docs.npmjs.com/cli-commands/fund.html
@@ -916,6 +923,8 @@ NPM checks whether there are any known vulnerabilities in the packages in your `
   [matcher methods]: https://jestjs.io/docs/en/expect
   [Mocha]: https://mochajs.org/
   [Node]: https://nodejs.org/
+  [node-assert]: https://nodejs.org/api/assert.html
+  [node-test]: https://nodejs.org/api/test.html
   [OCP]: https://en.wikipedia.org/wiki/Open%E2%80%93closed_principle
   [RFC 0017]: https://github.com/npm/rfcs/blob/2d2f00457ab19b3003eb6ac5ab3d250259fd5a81/accepted/0017-add-funding-support.md
   [Rock Paper Scissors]: https://en.wikipedia.org/wiki/Rock_paper_scissors
