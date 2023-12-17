@@ -1,11 +1,13 @@
 Title: JS TDD Vite
 Date: 2023-12-17 11:30
+Modified: 2023-12-17 12:10
+
 Tags: javascript, tdd, xp
 Authors: Jonathan Sharpe
 Summary: Test-driven JavaScript development done right - supplement A
 
 Since I wrote some of the earlier parts of this series (see [part 2] and
-[part 3]), [Create React App][cra] has become a little stale. As of right 
+[part 3]), [Create React App][cra] has become a little stale. As of right
 now, a brand new app shows multiple known vulnerabilities on installation:
 
 ```none
@@ -16,7 +18,7 @@ To address all issues (including breaking changes), run:
 
 Run `npm audit` for details.
 ```
-(this [isn't necessarily the problem][cra-npm-audit] it might appear, but 
+(this [isn't necessarily the problem][cra-npm-audit] it might appear, but
 likely wouldn't happen at all if the dependencies were kept up-to-date) and a
 warning of imminent breakage on build (spelling error in original):
 
@@ -34,28 +36,28 @@ your devDependencies to work around this error. This will make this message
 go away.
 ```
 
-(this is trivially fixable in your generated app, but has been known about 
-for a while and still hasn't been fixed in CRA itself). The last available 
+(this is trivially fixable in your generated app, but has been known about
+for a while and still hasn't been fixed in CRA itself). The last available
 release, v5.0.1, dates back to April 12th, 2022 (~18 months ago and counting).
-The [new React docs][react] don't even mention CRA. In this context, it 
+The [new React docs][react] don't even mention CRA. In this context, it
 might be time to think about moving away from CRA for new projects.
 
 Probably the closest thing to a drop-in equivalent of CRA right now, in terms
 of offering an opinionated client-side app setup, is [Vite]. So I thought I'd
 provide a quick update to show how to get a React app ready for TDD on Vite.
 
-**Note** that if a pure client-side/"single page" app doesn't meet your needs, 
+**Note** that if a pure client-side/"single page" app doesn't meet your needs,
 there are some recommendations for more complex projects in the official React
 docs [here][react-frameworks].
 
 ## Scaffolding the app \[1/5] {#part-1}
 
-Create a new npm package with the Vite React structure using the following 
-command (you can use the `react` or `react-swc` templates - there are also 
+Create a new npm package with the Vite React structure using the following
+command (you can use the `react` or `react-swc` templates - there are also
 equivalents with TypeScript pre-configured if you like):
 
 ```bash
-$ npm create vite@latest test-driven-vite -- --template react    
+$ npm create vite@latest test-driven-vite -- --template react
 Need to install the following packages:
 create-vite@5.1.0
 Ok to proceed? (y) y
@@ -72,7 +74,7 @@ Done. Now run:
 Follow the instructions it gave you:
 
 ```bash
-$ cd test-driven-vite 
+$ cd test-driven-vite
 $ npm install
 
 added 270 packages, and audited 271 packages in 35s
@@ -95,7 +97,7 @@ $ npm run dev
 
 ```
 
-This is roughly equivalent to scaffolding a new CRA app and running `npm 
+This is roughly equivalent to scaffolding a new CRA app and running `npm
 start`; you should be able to visit the URL and see a basic app page. However,
 there are a couple of things CRA did for us that `create-vite` doesn't, so
 we'll need a few extra steps before we can start test-driving any real
@@ -103,8 +105,8 @@ functionality.
 
 ## Creating a git repo \[2/5] {#part-2}
 
-Although the template does include a `.gitignore` file, a git repository is 
-not created by default. If you try checking the status, you can see the 
+Although the template does include a `.gitignore` file, a git repository is
+not created by default. If you try checking the status, you can see the
 directory doesn't contain one:
 
 ```bash
@@ -112,7 +114,7 @@ $ git status
 fatal: not a git repository (or any of the parent directories): .git
 ```
 
-So let's create a fresh git repo, as we did back in [part 1], then commit the 
+So let's create a fresh git repo, as we did back in [part 1], then commit the
 files `create-vite` added for us:
 
 ```bash
@@ -133,31 +135,31 @@ Now all of our changes are safely under version control.
 
 ## Setting up testing \[3/5] {#part-3}
 
-Another thing CRA included by default was a test, run with [Jest] and using 
-[React Testing Library][rtl] to render and select elements. However, we can see 
+Another thing CRA included by default was a test, run with [Jest] and using
+[React Testing Library][rtl] to render and select elements. However, we can see
 that a new Vite app includes no test script at all:
 
 ```bash
 $ npm t
 npm ERR! Missing script: "test"
-npm ERR! 
+npm ERR!
 npm ERR! To see a list of scripts, run:
 npm ERR!   npm run
 
 npm ERR! A complete log of this run can be found in: path/to/something.log
 ```
 
-As an alternative to Jest, there's [Vitest]. This test runner uses the same 
+As an alternative to Jest, there's [Vitest]. This test runner uses the same
 build tooling as Vite, and has API compatibility with Jest (so everything you
 learned about `it`, `expect`, etc. still applies).
 
-So let's install this, as well as JSDOM (which allows the components to be 
-rendered outside of a real browser environment - this was installed as part 
+So let's install this, as well as JSDOM (which allows the components to be
+rendered outside of a real browser environment - this was installed as part
 of `jest-environment-jsdom` by CRA) and the same Testing Library utilities
 we've used previously.
 
 ```bash
-$ npm install --save-dev @testing-library/{jest-dom,react,user-event} jsdom vitest                 
+$ npm install --save-dev @testing-library/{jest-dom,react,user-event} jsdom vitest
 
 added 129 packages, and audited 400 packages in 1s
 
@@ -185,10 +187,16 @@ We need a little bit of additional configuration in `vite.config.js`:
 This will:
 
 1. Use the JSDOM test environment, to allow browser-based code to work;
-2. Inject some global functions (e.g. `describe` and `it`) into the tests, as 
+2. Inject some global functions (e.g. `describe` and `it`) into the tests, as
    Jest does; and
-3. Load Testing Library's [Jest-DOM] selectors (like `.toHaveAttribute`), so we 
+3. Load Testing Library's [Jest-DOM] selectors (like `.toHaveAttribute`), so we
    can make assertions on the rendered elements.
+
+**Note** instead of using JSDOM (or [Happy DOM][npm-happy-dom], which
+Vitest also supports) to provide a mock browser environment, you could try
+Vitest's [experimental browser mode][vitest-browser-mode] to run the tests
+in an actual browser. Here we'll stick with JSDOM for consistency with what
+we had in CRA.
 
 Finally, let's tell npm we want to use Vitest to run our tests:
 
@@ -216,8 +224,8 @@ No test files found, exiting with code 1
 
 ## Writing a test \[4/5] {#part-4}
 
-So let's create one, in `src/App.spec.jsx`. Pick some aspect of the page 
-that gets rendered (in this case I've chosen the main heading that's shown) and 
+So let's create one, in `src/App.spec.jsx`. Pick some aspect of the page
+that gets rendered (in this case I've chosen the main heading that's shown) and
 write a simple test for it:
 
 ```javascript
@@ -235,7 +243,7 @@ describe('App', () => {
 
 ```
 
-As you can see, this looks identical to the sort of thing we had in Jest. 
+As you can see, this looks identical to the sort of thing we had in Jest.
 When we run it, it should pass:
 
 ```bash
@@ -260,10 +268,10 @@ $  npm test
  PASS  Waiting for file changes...
        press h to show help, press q to quit
 ```
-**Note** that like the default CRA Jest setup, Vitest enters a watch mode by 
+**Note** that like the default CRA Jest setup, Vitest enters a watch mode by
 default. To run the tests once then stop, use `npm test -- --run`.
 
-Quit the test runner when you're satisfied everything is working, then commit 
+Quit the test runner when you're satisfied everything is working, then commit
 the changes:
 
 ```bash
@@ -285,13 +293,13 @@ $ git commit --message 'Add a simple test'
 
 ## Exercises \[5/5] {#part-5}
 
-This was just a supplement, so the exercise is pretty simple: redo an earlier 
+This was just a supplement, so the exercise is pretty simple: redo an earlier
 exercise in the series, using Vite/Vitest instead of CRA/Jest.
 
-**Note** that you can set up Cypress exactly as you did before - the 
-end-to-end tests don't care what (if any) library or framework you're using 
-to create the page. If you follow the guide from [part 3] on creating the 
-`e2e:ci` _"automatic E2E"_, you don't need to install `serve` to test the 
+**Note** that you can set up Cypress exactly as you did before - the
+end-to-end tests don't care what (if any) library or framework you're using
+to create the page. If you follow the guide from [part 3] on creating the
+`e2e:ci` _"automatic E2E"_, you don't need to install `serve` to test the
 app in production mode; `vite preview` already does this:
 
 ```json5
@@ -312,21 +320,21 @@ app in production mode; `vite preview` already does this:
 
 ## To global, or not to global? \[Bonus] {#bonus}
 
-By default, Vitest does **not** inject anything into the global scope. To keep 
+By default, Vitest does **not** inject anything into the global scope. To keep
 things as similar to Jest as possible, we've overridden this with
-`globals: true` above. Alternatively you could choose the more explicit option, 
+`globals: true` above. Alternatively you could choose the more explicit option,
 and omit `globals: true` (or explicitly set `globals: false`) in the
 configuration. But if you do that, you'll need to make some other adjustments:
 
-1. Firstly, and most obviously, every test file will have to explicitly 
+1. Firstly, and most obviously, every test file will have to explicitly
    import the functions it needs for defining suites, tests and expectations:
 
         :::javascript
         import { describe, expect, it } from 'vitest'
 
- 2. Secondly, the default entrypoint for `@testing-library/jest-dom` that we 
-    used in `setupFiles` assumes that `expect` will be provided globally. Now 
-    that it won't be, we have to switch to the Vitest-specific entrypoint 
+ 2. Secondly, the default entrypoint for `@testing-library/jest-dom` that we
+    used in `setupFiles` assumes that `expect` will be provided globally. Now
+    that it won't be, we have to switch to the Vitest-specific entrypoint
     `@testing-library/jest-dom/vitest`, which includes an explicit:
 
         :::javascript
@@ -335,13 +343,13 @@ configuration. But if you do that, you'll need to make some other adjustments:
     before extending `expect` with its own matchers.
 
  3. Finally, React Testing Library's [automatic application of
-    `cleanup`][rtl-cleanup] only occurs if there's a globally-provided 
+    `cleanup`][rtl-cleanup] only occurs if there's a globally-provided
     `afterEach` function for it to hook into. This is explicitly called out in
     the [Vitest migration guide][vitest-migration]:
 
     > If you decide to keep globals disabled, be aware that common libraries
     > like `testing-library` will not run auto DOM cleanup.
-    
+
     Without this, each test is adding more and more elements into the render
     result, which means your tests can interfere with each other (most likely
     with error messages about matching more than one element when only one is
@@ -379,6 +387,7 @@ afterEach(() => {
 [cra-npm-audit]: https://github.com/facebook/create-react-app/issues/11174
 [jest]: https://jestjs.io/
 [jest-dom]: https://testing-library.com/docs/ecosystem-jest-dom/
+[npm-happy-dom]: https://www.npmjs.com/package/happy-dom
 [part 1]: {filename}/development/js-tdd-ftw.md
 [part 2]: {filename}/development/js-tdd-e2e.md
 [part 3]: {filename}/development/js-tdd-api.md
@@ -388,4 +397,5 @@ afterEach(() => {
 [rtl-cleanup]: https://testing-library.com/docs/react-testing-library/api#cleanup
 [vite]: https://vitejs.dev/
 [vitest]: https://vitest.dev/
-[vitest-migration]: https://vitest.dev/
+[vitest-browser-mode]: https://vitest.dev/guide/browser.html
+[vitest-migration]: https://vitest.dev/guide/migration.html#globals-as-a-default
