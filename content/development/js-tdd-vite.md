@@ -48,7 +48,7 @@ provide a quick update to show how to get a React app ready for TDD on Vite.
 there are some recommendations for more complex projects in the official React
 docs [here][react-frameworks].
 
-## Scaffolding the app \[1/5]
+## Scaffolding the app \[1/5] {#part-1}
 
 Create a new npm package with the Vite React structure using the following 
 command (you can use the `react` or `react-swc` templates - there are also 
@@ -101,7 +101,7 @@ there are a couple of things CRA did for us that `create-vite` doesn't, so
 we'll need a few extra steps before we can start test-driving any real
 functionality.
 
-## Creating a git repo \[2/5]
+## Creating a git repo \[2/5] {#part-2}
 
 Although the template does include a `.gitignore` file, a git repository is 
 not created by default. If you try checking the status, you can see the 
@@ -131,7 +131,7 @@ $ git commit --message 'Create Vite app'
 
 Now all of our changes are safely under version control.
 
-## Setting up testing \[3/5]
+## Setting up testing \[3/5] {#part-3}
 
 Another thing CRA included by default was a test, run with [Jest] and using 
 [React Testing Library][rtl] to render and select elements. However, we can see 
@@ -214,7 +214,7 @@ watch exclude:  **/node_modules/**, **/dist/**
 No test files found, exiting with code 1
 ```
 
-## Writing a test \[4/5]
+## Writing a test \[4/5] {#part-4}
 
 So let's create one, in `src/App.spec.jsx`. Pick some aspect of the page 
 that gets rendered (in this case I've chosen the main heading that's shown) and 
@@ -283,7 +283,7 @@ $ git commit --message 'Add a simple test'
  create mode 100644 src/App.spec.jsx
 ```
 
-## Exercises \[5/5]
+## Exercises \[5/5] {#part-5}
 
 This was just a supplement, so the exercise is pretty simple: redo an earlier 
 exercise in the series, using Vite/Vitest instead of CRA/Jest.
@@ -310,7 +310,7 @@ app in production mode; `vite preview` already does this:
 }
 ```
 
-## To global, or not to global? \[Bonus]
+## To global, or not to global? \[Bonus] {#bonus}
 
 By default, Vitest does **not** inject anything into the global scope. To keep 
 things as similar to Jest as possible, we've overridden this with
