@@ -1,7 +1,6 @@
 Title: JS TDD Vite
 Date: 2023-12-17 11:30
-Modified: 2023-12-17 12:40
-
+Modified: 2023-12-17 13:10
 Tags: javascript, tdd, xp
 Authors: Jonathan Sharpe
 Summary: Test-driven JavaScript development done right - supplement A
