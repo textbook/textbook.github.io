@@ -1,6 +1,6 @@
 Title: JS TDD Vite
 Date: 2023-12-17 11:30
-Modified: 2023-12-17 12:10
+Modified: 2023-12-17 12:40
 
 Tags: javascript, tdd, xp
 Authors: Jonathan Sharpe
@@ -364,8 +364,8 @@ We can deal with 2 and 3 simultaneously by changing the configuration to:
      environment: 'jsdom',
 -    globals: true,
      setupFiles: [
--      '@testing-library/jest-dom'
-+      './src/setupTests.js'
+-      '@testing-library/jest-dom',
++      './src/setupTests.js',
      ],
    },
  })
