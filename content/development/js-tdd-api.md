@@ -1,6 +1,6 @@
 Title: JS TDD API
 Date: 2021-04-10 20:30
-Modified: 2023-06-27 15:30
+Modified: 2023-12-17 11:30
 Tags: javascript, tdd, xp
 Authors: Jonathan Sharpe
 Summary: Test-driven JavaScript development done right - part 3
@@ -46,7 +46,10 @@ In addition, given the domain for this post, you'll need:
 
 Again please carefully _read everything_, and for newer developers I'd recommend _typing the code_ rather than copy-pasting.
 
-## Setup [1//8]
+## Setup [1/8]
+
+> **Note**: to use Vite, a more up-to-date alternative to CRA, see
+> [supplement A]
 
 Let's create a new CRA-with-Cypress project. You can return to part 2 for more detailed instructions, or follow the steps below if you're feeling more confident (I've also published instructions and even a script to automate the process in [this Gist]):
 
@@ -1640,6 +1643,7 @@ As above the `pre` script runs first, to build the app, then if that's successfu
   [Part 2]: {filename}/development/js-tdd-e2e.md
   [Regex 101]: https://regex101.com/
   [SPA config]: {filename}/development/spa-config.md
+  [supplement A]: {filename}/development/js-tdd-vite.md
   [Testing Library]: https://testing-library.com
   [the next article]: {filename}/development/js-tdd-ohm.md
   [these false buildings]: https://en.wikipedia.org/wiki/Leinster_Gardens#False_houses

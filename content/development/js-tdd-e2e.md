@@ -1,6 +1,6 @@
 Title: JS TDD E2E
 Date: 2020-11-22 15:30
-Modified: 2023-06-27 10:30
+Modified: 2023-12-17 11:30
 Tags: javascript, tdd, xp
 Authors: Jonathan Sharpe
 Summary: Test-driven JavaScript development done right - part 2
@@ -79,6 +79,9 @@ We're going to expand on the previous article and add a web UI for our Rock Pape
 Again please carefully _read everything_, and for newer developers I'd recommend _typing the code_ rather than copy-pasting.
 
 ## Setup [1/8]
+
+> **Note**: to use Vite, a more up-to-date alternative to CRA, see
+> [supplement A]
 
 To begin, let's create a new React app in our workspace using CRA:
 
@@ -1231,6 +1234,7 @@ Now `npm run lint` should be fine.
   [Jest]: https://jestjs.io/
   [npm audit]: https://github.com/facebook/create-react-app/issues/11174
   [Node]: https://nodejs.org/
+  [supplement A]: {filename}/development/js-tdd-vite.md
   [Testing Library]: https://testing-library.com
   [test double]: https://tanzu.vmware.com/content/pivotal-engineering-journal/the-test-double-rule-of-thumb-2
   [the next article]: {filename}/development/js-tdd-api.md
