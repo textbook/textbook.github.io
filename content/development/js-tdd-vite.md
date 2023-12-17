@@ -351,14 +351,15 @@ configuration. But if you do that, you'll need to make some other adjustments:
 We can deal with 2 and 3 simultaneously by changing the configuration to:
 
 ```diff
- export default defineConfig({
    plugins: [react()],
-+  test: {
-+    environment: 'jsdom',
-+    setupFiles: [
+   test: {
+     environment: 'jsdom',
+-    globals: true,
+     setupFiles: [
+-      '@testing-library/jest-dom'
 +      './src/setupTests.js'
-+    ],
-+  },
+     ],
+   },
  })
 ```
 
