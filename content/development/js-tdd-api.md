@@ -1,6 +1,6 @@
 Title: JS TDD API
 Date: 2021-04-10 20:30
-Modified: 2023-12-17 11:30
+Modified: 2023-12-23 14:30
 Tags: javascript, tdd, xp
 Authors: Jonathan Sharpe
 Summary: Test-driven JavaScript development done right - part 3
@@ -769,7 +769,7 @@ You might think we should simply replace `fetch` with a test double. The rule of
 Instead we're going to use [Mock Service Worker][msw] (MSW) to test that the appropriate _request_ gets made, irrespective of how that's done. This allows us to test the _behaviour_ (we make a GET request to the random user API) rather than _implementation_ (we call `fetch` with the correct URL). Let's add MSW to our app, following along with [their instructions][msw get started], and write an integration test. Start by installing the package:
 
 ```bash
-$ npm i msw
+$ npm i msw@1
 
 added 66 packages, and audited 1680 packages in 8s
 
@@ -786,6 +786,8 @@ To address all issues (including breaking changes), run:
 
 Run `npm audit` for details.
 ```
+
+**Note**: MSW changed substantially between v1 and v2 and getting the latter to work in Jest and with CRA adds a lot of complexity, so for now we'll explicitly continue to use v1.
 
 As this is a relatively simple configuration, rather than splitting it across multiple files, put the following in `src/setupTests.js` (beneath the existing `@testing-library` import) to reuse the fixture from our Cypress tests with MSW:
 
@@ -1636,7 +1638,7 @@ As above the `pre` script runs first, to build the app, then if that's successfu
   [github]: https://github.com/textbook/rps-api
   [Jest]: https://jestjs.io/
   [msw]: https://mswjs.io/
-  [msw get started]: https://mswjs.io/docs/getting-started
+  [msw get started]: https://v1.mswjs.io/docs/getting-started/
   [names]: https://www.kalzumeus.com/2010/06/17/falsehoods-programmers-believe-about-names/
   [Node]: https://nodejs.org/
   [Part 1]: {filename}/development/js-tdd-ftw.md
