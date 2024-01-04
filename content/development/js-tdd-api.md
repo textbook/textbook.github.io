@@ -1478,7 +1478,7 @@ I'd recommend creating a new git branch for each one you try (e.g. use `git chec
 
 > **Once you're ready to move on**, check out [the next article] in this series where we'll cover testing the API producer and discuss more about how tests drive design.
 
-## Automatic E2E [bonus]
+## Automatic E2E \[Bonus\] {#bonus}
 
 As I mentioned in my [article on automation], I'm a fan of making developers' lives easier through automating the things you do frequently. You may have found it a bit annoying that you had to manually juggle two terminal windows through the last two articles, one where the app's running (`npm start`) and another where you run the E2E tests (`npm run e2e`). So let's simplify that!
 
