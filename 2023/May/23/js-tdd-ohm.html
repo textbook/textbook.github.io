@@ -1,0 +1,1328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head prefix="og: http://ogp.me/ns# article: http://ogp.me/ns/article#">
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width">
+  <title>JS TDD Ohm</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.9.4/css/bulma.min.css">
+    <link rel="stylesheet" href="https://blog.jonrshar.pe/theme/css/main.3dad1b7a.css">
+  <style media="print">.is-hidden-print{display:none !important}</style>
+      <link rel="stylesheet" href="https://blog.jonrshar.pe/custom.css">
+<meta property="og:title" content="textbook - JS TDD Ohm">
+  <meta property="og:description" content="Test-driven JavaScript development done right - part 4">
+<meta property="og:url" content="https://blog.jonrshar.pe/2023/May/23/js-tdd-ohm.html">
+    <meta property="og:image" content="https://blog.jonrshar.pe/images/Electronic-Axial-Lead-Resistors-Array.png">
+    <meta name="twitter:image:alt" content="textbook | These are my opinions - if you don't like them, I have others">
+<meta name="twitter:card" content="summary">
+  <meta name="twitter:creator" content="@jonrsharpe">
+  <meta name="twitter:site" content="@jonrsharpe">
+<meta property="og:site_name" content="textbook">
+<meta property="og:type" content="article">
+  <meta property="article:published_time" content="2023-05-23T14:00:00+01:00">
+  <meta property="article:modified_time" content="2023-05-26T10:30:00+01:00">
+    <meta property="article:tag" content="javascript">
+    <meta property="article:tag" content="tdd">
+    <meta property="article:tag" content="xp">
+  <meta property="article:section" content="development">
+</head>
+
+<body id="index" class="home">
+<header class="hero is-primary">
+  <div class="hero-head">
+    <div class="container">
+      <nav class="navbar">
+        <div class="navbar-brand">
+          <a class="navbar-item title is-3"
+             href="https://blog.jonrshar.pe/">textbook</a>
+        </div>
+      </nav>
+    </div>
+  </div>
+</header>
+
+<nav class="navbar has-shadow is-hidden-print">
+  <div class="container">
+    <div class="navbar-center"></div>
+    <span id="navToggle" class="navbar-burger">
+      <span></span>
+      <span></span>
+      <span></span>
+    </span>
+    <div id="navMenu" class="navbar-menu">
+        <div class="navbar-end">
+              <a class="navbar-item is-tab "
+                 href="https://blog.jonrshar.pe/category/work.html">work</a>
+              <a class="navbar-item is-tab "
+                 href="https://blog.jonrshar.pe/category/meta.html">meta</a>
+              <a class="navbar-item is-tab is-active"
+                 href="https://blog.jonrshar.pe/category/development.html">development</a>
+        </div>
+    </div>
+  </div>
+</nav>
+
+<div class="container">
+  <div class="section columns">
+    <div class="column is-three-quarters-desktop is-two-thirds-tablet">
+<section id="content" class="body">
+  <article>
+    <h1 class="title">
+      <a href="https://blog.jonrshar.pe/2023/May/23/js-tdd-ohm.html" rel="bookmark"
+         title="Permalink to JS TDD Ohm">JS TDD Ohm</a></h1>
+<footer class="post-info">
+  <abbr class="published" title="2023-05-23T14:00:00+01:00">
+    Published <span class="is-info">Tue 23 May 2023</span>
+    in <a href="https://blog.jonrshar.pe/category/development.html">development</a>
+  </abbr>
+    <br />
+    <abbr class="modified" title="2023-05-26T10:30:00+01:00">
+      Updated Fri 26 May 2023
+    </abbr>
+
+    <p class="author">
+      <em>by           Jonathan Sharpe
+</em>
+      <span class="tag is-small is-rounded">
+        <a href="https://blog.jonrshar.pe/tag/javascript.html">javascript</a>
+      </span>
+      <span class="tag is-small is-rounded">
+        <a href="https://blog.jonrshar.pe/tag/tdd.html">tdd</a>
+      </span>
+      <span class="tag is-small is-rounded">
+        <a href="https://blog.jonrshar.pe/tag/xp.html">xp</a>
+      </span>
+    </p>
+  
+</footer>    <div class="section"><p>Welcome to part 4 of this ongoing series on test-driven development (TDD) in JavaScript. So far we've covered:</p>
+<ul>
+<li><a href="https://blog.jonrshar.pe/2020/Aug/31/js-tdd-ftw.html">Part 1</a> - the basic principles of test-driven development, showing unit testing using Jest;</li>
+<li><a href="https://blog.jonrshar.pe/2020/Nov/22/js-tdd-e2e.html">Part 2</a> - expanding to higher level testing, using Cypress for E2E and Jest for integration (and unit) testing of a simple React app with Testing Library; and</li>
+<li><a href="https://blog.jonrshar.pe/2021/Apr/10/js-tdd-api.html">Part 3</a> - introducing some more ideas about isolating your code for testing using test doubles.</li>
+</ul>
+<p>If you haven't already been through those I'd suggest revisiting at least the first one, as it introduces some terminology and ideas I'll use here.</p>
+<p>This time we're going to dive into test-driving HTTP APIs and talk a bit more about how we can use testing to support us in designing the code we're working on.</p>
+<h3>Requirements</h3>
+<p>The prerequisites here are the same as the previous articles:</p>
+<ul>
+<li>*nix command line: already provided on macOS and Linux; if you're using Windows try WSL or Git BASH;</li>
+<li>Node (16+ recommended, Jest 29 is only <a href="https://jestjs.io/docs/upgrading-to-jest29#compatibility">compatible with</a> recent LTS versions; run <code>node -v</code> to check) and NPM; and</li>
+<li>Familiarity with ES6 JavaScript syntax.</li>
+</ul>
+<p>In addition, given the domain for this post, you'll need:</p>
+<ul>
+<li>Familiarity with HTTP requests and responses; and</li>
+<li>Familiarity with <a href="https://expressjs.com/">Express</a>.</li>
+</ul>
+<p>Again please carefully <em>read everything</em>, and for newer developers I'd recommend <em>typing the code</em> rather than copy-pasting.</p>
+<h2>Setting the scene [1/9]</h2>
+<p>We're going to be tackling a more realistic case than rock, paper, scissors this time. Our customer, <strong>JonFX</strong>, sells guitar pedal kits that you construct yourself at home. These kits contain set of instructions and a bunch of electrical components, including resistors: </p>
+<p><img alt="Picture of some resistors" src="https://blog.jonrshar.pe/images/Electronic-Axial-Lead-Resistors-Array.png"></p>
+<p>There are three representations of resistance (measured in Ohms, Ω) in use within this ecosystem. For example, given a 22,000Ω resistor, it can be represented as:</p>
+<ul>
+<li>A number, <code>22_000</code>;</li>
+<li>A shorthand string, <code>"22K"</code>; or</li>
+<li>A set of bands on the physical component, e.g. <strong><span style="color: red">red</span></strong>, <strong><span style="color: red">red</span></strong>, <strong><span style="color: orange; background-color: black">&nbsp;orange&nbsp;</span></strong>.</li>
+</ul>
+<p>Our customer has noted that people sometimes have difficulty converting between these representations, and asked us to build something to help solve the problem.</p>
+<hr>
+<p>How do we prioritise which representations we should focus on to start with? We want to deliver the most valuable thing first, so let's do some analysis. There are three <em>personas</em> who work with these representations:</p>
+<ul>
+<li>Debbie the designer: Debbie designs the circuits, and generally works with the <em>number</em> representation. Once a design is complete the values are recorded in a manifest using the <em>shorthand</em> notation;</li>
+<li>Colin the customer: Colin wants to buy and build one of the kits, which will include the manifest and the components with their <em>bands</em>; and</li>
+<li>Parul the packer: When Colin orders a kit, Parul is responsible for selecting the components based on the manifest, boxing them up and shipping them out.</li>
+</ul>
+<p>Parul and Debbie both work with resistors and other electrical components on a very regular basis, so they probably don't need reminding what the bands mean, and if not there are various non-software interventions we could use to make their lives easier (for example, the boxes Parul is selecting components from could have a picture of the relevant bands and the shorthand printed in large letters to aid selection and refilling). But it might be a while since Colin built his last kit (or he may even be a first-time customer), so that's the persona most likely to need help and therefore the highest value software would focus on the conversion between bands and shorthand, especially when you consider that the company will have far more Colins (thousands) than Paruls (ten) or Debbies (one).</p>
+<hr>
+<p>Let's capture that as a <em>user story</em> that we can refer back to if we need reminding what we're working towards:</p>
+<blockquote>
+<p><strong>As a</strong> customer</p>
+<p><strong>I want</strong> to convert a set of bands to a shorthand string</p>
+<p><strong>So that</strong> I can match a given resistor to the diagram</p>
+</blockquote>
+<p>For this exercise, we're going to be building the backend for a web UI; an acceptance criterion based on the above examples might be:</p>
+<blockquote>
+<ul>
+<li>
+<p><strong>Given</strong> an input of the bands red, red, orange</p>
+<p><strong>When</strong> the client makes a request</p>
+<p><strong>Then</strong> the response contains the shorthand <code>"22K"</code></p>
+</li>
+</ul>
+</blockquote>
+<p><strong>Note</strong>: for the sake of simplicity we will be working on an implementation that can convert values from 10Ω (or 100Ω for three value bands) up to but not including 1,000,000,000Ω.</p>
+<h2>Welcome to the resistance [2/9]</h2>
+<p>As shown above, physical resistors have coloured bands which indicate their resistance. The "rules of resistors" that we'll be following are:</p>
+<ol>
+<li>A resistor must have two or three <em>value</em> bands, unless it's a 0Ω resistor (which must have only a single black value band);</li>
+<li>The first value band must not be black, unless it's a 0Ω resistor; and</li>
+<li>A resistor must have a single <em>multiplier</em> band.</li>
+</ol>
+<p>The band colours indicate numbers via the following mapping:</p>
+<table>
+<thead>
+<tr>
+<th>0</th>
+<th>1</th>
+<th>2</th>
+<th>3</th>
+<th>4</th>
+<th>5</th>
+<th>6</th>
+<th>7</th>
+<th>8</th>
+<th>9</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong><span style="color: black">black</span></strong></td>
+<td><strong><span style="color: brown">brown</span></strong></td>
+<td><strong><span style="color: red">red</span></strong></td>
+<td><strong><span style="color: orange; background-color: black">&nbsp;orange&nbsp;</span></strong></td>
+<td><strong><span style="color: yellow; background-color: black">&nbsp;yellow&nbsp;</span></strong></td>
+<td><strong><span style="color: green">green</span></strong></td>
+<td><strong><span style="color: blue">blue</span></strong></td>
+<td><strong><span style="color: purple">violet</span></strong></td>
+<td><strong><span style="color: dimgrey">grey</span></strong></td>
+<td><strong><span style="color: white; background-color: black">&nbsp;white&nbsp;</span></strong></td>
+</tr>
+</tbody>
+</table>
+<p>The numerical resistance is determined by taking the two or three value bands as the first two or three digits, then adding the number of zeros specified by the multiplier band to the end, e.g.:</p>
+<ul>
+<li>Value: <strong><span style="color: blue">blue</span></strong> - 6</li>
+<li>Value: <strong><span style="color: dimgrey">grey</span></strong> - 8</li>
+<li>Multiplier: <strong><span style="color: green">green</span></strong> - 5</li>
+</ul>
+<p>becomes 6,800,000Ω (6 then 8 then 5 zeros). You could also calculate this as <code>((6 * 10) + 8) * (10 ** 5)</code>.</p>
+<p>The shorthand form is created by replacing the left-most comma with M (for "mega", meaning a factor of one million) and dropping all trailing zeros; in this case <code>"6M8"</code>. For values between 1,000Ω and 999,999Ω the comma is replaced with K (for "kilo", meaning a factor of one thousand) instead, hence the 22,000Ω above becomes <code>"22K"</code>. For values less than 1,000Ω the decimal point is replaced with R, so e.g. 150Ω (bands <strong><span style="color: brown">brown</span></strong>, <strong><span style="color: green">green</span></strong>, <strong><span style="color: brown">brown</span></strong>) would be represented as <code>"150R"</code>.</p>
+<p>Here are a few more examples, or for more details you can read about this <a href="https://en.wikipedia.org/wiki/Electronic_color_code">electronic colour code</a> on Wikipedia:</p>
+<table>
+<thead>
+<tr>
+<th>Numeric (Ω)</th>
+<th>Shorthand</th>
+<th>Bands</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>22</td>
+<td><code>"22R"</code></td>
+<td><strong><span style="color: red">red</span></strong>, <strong><span style="color: red">red</span></strong>, <strong><span style="color: black">black</span></strong></td>
+</tr>
+<tr>
+<td>12,700</td>
+<td><code>"12K7"</code></td>
+<td><strong><span style="color: brown">brown</span></strong>, <strong><span style="color: red">red</span></strong>, <strong><span style="color: purple">violet</span></strong>, <strong><span style="color: red">red</span></strong></td>
+</tr>
+<tr>
+<td>330,000</td>
+<td><code>"330K"</code></td>
+<td><strong><span style="color: orange; background-color: black">&nbsp;orange&nbsp;</span></strong>, <strong><span style="color: orange; background-color: black">&nbsp;orange&nbsp;</span></strong>, <strong><span style="color: black">black</span></strong>, <strong><span style="color: orange; background-color: black">&nbsp;orange&nbsp;</span></strong></td>
+</tr>
+<tr>
+<td>8,200,000</td>
+<td><code>"8M2"</code></td>
+<td><strong><span style="color: dimgrey">grey</span></strong>, <strong><span style="color: red">red</span></strong>, <strong><span style="color: green">green</span></strong></td>
+</tr>
+</tbody>
+</table>
+<p>How can we represent this at the API level? There are a few options, but for the purposes of working through this exercise let's say:</p>
+<ul>
+<li>The request method will be <code>GET</code>;</li>
+<li>The request path will be <code>/resistance</code>;</li>
+<li>The bands will be provided as a query parameter named <code>bands</code>;</li>
+<li>The response status code on success will be <code>200</code> ("OK"); and</li>
+<li>The response body on success will be the shorthand representation as plain text.</li>
+</ul>
+<p>Using <a href="https://en.wikipedia.org/wiki/CURL">cURL</a>, this might look like (assuming an environment variable <code>URL</code> has been set pointing to our API server):</p>
+<div class="highlight"><pre><span></span><code>$<span class="w"> </span>curl<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$URL</span><span class="s2">/resistance?bands=brown&amp;bands=red&amp;bands=violet&amp;bands=red&quot;</span>
+8M2
+</code></pre></div>
+
+<h2>None more black [3/9]</h2>
+<p>Let's get started by creating a new NPM package to hold our API:</p>
+<div class="highlight"><pre><span></span><code>$<span class="w"> </span>mkdir<span class="w"> </span>resistance
+$<span class="w"> </span><span class="nb">cd</span><span class="w"> </span><span class="nv">$_</span>
+$<span class="w"> </span>git<span class="w"> </span>init
+Reinitialized<span class="w"> </span>existing<span class="w"> </span>Git<span class="w"> </span>repository<span class="w"> </span><span class="k">in</span><span class="w"> </span>path/to/resistance/.git/
+$<span class="w"> </span>git<span class="w"> </span>commit<span class="w"> </span>--allow-empty<span class="w"> </span>--message<span class="w"> </span><span class="s1">&#39;Initial commit&#39;</span>
+<span class="o">[</span>main<span class="w"> </span><span class="o">(</span>root-commit<span class="o">)</span><span class="w"> </span>7c30cd9<span class="o">]</span><span class="w"> </span>Initial<span class="w"> </span>commit
+$<span class="w"> </span>npm<span class="w"> </span>init<span class="w"> </span>--yes
+Wrote<span class="w"> </span>to<span class="w"> </span>path/to/resistance/package.json:
+
+<span class="o">{</span>
+<span class="w">  </span><span class="s2">&quot;name&quot;</span>:<span class="w"> </span><span class="s2">&quot;resistance&quot;</span>,
+<span class="w">  </span><span class="s2">&quot;version&quot;</span>:<span class="w"> </span><span class="s2">&quot;1.0.0&quot;</span>,
+<span class="w">  </span><span class="s2">&quot;description&quot;</span>:<span class="w"> </span><span class="s2">&quot;&quot;</span>,
+<span class="w">  </span><span class="s2">&quot;main&quot;</span>:<span class="w"> </span><span class="s2">&quot;index.js&quot;</span>,
+<span class="w">  </span><span class="s2">&quot;scripts&quot;</span>:<span class="w"> </span><span class="o">{</span>
+<span class="w">    </span><span class="s2">&quot;test&quot;</span>:<span class="w"> </span><span class="s2">&quot;echo \&quot;Error: no test specified\&quot; &amp;&amp; exit 1&quot;</span>
+<span class="w">  </span><span class="o">}</span>,
+<span class="w">  </span><span class="s2">&quot;keywords&quot;</span>:<span class="w"> </span><span class="o">[]</span>
+<span class="o">}</span>
+$<span class="w"> </span>git<span class="w"> </span>add<span class="w"> </span>.
+$<span class="w"> </span>git<span class="w"> </span>commit<span class="w"> </span>--message<span class="w"> </span><span class="s1">&#39;Create NPM package&#39;</span>
+<span class="o">[</span>main<span class="w"> </span>6c30da5<span class="o">]</span><span class="w"> </span>Create<span class="w"> </span>NPM<span class="w"> </span>package
+<span class="w"> </span><span class="m">1</span><span class="w"> </span>file<span class="w"> </span>changed,<span class="w"> </span><span class="m">12</span><span class="w"> </span>insertions<span class="o">(</span>+<span class="o">)</span>
+<span class="w"> </span>create<span class="w"> </span>mode<span class="w"> </span><span class="m">100644</span><span class="w"> </span>package.json
+</code></pre></div>
+
+<p>We'll use <a href="https://jestjs.io/">Jest</a> again for testing, and add <a href="https://www.npmjs.com/package/supertest">Supertest</a> as an adapter between the test runner and the API, to make it easier to make requests and assert on the responses (I've explained why I think this is better than just using e.g. Axios to make the requests <a href="https://stackoverflow.com/a/62992056/3001761">here</a>):</p>
+<div class="highlight"><pre><span></span><code>$<span class="w"> </span>npm<span class="w"> </span>install<span class="w"> </span>--save-dev<span class="w"> </span>jest<span class="w"> </span>supertest
+
+added<span class="w"> </span><span class="m">305</span><span class="w"> </span>packages,<span class="w"> </span>and<span class="w"> </span>audited<span class="w"> </span><span class="m">306</span><span class="w"> </span>packages<span class="w"> </span><span class="k">in</span><span class="w"> </span>7s
+
+<span class="m">38</span><span class="w"> </span>packages<span class="w"> </span>are<span class="w"> </span>looking<span class="w"> </span><span class="k">for</span><span class="w"> </span>funding
+<span class="w">  </span>run<span class="w"> </span><span class="sb">`</span>npm<span class="w"> </span>fund<span class="sb">`</span><span class="w"> </span><span class="k">for</span><span class="w"> </span>details
+
+found<span class="w"> </span><span class="m">0</span><span class="w"> </span>vulnerabilities
+$<span class="w"> </span><span class="nb">echo</span><span class="w"> </span>node_modules/<span class="w"> </span>&gt;<span class="w"> </span>.gitignore
+$<span class="w"> </span>git<span class="w"> </span>status
+On<span class="w"> </span>branch<span class="w"> </span>main
+Changes<span class="w"> </span>not<span class="w"> </span>staged<span class="w"> </span><span class="k">for</span><span class="w"> </span>commit:
+<span class="w">  </span><span class="o">(</span>use<span class="w"> </span><span class="s2">&quot;git add &lt;file&gt;...&quot;</span><span class="w"> </span>to<span class="w"> </span>update<span class="w"> </span>what<span class="w"> </span>will<span class="w"> </span>be<span class="w"> </span>committed<span class="o">)</span>
+<span class="w">  </span><span class="o">(</span>use<span class="w"> </span><span class="s2">&quot;git restore &lt;file&gt;...&quot;</span><span class="w"> </span>to<span class="w"> </span>discard<span class="w"> </span>changes<span class="w"> </span><span class="k">in</span><span class="w"> </span>working<span class="w"> </span>directory<span class="o">)</span>
+<span class="w">        </span>modified:<span class="w">   </span>package.json
+
+Untracked<span class="w"> </span>files:
+<span class="w">  </span><span class="o">(</span>use<span class="w"> </span><span class="s2">&quot;git add &lt;file&gt;...&quot;</span><span class="w"> </span>to<span class="w"> </span>include<span class="w"> </span><span class="k">in</span><span class="w"> </span>what<span class="w"> </span>will<span class="w"> </span>be<span class="w"> </span>committed<span class="o">)</span>
+<span class="w">        </span>.gitignore
+<span class="w">        </span>package-lock.json
+
+no<span class="w"> </span>changes<span class="w"> </span>added<span class="w"> </span>to<span class="w"> </span>commit<span class="w"> </span><span class="o">(</span>use<span class="w"> </span><span class="s2">&quot;git add&quot;</span><span class="w"> </span>and/or<span class="w"> </span><span class="s2">&quot;git commit -a&quot;</span><span class="o">)</span>
+$<span class="w"> </span>git<span class="w"> </span>add<span class="w"> </span>.
+$<span class="w"> </span>git<span class="w"> </span>commit<span class="w"> </span>--message<span class="w"> </span><span class="s1">&#39;Install test dependencies&#39;</span>
+<span class="o">[</span>main<span class="w"> </span>56d2180<span class="o">]</span><span class="w"> </span>Install<span class="w"> </span><span class="nb">test</span><span class="w"> </span>dependencies
+<span class="w"> </span><span class="m">3</span><span class="w"> </span>files<span class="w"> </span>changed,<span class="w"> </span><span class="m">6553</span><span class="w"> </span>insertions<span class="o">(</span>+<span class="o">)</span>,<span class="w"> </span><span class="m">1</span><span class="w"> </span>deletion<span class="o">(</span>-<span class="o">)</span>
+<span class="w"> </span>create<span class="w"> </span>mode<span class="w"> </span><span class="m">100644</span><span class="w"> </span>.gitignore
+<span class="w"> </span>create<span class="w"> </span>mode<span class="w"> </span><span class="m">100644</span><span class="w"> </span>package-lock.json
+</code></pre></div>
+
+<p>Create <code>app.test.js</code> and write a test. Let's start with the <strong>simplest possible case</strong>; the 0Ω resistor, a single black band:</p>
+<div class="highlight"><pre><span></span><code><span class="kd">const</span><span class="w"> </span><span class="nx">request</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">require</span><span class="p">(</span><span class="s2">&quot;supertest&quot;</span><span class="p">);</span>
+
+<span class="nx">describe</span><span class="p">(</span><span class="s2">&quot;resistance API&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">()</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="nx">it</span><span class="p">(</span><span class="s2">&quot;returns 0R for a single black band&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">()</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nx">request</span><span class="p">(</span><span class="nx">app</span><span class="p">)</span>
+<span class="w">      </span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s2">&quot;/resistance&quot;</span><span class="p">)</span>
+<span class="w">      </span><span class="p">.</span><span class="nx">query</span><span class="p">({</span><span class="w"> </span><span class="nx">bands</span><span class="o">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;black&quot;</span><span class="p">]</span><span class="w"> </span><span class="p">})</span>
+<span class="w">      </span><span class="p">.</span><span class="nx">expect</span><span class="p">(</span><span class="mf">200</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;0R&quot;</span><span class="p">);</span>
+<span class="w">  </span><span class="p">});</span>
+<span class="p">});</span>
+</code></pre></div>
+
+<p>Here you can see how Supertest's API lets us specify the request to make (method, path and query parameters) and assert on the response (status code and body). Set up Jest as the test runner using <a href="https://docs.npmjs.com/cli/v9/commands/npm-pkg">NPM's <code>pkg</code> command</a>:</p>
+<div class="highlight"><pre><span></span><code>$<span class="w"> </span>npm<span class="w"> </span>pkg<span class="w"> </span><span class="nb">set</span><span class="w"> </span>scripts.test<span class="o">=</span>jest
+</code></pre></div>
+
+<p>What will happen when you run the test? <strong>Call the shot</strong>, then use <code>npm test</code> to run it.</p>
+<hr>
+<div class="highlight"><pre><span></span><code>$<span class="w"> </span>npm<span class="w"> </span><span class="nb">test</span>
+
+&gt;<span class="w"> </span>resistance@1.0.0<span class="w"> </span><span class="nb">test</span>
+&gt;<span class="w"> </span>jest
+
+<span class="w"> </span>FAIL<span class="w">  </span>./app.test.js
+<span class="w">  </span>resistance<span class="w"> </span>API
+<span class="w">    </span>✕<span class="w"> </span>returns<span class="w"> </span>0R<span class="w"> </span><span class="k">for</span><span class="w"> </span>a<span class="w"> </span>single<span class="w"> </span>black<span class="w"> </span>band<span class="w"> </span><span class="o">(</span><span class="m">1</span><span class="w"> </span>ms<span class="o">)</span>
+
+<span class="w">  </span>●<span class="w"> </span>resistance<span class="w"> </span>API<span class="w"> </span>›<span class="w"> </span>returns<span class="w"> </span>0R<span class="w"> </span><span class="k">for</span><span class="w"> </span>a<span class="w"> </span>single<span class="w"> </span>black<span class="w"> </span>band
+
+<span class="w">    </span>ReferenceError:<span class="w"> </span>app<span class="w"> </span>is<span class="w"> </span>not<span class="w"> </span>defined
+
+<span class="w">      </span><span class="m">3</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>describe<span class="o">(</span><span class="s2">&quot;resistance API&quot;</span>,<span class="w"> </span><span class="o">()</span><span class="w"> </span><span class="o">=</span>&gt;<span class="w"> </span><span class="o">{</span>
+<span class="w">      </span><span class="m">4</span><span class="w"> </span><span class="p">|</span><span class="w">   </span>it<span class="o">(</span><span class="s2">&quot;returns 0R for a single black band&quot;</span>,<span class="w"> </span><span class="o">()</span><span class="w"> </span><span class="o">=</span>&gt;<span class="w"> </span><span class="o">{</span>
+<span class="w">    </span>&gt;<span class="w"> </span><span class="m">5</span><span class="w"> </span><span class="p">|</span><span class="w">     </span><span class="k">return</span><span class="w"> </span>request<span class="o">(</span>app<span class="o">)</span>
+<span class="w">        </span><span class="p">|</span><span class="w">                    </span>^
+<span class="w">      </span><span class="m">6</span><span class="w"> </span><span class="p">|</span><span class="w">       </span>.get<span class="o">(</span><span class="s2">&quot;/resistance&quot;</span><span class="o">)</span>
+<span class="w">      </span><span class="m">7</span><span class="w"> </span><span class="p">|</span><span class="w">       </span>.query<span class="o">({</span><span class="w"> </span>bands:<span class="w"> </span><span class="o">[</span><span class="s2">&quot;black&quot;</span><span class="o">]</span><span class="w"> </span><span class="o">})</span>
+<span class="w">      </span><span class="m">8</span><span class="w"> </span><span class="p">|</span><span class="w">       </span>.expect<span class="o">(</span><span class="m">200</span>,<span class="w"> </span><span class="s2">&quot;0R&quot;</span><span class="o">)</span><span class="p">;</span>
+
+<span class="w">      </span>at<span class="w"> </span>Object.app<span class="w"> </span><span class="o">(</span>app.test.js:5:20<span class="o">)</span>
+
+Test<span class="w"> </span>Suites:<span class="w"> </span><span class="m">1</span><span class="w"> </span>failed,<span class="w"> </span><span class="m">1</span><span class="w"> </span>total
+Tests:<span class="w">       </span><span class="m">1</span><span class="w"> </span>failed,<span class="w"> </span><span class="m">1</span><span class="w"> </span>total
+Snapshots:<span class="w">   </span><span class="m">0</span><span class="w"> </span>total
+Time:<span class="w">        </span><span class="m">0</span>.224<span class="w"> </span>s,<span class="w"> </span>estimated<span class="w"> </span><span class="m">1</span><span class="w"> </span>s
+Ran<span class="w"> </span>all<span class="w"> </span><span class="nb">test</span><span class="w"> </span>suites.
+</code></pre></div>
+
+<p>Hopefully you predicted that: <code>app</code> wasn't defined, the test crashed before even getting the chance to fail. So let's give it an app to test! Start by installing Express:</p>
+<div class="highlight"><pre><span></span><code>$<span class="w"> </span>npm<span class="w"> </span>install<span class="w"> </span>express
+
+added<span class="w"> </span><span class="m">53</span><span class="w"> </span>packages,<span class="w"> </span>and<span class="w"> </span>audited<span class="w"> </span><span class="m">359</span><span class="w"> </span>packages<span class="w"> </span><span class="k">in</span><span class="w"> </span>880ms
+
+<span class="m">40</span><span class="w"> </span>packages<span class="w"> </span>are<span class="w"> </span>looking<span class="w"> </span><span class="k">for</span><span class="w"> </span>funding
+<span class="w">  </span>run<span class="w"> </span><span class="sb">`</span>npm<span class="w"> </span>fund<span class="sb">`</span><span class="w"> </span><span class="k">for</span><span class="w"> </span>details
+
+found<span class="w"> </span><span class="m">0</span><span class="w"> </span>vulnerabilities
+</code></pre></div>
+
+<p>Create a new file <code>app.js</code>, and set up a basic Express application:</p>
+<div class="highlight"><pre><span></span><code><span class="kd">const</span><span class="w"> </span><span class="nx">express</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">require</span><span class="p">(</span><span class="s2">&quot;express&quot;</span><span class="p">);</span>
+
+<span class="kd">const</span><span class="w"> </span><span class="nx">app</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">express</span><span class="p">();</span>
+
+<span class="nx">module</span><span class="p">.</span><span class="nx">exports</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">app</span><span class="p">;</span>
+</code></pre></div>
+
+<p>then add the import into <code>app.test.js</code>:</p>
+<div class="highlight"><pre><span></span><code><span class="w"> </span> const request = require(&quot;supertest&quot;);
+<span class="gi">+ </span>
+<span class="gi">+ const app = require(&quot;./app&quot;);</span>
+
+<span class="w"> </span> describe(&quot;resistance API&quot;, () =&gt; {
+</code></pre></div>
+
+<p>What will happen when we re-run the test now? <strong>Call the shot</strong>, then run it again.</p>
+<hr>
+<div class="highlight"><pre><span></span><code>$<span class="w"> </span>npm<span class="w"> </span><span class="nb">test</span><span class="w">     </span>
+
+&gt;<span class="w"> </span>resistance@1.0.0<span class="w"> </span><span class="nb">test</span>
+&gt;<span class="w"> </span>jest
+
+<span class="w"> </span>FAIL<span class="w">  </span>./app.test.js
+<span class="w">  </span>resistance<span class="w"> </span>API
+<span class="w">    </span>✕<span class="w"> </span>returns<span class="w"> </span>0R<span class="w"> </span><span class="k">for</span><span class="w"> </span>a<span class="w"> </span>single<span class="w"> </span>black<span class="w"> </span>band<span class="w"> </span><span class="o">(</span><span class="m">18</span><span class="w"> </span>ms<span class="o">)</span>
+
+<span class="w">  </span>●<span class="w"> </span>resistance<span class="w"> </span>API<span class="w"> </span>›<span class="w"> </span>returns<span class="w"> </span>0R<span class="w"> </span><span class="k">for</span><span class="w"> </span>a<span class="w"> </span>single<span class="w"> </span>black<span class="w"> </span>band
+
+<span class="w">    </span>expected<span class="w"> </span><span class="m">200</span><span class="w"> </span><span class="s2">&quot;OK&quot;</span>,<span class="w"> </span>got<span class="w"> </span><span class="m">404</span><span class="w"> </span><span class="s2">&quot;Not Found&quot;</span>
+
+<span class="w">       </span><span class="m">8</span><span class="w"> </span><span class="p">|</span><span class="w">       </span>.get<span class="o">(</span><span class="s2">&quot;/resistance&quot;</span><span class="o">)</span>
+<span class="w">       </span><span class="m">9</span><span class="w"> </span><span class="p">|</span><span class="w">       </span>.query<span class="o">({</span><span class="w"> </span>bands:<span class="w"> </span><span class="o">[</span><span class="s2">&quot;black&quot;</span><span class="o">]</span><span class="w"> </span><span class="o">})</span>
+<span class="w">    </span>&gt;<span class="w"> </span><span class="m">10</span><span class="w"> </span><span class="p">|</span><span class="w">       </span>.expect<span class="o">(</span><span class="m">200</span>,<span class="w"> </span><span class="s2">&quot;0R&quot;</span><span class="o">)</span><span class="p">;</span>
+<span class="w">         </span><span class="p">|</span><span class="w">        </span>^
+<span class="w">      </span><span class="m">11</span><span class="w"> </span><span class="p">|</span><span class="w">   </span><span class="o">})</span><span class="p">;</span>
+<span class="w">      </span><span class="m">12</span><span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="o">})</span><span class="p">;</span>
+<span class="w">      </span><span class="m">13</span><span class="w"> </span><span class="p">|</span>
+
+<span class="w">      </span>at<span class="w"> </span>Object.expect<span class="w"> </span><span class="o">(</span>app.test.js:10:8<span class="o">)</span>
+<span class="w">      </span>----
+<span class="w">      </span>at<span class="w"> </span>Test._assertStatus<span class="w"> </span><span class="o">(</span>node_modules/supertest/lib/test.js:252:14<span class="o">)</span>
+<span class="w">      </span>at<span class="w"> </span>node_modules/supertest/lib/test.js:308:13
+<span class="w">      </span>at<span class="w"> </span>Test._assertFunction<span class="w"> </span><span class="o">(</span>node_modules/supertest/lib/test.js:285:13<span class="o">)</span>
+<span class="w">      </span>at<span class="w"> </span>Test.assert<span class="w"> </span><span class="o">(</span>node_modules/supertest/lib/test.js:164:23<span class="o">)</span>
+<span class="w">      </span>at<span class="w"> </span>Server.localAssert<span class="w"> </span><span class="o">(</span>node_modules/supertest/lib/test.js:120:14<span class="o">)</span>
+
+Test<span class="w"> </span>Suites:<span class="w"> </span><span class="m">1</span><span class="w"> </span>failed,<span class="w"> </span><span class="m">1</span><span class="w"> </span>total
+Tests:<span class="w">       </span><span class="m">1</span><span class="w"> </span>failed,<span class="w"> </span><span class="m">1</span><span class="w"> </span>total
+Snapshots:<span class="w">   </span><span class="m">0</span><span class="w"> </span>total
+Time:<span class="w">        </span><span class="m">0</span>.232<span class="w"> </span>s
+Ran<span class="w"> </span>all<span class="w"> </span><span class="nb">test</span><span class="w"> </span>suites.
+</code></pre></div>
+
+<p>That's a bit more like it, the test is now <em>failing</em> (rather than <em>crashing</em>) and we're getting feedback at the HTTP API level (404 Not Found status code instead of the expected 200 OK). Let's handle that endpoint and move the failure a bit further along; add the code to <code>app.js</code> to handle the GET request and immediately return 200 OK:</p>
+<div class="highlight"><pre><span></span><code><span class="nx">app</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s2">&quot;/resistance&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">(</span><span class="nx">req</span><span class="p">,</span><span class="w"> </span><span class="nx">res</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="nx">res</span><span class="p">.</span><span class="nx">sendStatus</span><span class="p">(</span><span class="mf">200</span><span class="p">);</span>
+<span class="p">});</span>
+</code></pre></div>
+
+<p>Now we should see a failure for the body of the response, rather than the status code: </p>
+<div class="highlight"><pre><span></span><code><span class="w">  </span>●<span class="w"> </span>resistance<span class="w"> </span>API<span class="w"> </span>›<span class="w"> </span>returns<span class="w"> </span>0R<span class="w"> </span><span class="k">for</span><span class="w"> </span>a<span class="w"> </span>single<span class="w"> </span>black<span class="w"> </span>band
+
+<span class="w">    </span>expected<span class="w"> </span><span class="s1">&#39;0R&#39;</span><span class="w"> </span>response<span class="w"> </span>body,<span class="w"> </span>got<span class="w"> </span><span class="s1">&#39;OK&#39;</span>
+
+<span class="w">       </span><span class="m">8</span><span class="w"> </span><span class="p">|</span><span class="w">       </span>.get<span class="o">(</span><span class="s2">&quot;/resistance&quot;</span><span class="o">)</span>
+<span class="w">       </span><span class="m">9</span><span class="w"> </span><span class="p">|</span><span class="w">       </span>.query<span class="o">({</span><span class="w"> </span>bands:<span class="w"> </span><span class="o">[</span><span class="s2">&quot;black&quot;</span><span class="o">]</span><span class="w"> </span><span class="o">})</span>
+<span class="w">    </span>&gt;<span class="w"> </span><span class="m">10</span><span class="w"> </span><span class="p">|</span><span class="w">       </span>.expect<span class="o">(</span><span class="m">200</span>,<span class="w"> </span><span class="s2">&quot;0R&quot;</span><span class="o">)</span><span class="p">;</span>
+<span class="w">         </span><span class="p">|</span><span class="w">        </span>^
+<span class="w">      </span><span class="m">11</span><span class="w"> </span><span class="p">|</span><span class="w">   </span><span class="o">})</span><span class="p">;</span>
+<span class="w">      </span><span class="m">12</span><span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="o">})</span><span class="p">;</span>
+<span class="w">      </span><span class="m">13</span><span class="w"> </span><span class="p">|</span>
+
+<span class="w">      </span>at<span class="w"> </span>Object.expect<span class="w"> </span><span class="o">(</span>app.test.js:10:8<span class="o">)</span>
+</code></pre></div>
+
+<p>If not, you may be handling the wrong path or method; double-check that the code in <code>app.js</code> matches up with the request defined in <code>app.test.js</code>.</p>
+<p>Finish up the first step by updating the handler so that the test passes, then make a commit:</p>
+<div class="highlight"><pre><span></span><code>$<span class="w"> </span>git<span class="w"> </span>add<span class="w"> </span>.
+$<span class="w"> </span>git<span class="w"> </span>commit<span class="w"> </span>--message<span class="w"> </span><span class="s1">&#39;Implement 0 Ohm resistor&#39;</span>
+<span class="o">[</span>main<span class="w"> </span>51abbe9<span class="o">]</span><span class="w"> </span>Implement<span class="w"> </span><span class="m">0</span><span class="w"> </span>Ohm<span class="w"> </span>resistor
+<span class="w"> </span><span class="m">4</span><span class="w"> </span>files<span class="w"> </span>changed,<span class="w"> </span><span class="m">964</span><span class="w"> </span>insertions<span class="o">(</span>+<span class="o">)</span>,<span class="w"> </span><span class="m">31</span><span class="w"> </span>deletions<span class="o">(</span>-<span class="o">)</span>
+<span class="w"> </span>create<span class="w"> </span>mode<span class="w"> </span><span class="m">100644</span><span class="w"> </span>app.js
+<span class="w"> </span>create<span class="w"> </span>mode<span class="w"> </span><span class="m">100644</span><span class="w"> </span>app.test.js
+</code></pre></div>
+
+<hr>
+<p><strong>Note</strong>: test-driving the development has already influenced one part of our system's design - wanting to access the application directly means we've exported it rather than immediately calling <code>app.listen</code> to start it up. If you'd like to try out the server locally (e.g. using cURL or Postman) while you're working on it, create the following <code>server.js</code>:</p>
+<div class="highlight"><pre><span></span><code><span class="kd">const</span><span class="w"> </span><span class="nx">app</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">require</span><span class="p">(</span><span class="s2">&quot;./app.js&quot;</span><span class="p">);</span>
+
+<span class="kd">const</span><span class="w"> </span><span class="nx">PORT</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">parseInt</span><span class="p">(</span><span class="nx">process</span><span class="p">.</span><span class="nx">env</span><span class="p">.</span><span class="nx">PORT</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="s2">&quot;3000&quot;</span><span class="p">,</span><span class="w"> </span><span class="mf">10</span><span class="p">);</span>
+
+<span class="nx">app</span><span class="p">.</span><span class="nx">listen</span><span class="p">(</span><span class="nx">PORT</span><span class="p">,</span><span class="w"> </span><span class="p">()</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="sb">`listening on </span><span class="si">${</span><span class="nx">PORT</span><span class="si">}</span><span class="sb">`</span><span class="p">));</span>
+</code></pre></div>
+
+<p>then <code>npm install --save-dev nodemon</code> and update the scripts in <code>package.json</code> with the following:</p>
+<div class="highlight"><pre><span></span><code><span class="w"> </span>   &quot;scripts&quot;: {
+<span class="gi">+     &quot;dev&quot;: &quot;nodemon ./server.js&quot;,</span>
+<span class="w"> </span>     &quot;test&quot;: &quot;jest&quot;
+<span class="w"> </span>   }
+</code></pre></div>
+
+<p>Now <code>npm run dev</code> will start the app, and restart whenever you save changes. But you might find that you don't <em>need</em> to try out the server manually, because all the tests mean you're already confident that it works, and that's worth reflecting on!</p>
+<h2>Unhappy path to design [4/9]</h2>
+<p>At this point you might be tempted to jump straight to an example like the 22kΩ resistor in the introduction, writing something like:</p>
+<div class="highlight"><pre><span></span><code><span class="w">  </span><span class="nx">it</span><span class="p">(</span><span class="s2">&quot;returns 22K for red, red, orange&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">()</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nx">request</span><span class="p">(</span><span class="nx">app</span><span class="p">)</span>
+<span class="w">      </span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s2">&quot;/resistance&quot;</span><span class="p">)</span>
+<span class="w">      </span><span class="p">.</span><span class="nx">query</span><span class="p">({</span><span class="w"> </span><span class="nx">bands</span><span class="o">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;red&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;red&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;orange&quot;</span><span class="p">]</span><span class="w"> </span><span class="p">})</span>
+<span class="w">      </span><span class="p">.</span><span class="nx">expect</span><span class="p">(</span><span class="mf">200</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;22K&quot;</span><span class="p">);</span>
+<span class="w">  </span><span class="p">});</span>
+</code></pre></div>
+
+<p>But bear in mind that this is an HTTP API. Anyone can make a request to it, and they might not send one that's well-formed. In my case, where it's expecting a request like <code>/resistance?bands=black</code>, what if there <em>isn't</em> a query parameter? I've found this <a href="https://www.codetinkerer.com/2015/12/04/choosing-an-http-status-code.html">status code flowchart</a> really useful for figuring out a semantically appropriate response; working through that I get down to <code>400 Bad Request</code>. So let's write <em>that</em> test:</p>
+<div class="highlight"><pre><span></span><code><span class="w">  </span><span class="nx">it</span><span class="p">(</span><span class="s2">&quot;returns 400 if query missing&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">()</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nx">request</span><span class="p">(</span><span class="nx">app</span><span class="p">)</span>
+<span class="w">      </span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s2">&quot;/resistance&quot;</span><span class="p">)</span>
+<span class="w">      </span><span class="p">.</span><span class="nx">expect</span><span class="p">(</span><span class="mf">400</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;Bad Request&quot;</span><span class="p">);</span>
+<span class="w">  </span><span class="p">});</span>
+</code></pre></div>
+
+<p>Follow the TDD process:</p>
+<ol>
+<li>Call the shot;</li>
+<li>Run the test;</li>
+<li>Ensure it fails usefully (edit the test and repeat steps 1 and 2 as needed);</li>
+<li>Get it passing; and</li>
+<li>Make a commit.</li>
+</ol>
+<p><strong>Remember</strong>: never rely on your clients to make valid requests. Even if you only intend for the API to be consumed by e.g. a React app you're maintaining, always check that input validation and authentication is applied correctly; it's trivial to make a request <em>without</em> using the UI.</p>
+<hr>
+<p>Next, what if there is a <code>bands</code> query parameter but its value isn't <code>black</code>? That's a <em>structurally</em> valid request, it has the query parameter, but e.g. <code>/resistance?bands=blue</code> is <em>semantically</em> invalid; there's no real resistor with a single blue band. From the above flowchart, I get to <code>422 Unprocessable Entity</code>. So let's write a second test for that.</p>
+<div class="highlight"><pre><span></span><code><span class="w">  </span><span class="nx">it</span><span class="p">(</span><span class="s2">&quot;returns 422 for a single non-black band&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">()</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nx">request</span><span class="p">(</span><span class="nx">app</span><span class="p">)</span>
+<span class="w">      </span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s2">&quot;/resistance&quot;</span><span class="p">)</span>
+<span class="w">      </span><span class="p">.</span><span class="nx">query</span><span class="p">({</span><span class="w"> </span><span class="nx">bands</span><span class="o">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;blue&quot;</span><span class="p">]</span><span class="w"> </span><span class="p">})</span>
+<span class="w">      </span><span class="p">.</span><span class="nx">expect</span><span class="p">(</span><span class="mf">422</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;Unprocessable Entity&quot;</span><span class="p">);</span>
+<span class="w">  </span><span class="p">});</span>
+</code></pre></div>
+
+<p>The temptation here might be to do something like this:</p>
+<div class="highlight"><pre><span></span><code><span class="nx">app</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s2">&quot;/resistance&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">(</span><span class="nx">req</span><span class="p">,</span><span class="w"> </span><span class="nx">res</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="kd">const</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">bands</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">req</span><span class="p">.</span><span class="nx">query</span><span class="p">;</span>
+<span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="nx">bands</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nx">res</span><span class="p">.</span><span class="nx">sendStatus</span><span class="p">(</span><span class="mf">400</span><span class="p">);</span>
+<span class="w">  </span><span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">bands</span><span class="p">.</span><span class="nx">length</span><span class="w"> </span><span class="o">!==</span><span class="w"> </span><span class="mf">1</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="nx">bands</span><span class="p">[</span><span class="mf">0</span><span class="p">]</span><span class="w"> </span><span class="o">!==</span><span class="w"> </span><span class="s2">&quot;black&quot;</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">     </span><span class="k">return</span><span class="w"> </span><span class="nx">res</span><span class="p">.</span><span class="nx">sendStatus</span><span class="p">(</span><span class="mf">422</span><span class="p">);</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="w">  </span><span class="nx">res</span><span class="p">.</span><span class="nx">send</span><span class="p">(</span><span class="s2">&quot;0R&quot;</span><span class="p">);</span>
+<span class="p">});</span>
+</code></pre></div>
+
+<p>However, this is mixing up two very important concepts. We have two <em>domains</em> here, <strong>transport</strong> (HTTP requests and responses, things like paths, query parameters and status codes) and <strong>business</strong> (resistors and their resistance values). Splitting this out into those two domains might look like:</p>
+<table>
+<thead>
+<tr>
+<th>Request</th>
+<th>Transport</th>
+<th>Business</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>GET /resistance</code></td>
+<td><em>"A request with no <code>bands</code> query parameter is bad."</em> -&gt; <code>400</code></td>
+<td>N/A</td>
+</tr>
+<tr>
+<td><code>GET /resistance?bands=blue</code></td>
+<td><em>"An invalid resistor isn't processable."</em> -&gt; <code>422</code></td>
+<td><em>"A resistor with a single blue band isn't valid."</em></td>
+</tr>
+</tbody>
+</table>
+<p>Here you can see the split described above - the left-hand side is about HTTP APIs, the right-hand side is about resistors.  While handling a <em>structurally</em> invalid request can be done entirely at the transport level, handling a <em>semantically</em> invalid request is a business level question.</p>
+<p>So let's take this opportunity to split out a <em>service</em> in <code>service.js</code> to handle the business domain:</p>
+<div class="highlight"><pre><span></span><code><span class="nx">module</span><span class="p">.</span><span class="nx">exports</span><span class="p">.</span><span class="nx">resistance</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="nx">bands</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="s2">&quot;0R&quot;</span><span class="p">;</span>
+</code></pre></div>
+
+<p>and use that in the app:</p>
+<div class="highlight"><pre><span></span><code><span class="kd">const</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">resistance</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">require</span><span class="p">(</span><span class="s2">&quot;./service&quot;</span><span class="p">);</span>
+
+<span class="c1">// ...</span>
+
+<span class="nx">app</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s2">&quot;/resistance&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">(</span><span class="nx">req</span><span class="p">,</span><span class="w"> </span><span class="nx">res</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="kd">const</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">bands</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">req</span><span class="p">.</span><span class="nx">query</span><span class="p">;</span>
+<span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="nx">bands</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nx">res</span><span class="p">.</span><span class="nx">sendStatus</span><span class="p">(</span><span class="mf">400</span><span class="p">);</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="w">  </span><span class="nx">res</span><span class="p">.</span><span class="nx">send</span><span class="p">(</span><span class="nx">resistance</span><span class="p">(</span><span class="nx">bands</span><span class="p">));</span>
+<span class="p">});</span>
+</code></pre></div>
+
+<p>This is a simple <em>refactor</em>, the <code>200</code> and <code>400</code> tests should still pass, and the <code>422</code> test should still fail (you can comment it out or <a href="https://jestjs.io/docs/api#testskipname-fn">skip it</a> to double-check). It also gives us a new <em>boundary</em> to test at, we can exercise the service code directly in <code>service.test.js</code>:</p>
+<div class="highlight"><pre><span></span><code><span class="kd">const</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">resistance</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">require</span><span class="p">(</span><span class="s2">&quot;./service&quot;</span><span class="p">);</span>
+
+<span class="nx">describe</span><span class="p">(</span><span class="s2">&quot;resistance&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">()</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="nx">it</span><span class="p">(</span><span class="s2">&quot;returns 0R for a single black band&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">()</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nx">expect</span><span class="p">(</span><span class="nx">resistance</span><span class="p">([</span><span class="s2">&quot;black&quot;</span><span class="p">])).</span><span class="nx">toBe</span><span class="p">(</span><span class="s2">&quot;0R&quot;</span><span class="p">);</span>
+<span class="w">  </span><span class="p">});</span>
+<span class="p">});</span>
+</code></pre></div>
+
+<p>You can run these low-level tests on their own by passing the file name as an argument to Jest, <code>npm test -- service</code>. So how should we handle an invalid band? Again this gives us a chance to do some design, think through how the function should behave by writing the test <em>before</em> the implementation. For example:</p>
+<ul>
+<li>We could return <code>null</code> for cases where the bands aren't valid, <code>expect(resistance(["red"]).toBeNull()</code>,  but if <em>all</em> we get back from the function in the failing case is <code>null</code> that doesn't tell us much about what the problem was;</li>
+<li>We could return a string describing the problem, but that would make it very difficult for the controller to distinguish between valid and invalid cases to send the appropriate responses;</li>
+<li>We could return an object, <code>expect(resistance(["red"]).toEqual({ error: "..." })</code>, but that doesn't exactly scream <em>"your input made no sense"</em>.</li>
+</ul>
+<p>I would say the right thing to do here is to <strong>throw an error</strong>, which can have a message explaining what the problem was. Remember that you have to pass a <em>function</em> when you expect an error to be thrown, to defer the execution of the thing you're testing, otherwise (with e.g. <code>expect(resistance["blue"])).toThrow(...)</code>) the error is thrown <em>before</em> <code>expect</code> gets called:</p>
+<div class="highlight"><pre><span></span><code><span class="w">  </span><span class="nx">it</span><span class="p">(</span><span class="s2">&quot;throws an error for a single non-black band&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">()</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nx">expect</span><span class="p">(()</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="nx">resistance</span><span class="p">([</span><span class="s2">&quot;blue&quot;</span><span class="p">])).</span><span class="nx">toThrow</span><span class="p">(</span><span class="s2">&quot;Invalid bands: blue&quot;</span><span class="p">);</span>
+<span class="w">  </span><span class="p">});</span>
+</code></pre></div>
+
+<hr>
+<p><strong>Note</strong>: it seems to be a popular pattern to write an exception with a status code for this kind of thing, e.g.:</p>
+<div class="highlight"><pre><span></span><code><span class="c1">// custom error:</span>
+<span class="kd">class</span><span class="w"> </span><span class="nx">CustomError</span><span class="w"> </span><span class="k">extends</span><span class="w"> </span><span class="ne">Error</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="kr">constructor</span><span class="p">(</span><span class="nx">status</span><span class="p">,</span><span class="w"> </span><span class="nx">message</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">super</span><span class="p">(</span><span class="nx">message</span><span class="p">);</span>
+<span class="w">    </span><span class="k">this</span><span class="p">.</span><span class="nx">status</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">status</span><span class="p">;</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">}</span>
+
+<span class="c1">// in the service:</span>
+<span class="k">throw</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">CustomError</span><span class="p">(</span><span class="mf">422</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;...&quot;</span><span class="p">);</span>
+
+<span class="c1">// in the controller/middleware:</span>
+<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">err</span><span class="w"> </span><span class="ow">instanceof</span><span class="w"> </span><span class="nx">CustomError</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="nx">res</span><span class="p">.</span><span class="nx">status</span><span class="p">(</span><span class="nx">err</span><span class="p">.</span><span class="nx">status</span><span class="p">).</span><span class="nx">send</span><span class="p">(</span><span class="nx">err</span><span class="p">.</span><span class="nx">message</span><span class="p">);</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<p>I think that this is bad design - the whole point of extracting the service was to <em>isolate</em> our business logic from details of the transport layer. Imagine we reused the core service with a <em>different</em> transport layer, e.g. a CLI wrapper to allow usage on the command line:</p>
+<div class="highlight"><pre><span></span><code>$<span class="w"> </span>./resistance.js<span class="w"> </span>yellow<span class="w"> </span>violet<span class="w"> </span>black
+4K7
+</code></pre></div>
+
+<p>Now what does the <code>status</code> on the error mean, what is <code>422</code> in the context of a CLI? We've re-coupled our core domain/business logic back to the transport layer, we might as well have written everything in the controller!</p>
+<hr>
+<p>Call the shot, run the test, check the diagnostics:</p>
+<div class="highlight"><pre><span></span><code><span class="w">  </span><span class="err">●</span><span class="w"> </span><span class="nt">resistance</span><span class="w"> </span><span class="err">›</span><span class="w"> </span><span class="nt">throws</span><span class="w"> </span><span class="nt">an</span><span class="w"> </span><span class="nt">error</span><span class="w"> </span><span class="nt">for</span><span class="w"> </span><span class="nt">a</span><span class="w"> </span><span class="nt">single</span><span class="w"> </span><span class="nt">non-black</span><span class="w"> </span><span class="nt">band</span>
+
+<span class="w">    </span><span class="nt">expect</span><span class="o">(</span><span class="nt">received</span><span class="o">)</span><span class="p">.</span><span class="nc">toThrow</span><span class="o">(</span><span class="nt">expected</span><span class="o">)</span>
+
+<span class="w">    </span><span class="nt">Expected</span><span class="w"> </span><span class="nt">substring</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;Invalid bands: blue&quot;</span>
+
+<span class="w">    </span><span class="nt">Received</span><span class="w"> </span><span class="nt">function</span><span class="w"> </span><span class="nt">did</span><span class="w"> </span><span class="nt">not</span><span class="w"> </span><span class="nt">throw</span>
+
+<span class="w">       </span><span class="nt">7</span><span class="w"> </span><span class="o">|</span>
+<span class="w">       </span><span class="nt">8</span><span class="w"> </span><span class="o">|</span><span class="w">   </span><span class="nt">it</span><span class="o">(</span><span class="s2">&quot;throws an error for a single non-black band&quot;</span><span class="o">,</span><span class="w"> </span><span class="o">()</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="err">&gt;</span><span class="w">  </span><span class="err">9</span><span class="w"> </span><span class="err">|</span><span class="w">     </span><span class="err">expect(()</span><span class="w"> </span><span class="err">=&gt;</span><span class="w"> </span><span class="err">resistance(</span><span class="cp">[</span><span class="s2">&quot;blue&quot;</span><span class="cp">]</span><span class="err">)).toThrow(&quot;Invalid</span><span class="w"> </span><span class="n">bands</span><span class="p">:</span><span class="w"> </span><span class="kc">blue</span><span class="err">&quot;</span><span class="p">);</span>
+<span class="w">         </span><span class="err">|</span><span class="w">                                        </span><span class="err">^</span>
+<span class="w">      </span><span class="err">10</span><span class="w"> </span><span class="err">|</span><span class="w">   </span><span class="p">}</span><span class="o">);</span>
+<span class="w">      </span><span class="nt">11</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="err">}</span><span class="o">);</span>
+<span class="w">      </span><span class="nt">12</span><span class="w"> </span><span class="o">|</span>
+
+<span class="w">      </span><span class="nt">at</span><span class="w"> </span><span class="nt">Object</span><span class="p">.</span><span class="nc">toThrow</span><span class="w"> </span><span class="o">(</span><span class="nt">service</span><span class="p">.</span><span class="nc">test</span><span class="p">.</span><span class="nc">js</span><span class="p">:</span><span class="nd">9</span><span class="p">:</span><span class="nd">40</span><span class="o">)</span>
+</code></pre></div>
+
+<p>Get that test passing at the service level, then run all of the tests to bring the integration tests back in (remember to <strong>call the shot</strong>):</p>
+<div class="highlight"><pre><span></span><code>$<span class="w"> </span>npm<span class="w"> </span><span class="nb">test</span>
+
+&gt;<span class="w"> </span>resistance@1.0.0<span class="w"> </span><span class="nb">test</span>
+&gt;<span class="w"> </span>jest
+
+FAIL<span class="w"> </span>./app.test.js
+<span class="w">  </span>●<span class="w"> </span>resistance<span class="w"> </span>›<span class="w"> </span>returns<span class="w"> </span>0R<span class="w"> </span><span class="k">for</span><span class="w"> </span>a<span class="w"> </span>single<span class="w"> </span>black<span class="w"> </span>band
+
+<span class="w">    </span>expected<span class="w"> </span><span class="m">200</span><span class="w"> </span><span class="s2">&quot;OK&quot;</span>,<span class="w"> </span>got<span class="w"> </span><span class="m">500</span><span class="w"> </span><span class="s2">&quot;Internal Server Error&quot;</span>
+
+<span class="w">      </span><span class="m">14</span><span class="w"> </span><span class="p">|</span><span class="w">       </span>.get<span class="o">(</span><span class="s2">&quot;/resistance&quot;</span><span class="o">)</span>
+<span class="w">      </span><span class="m">15</span><span class="w"> </span><span class="p">|</span><span class="w">       </span>.query<span class="o">({</span><span class="w"> </span>bands:<span class="w"> </span><span class="o">[</span><span class="s2">&quot;black&quot;</span><span class="o">]</span><span class="w"> </span><span class="o">})</span>
+<span class="w">    </span>&gt;<span class="w"> </span><span class="m">16</span><span class="w"> </span><span class="p">|</span><span class="w">       </span>.expect<span class="o">(</span><span class="m">200</span>,<span class="w"> </span><span class="s2">&quot;0R&quot;</span><span class="o">)</span><span class="p">;</span>
+<span class="w">         </span><span class="p">|</span><span class="w">        </span>^
+<span class="w">      </span><span class="m">17</span><span class="w"> </span><span class="p">|</span><span class="w">   </span><span class="o">})</span><span class="p">;</span>
+<span class="w">      </span><span class="m">18</span><span class="w"> </span><span class="p">|</span>
+<span class="w">      </span><span class="m">19</span><span class="w"> </span><span class="p">|</span><span class="w">   </span>it<span class="o">(</span><span class="s2">&quot;returns 422 for a single non-black band&quot;</span>,<span class="w"> </span><span class="o">()</span><span class="w"> </span><span class="o">=</span>&gt;<span class="w"> </span><span class="o">{</span>
+
+<span class="w">      </span>at<span class="w"> </span>Object.expect<span class="w"> </span><span class="o">(</span>app.test.js:16:8<span class="o">)</span>
+<span class="w">      </span>----
+<span class="w">      </span>at<span class="w"> </span>Test._assertStatus<span class="w"> </span><span class="o">(</span>node_modules/supertest/lib/test.js:252:14<span class="o">)</span>
+<span class="w">      </span>at<span class="w"> </span>node_modules/supertest/lib/test.js:308:13
+<span class="w">      </span>at<span class="w"> </span>Test._assertFunction<span class="w"> </span><span class="o">(</span>node_modules/supertest/lib/test.js:285:13<span class="o">)</span>
+<span class="w">      </span>at<span class="w"> </span>Test.assert<span class="w"> </span><span class="o">(</span>node_modules/supertest/lib/test.js:164:23<span class="o">)</span>
+<span class="w">      </span>at<span class="w"> </span>Server.localAssert<span class="w"> </span><span class="o">(</span>node_modules/supertest/lib/test.js:120:14<span class="o">)</span>
+
+<span class="w">  </span>●<span class="w"> </span>resistance<span class="w"> </span>›<span class="w"> </span>returns<span class="w"> </span><span class="m">422</span><span class="w"> </span><span class="k">for</span><span class="w"> </span>a<span class="w"> </span>single<span class="w"> </span>non-black<span class="w"> </span>band
+
+<span class="w">    </span>expected<span class="w"> </span><span class="m">422</span><span class="w"> </span><span class="s2">&quot;Unprocessable Entity&quot;</span>,<span class="w"> </span>got<span class="w"> </span><span class="m">500</span><span class="w"> </span><span class="s2">&quot;Internal Server Error&quot;</span>
+
+<span class="w">      </span><span class="m">21</span><span class="w"> </span><span class="p">|</span><span class="w">       </span>.get<span class="o">(</span><span class="s2">&quot;/resistance&quot;</span><span class="o">)</span>
+<span class="w">      </span><span class="m">22</span><span class="w"> </span><span class="p">|</span><span class="w">       </span>.query<span class="o">({</span><span class="w"> </span>bands:<span class="w"> </span><span class="o">[</span><span class="s2">&quot;blue&quot;</span><span class="o">]</span><span class="w"> </span><span class="o">})</span>
+<span class="w">    </span>&gt;<span class="w"> </span><span class="m">23</span><span class="w"> </span><span class="p">|</span><span class="w">       </span>.expect<span class="o">(</span><span class="m">422</span>,<span class="w"> </span><span class="s2">&quot;Unprocessable Entity&quot;</span><span class="o">)</span><span class="p">;</span>
+<span class="w">         </span><span class="p">|</span><span class="w">        </span>^
+<span class="w">      </span><span class="m">24</span><span class="w"> </span><span class="p">|</span><span class="w">   </span><span class="o">})</span><span class="p">;</span>
+<span class="w">      </span><span class="m">25</span><span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="o">})</span><span class="p">;</span>
+<span class="w">      </span><span class="m">26</span><span class="w"> </span><span class="p">|</span>
+
+<span class="w">      </span>at<span class="w"> </span>Object.expect<span class="w"> </span><span class="o">(</span>app.test.js:23:8<span class="o">)</span>
+<span class="w">      </span>----
+<span class="w">      </span>at<span class="w"> </span>Test._assertStatus<span class="w"> </span><span class="o">(</span>node_modules/supertest/lib/test.js:252:14<span class="o">)</span>
+<span class="w">      </span>at<span class="w"> </span>node_modules/supertest/lib/test.js:308:13
+<span class="w">      </span>at<span class="w"> </span>Test._assertFunction<span class="w"> </span><span class="o">(</span>node_modules/supertest/lib/test.js:285:13<span class="o">)</span>
+<span class="w">      </span>at<span class="w"> </span>Test.assert<span class="w"> </span><span class="o">(</span>node_modules/supertest/lib/test.js:164:23<span class="o">)</span>
+<span class="w">      </span>at<span class="w"> </span>Server.localAssert<span class="w"> </span><span class="o">(</span>node_modules/supertest/lib/test.js:120:14<span class="o">)</span>
+
+PASS<span class="w"> </span>./service.test.js
+
+Test<span class="w"> </span>Suites:<span class="w"> </span><span class="m">1</span><span class="w"> </span>failed,<span class="w"> </span><span class="m">1</span><span class="w"> </span>passed,<span class="w"> </span><span class="m">2</span><span class="w"> </span>total
+Tests:<span class="w">       </span><span class="m">2</span><span class="w"> </span>failed,<span class="w"> </span><span class="m">3</span><span class="w"> </span>passed,<span class="w"> </span><span class="m">5</span><span class="w"> </span>total
+Snapshots:<span class="w">   </span><span class="m">0</span><span class="w"> </span>total
+Time:<span class="w">        </span><span class="m">0</span>.26<span class="w"> </span>s,<span class="w"> </span>estimated<span class="w"> </span><span class="m">1</span><span class="w"> </span>s
+Ran<span class="w"> </span>all<span class="w"> </span><span class="nb">test</span><span class="w"> </span>suites.
+</code></pre></div>
+
+<p>That's unfortunate; <em>two</em> of the tests are failing. I was expecting only <em>one</em> failure, we still handle the single black band case correctly. And even worse we don't see very much information about <em>why</em>.</p>
+<p><strong>Note</strong>: this is a good motivation for running the code in a known-failing state, as TDD encourages - you get a preview of what errors in production would look like, and it this case it's told us we need better observability (<em>"o11y"</em>)!</p>
+<p>To help with debugging, add the following Express <a href="https://expressjs.com/en/guide/using-middleware.html">middleware</a> to the end of <code>app.js</code> to ensure we see any unhandled errors in the server logs:</p>
+<div class="highlight"><pre><span></span><code><span class="nx">app</span><span class="p">.</span><span class="nx">use</span><span class="p">((</span><span class="nx">err</span><span class="p">,</span><span class="w"> </span><span class="nx">req</span><span class="p">,</span><span class="w"> </span><span class="nx">res</span><span class="p">,</span><span class="w"> </span><span class="nx">next</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="nx">req</span><span class="p">.</span><span class="nx">headersSent</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nx">console</span><span class="p">.</span><span class="nx">error</span><span class="p">(</span><span class="nx">err</span><span class="p">);</span>
+<span class="w">    </span><span class="nx">res</span><span class="p">.</span><span class="nx">sendStatus</span><span class="p">(</span><span class="mf">500</span><span class="p">);</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="w">  </span><span class="nx">next</span><span class="p">(</span><span class="nx">err</span><span class="p">);</span>
+<span class="p">});</span>
+</code></pre></div>
+
+<p>and re-run the tests (I've trimmed any error tracebacks to exclude external code - they're very long otherwise):</p>
+<div class="highlight"><pre><span></span><code>$<span class="w"> </span>npm<span class="w"> </span>t
+
+&gt;<span class="w"> </span>resistance@1.0.0<span class="w"> </span><span class="nb">test</span>
+&gt;<span class="w"> </span>jest
+
+<span class="w"> </span>FAIL<span class="w">  </span>./app.test.js
+<span class="w">  </span>●<span class="w"> </span>Console
+
+<span class="w">    </span>console.error
+<span class="w">      </span>Error:<span class="w"> </span>Invalid<span class="w"> </span>bands:<span class="w"> </span>black
+<span class="w">          </span>at<span class="w"> </span>Object.&lt;anonymous&gt;.module.exports.resistance<span class="w"> </span><span class="o">(</span>path/to/resistance/service.js:5:9<span class="o">)</span>
+<span class="w">          </span>at<span class="w"> </span>resistance<span class="w"> </span><span class="o">(</span>path/to/resistance/app.js:12:12<span class="o">)</span>
+<span class="w">          </span>...
+
+<span class="w">      </span><span class="m">15</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>app.use<span class="o">((</span>err,<span class="w"> </span>req,<span class="w"> </span>res,<span class="w"> </span>next<span class="o">)</span><span class="w"> </span><span class="o">=</span>&gt;<span class="w"> </span><span class="o">{</span>
+<span class="w">      </span><span class="m">16</span><span class="w"> </span><span class="p">|</span><span class="w">   </span><span class="k">if</span><span class="w"> </span><span class="o">(</span>!res.headersSent<span class="o">)</span><span class="w"> </span><span class="o">{</span>
+<span class="w">    </span>&gt;<span class="w"> </span><span class="m">17</span><span class="w"> </span><span class="p">|</span><span class="w">     </span>console.error<span class="o">(</span>err<span class="o">)</span><span class="p">;</span>
+<span class="w">         </span><span class="p">|</span><span class="w">             </span>^
+<span class="w">      </span><span class="m">18</span><span class="w"> </span><span class="p">|</span><span class="w">     </span>res.sendStatus<span class="o">(</span><span class="m">500</span><span class="o">)</span><span class="p">;</span>
+<span class="w">      </span><span class="m">19</span><span class="w"> </span><span class="p">|</span><span class="w">   </span><span class="o">}</span>
+<span class="w">      </span><span class="m">20</span><span class="w"> </span><span class="p">|</span><span class="w">   </span>next<span class="o">(</span>err<span class="o">)</span><span class="p">;</span>
+
+<span class="w">      </span>at<span class="w"> </span>error<span class="w"> </span><span class="o">(</span>app.js:17:13<span class="o">)</span>
+<span class="w">      </span>...
+
+<span class="w">    </span>console.error
+<span class="w">      </span>Error:<span class="w"> </span>Invalid<span class="w"> </span>bands:<span class="w"> </span>blue
+<span class="w">          </span>at<span class="w"> </span>Object.&lt;anonymous&gt;.module.exports.resistance<span class="w"> </span><span class="o">(</span>path/to/resistance/service.js:5:9<span class="o">)</span>
+<span class="w">          </span>at<span class="w"> </span>resistance<span class="w"> </span><span class="o">(</span>path/to/resistance/app.js:12:12<span class="o">)</span>
+<span class="w">          </span>...
+
+<span class="w">      </span><span class="m">15</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>app.use<span class="o">((</span>err,<span class="w"> </span>req,<span class="w"> </span>res,<span class="w"> </span>next<span class="o">)</span><span class="w"> </span><span class="o">=</span>&gt;<span class="w"> </span><span class="o">{</span>
+<span class="w">      </span><span class="m">16</span><span class="w"> </span><span class="p">|</span><span class="w">   </span><span class="k">if</span><span class="w"> </span><span class="o">(</span>!res.headersSent<span class="o">)</span><span class="w"> </span><span class="o">{</span>
+<span class="w">    </span>&gt;<span class="w"> </span><span class="m">17</span><span class="w"> </span><span class="p">|</span><span class="w">     </span>console.error<span class="o">(</span>err<span class="o">)</span><span class="p">;</span>
+<span class="w">         </span><span class="p">|</span><span class="w">             </span>^
+<span class="w">      </span><span class="m">18</span><span class="w"> </span><span class="p">|</span><span class="w">     </span>res.sendStatus<span class="o">(</span><span class="m">500</span><span class="o">)</span><span class="p">;</span>
+<span class="w">      </span><span class="m">19</span><span class="w"> </span><span class="p">|</span><span class="w">   </span><span class="o">}</span>
+<span class="w">      </span><span class="m">20</span><span class="w"> </span><span class="p">|</span><span class="w">   </span>next<span class="o">(</span>err<span class="o">)</span><span class="p">;</span>
+
+<span class="w">      </span>at<span class="w"> </span>error<span class="w"> </span><span class="o">(</span>app.js:17:13<span class="o">)</span>
+<span class="w">      </span>...
+
+<span class="w">  </span>●<span class="w"> </span>resistance<span class="w"> </span>API<span class="w"> </span>›<span class="w"> </span>returns<span class="w"> </span>0R<span class="w"> </span><span class="k">for</span><span class="w"> </span>a<span class="w"> </span>single<span class="w"> </span>black<span class="w"> </span>band
+
+<span class="w">    </span>expected<span class="w"> </span><span class="m">200</span><span class="w"> </span><span class="s2">&quot;OK&quot;</span>,<span class="w"> </span>got<span class="w"> </span><span class="m">500</span><span class="w"> </span><span class="s2">&quot;Internal Server Error&quot;</span>
+
+<span class="w">       </span><span class="m">8</span><span class="w"> </span><span class="p">|</span><span class="w">       </span>.get<span class="o">(</span><span class="s2">&quot;/resistance&quot;</span><span class="o">)</span>
+<span class="w">       </span><span class="m">9</span><span class="w"> </span><span class="p">|</span><span class="w">       </span>.query<span class="o">({</span><span class="w"> </span>bands:<span class="w"> </span><span class="o">[</span><span class="s2">&quot;black&quot;</span><span class="o">]</span><span class="w"> </span><span class="o">})</span>
+<span class="w">    </span>&gt;<span class="w"> </span><span class="m">10</span><span class="w"> </span><span class="p">|</span><span class="w">       </span>.expect<span class="o">(</span><span class="m">200</span>,<span class="w"> </span><span class="s2">&quot;0R&quot;</span><span class="o">)</span><span class="p">;</span>
+<span class="w">         </span><span class="p">|</span><span class="w">        </span>^
+<span class="w">      </span><span class="m">11</span><span class="w"> </span><span class="p">|</span><span class="w">   </span><span class="o">})</span><span class="p">;</span>
+<span class="w">      </span><span class="m">12</span><span class="w"> </span><span class="p">|</span>
+<span class="w">      </span><span class="m">13</span><span class="w"> </span><span class="p">|</span><span class="w">   </span>it<span class="o">(</span><span class="s2">&quot;returns 400 if query missing&quot;</span>,<span class="w"> </span><span class="o">()</span><span class="w"> </span><span class="o">=</span>&gt;<span class="w"> </span><span class="o">{</span>
+
+<span class="w">      </span>at<span class="w"> </span>Object.expect<span class="w"> </span><span class="o">(</span>app.test.js:10:8<span class="o">)</span>
+<span class="w">      </span>----
+<span class="w">      </span>at<span class="w"> </span>Test._assertStatus<span class="w"> </span><span class="o">(</span>node_modules/supertest/lib/test.js:252:14<span class="o">)</span>
+<span class="w">      </span>at<span class="w"> </span>node_modules/supertest/lib/test.js:308:13
+<span class="w">      </span>at<span class="w"> </span>Test._assertFunction<span class="w"> </span><span class="o">(</span>node_modules/supertest/lib/test.js:285:13<span class="o">)</span>
+<span class="w">      </span>at<span class="w"> </span>Test.assert<span class="w"> </span><span class="o">(</span>node_modules/supertest/lib/test.js:164:23<span class="o">)</span>
+<span class="w">      </span>at<span class="w"> </span>Server.localAssert<span class="w"> </span><span class="o">(</span>node_modules/supertest/lib/test.js:120:14<span class="o">)</span>
+
+<span class="w">  </span>●<span class="w"> </span>resistance<span class="w"> </span>API<span class="w"> </span>›<span class="w"> </span>returns<span class="w"> </span><span class="m">422</span><span class="w"> </span><span class="k">for</span><span class="w"> </span>a<span class="w"> </span>single<span class="w"> </span>non-black<span class="w"> </span>band
+
+<span class="w">    </span>expected<span class="w"> </span><span class="m">422</span><span class="w"> </span><span class="s2">&quot;Unprocessable Entity&quot;</span>,<span class="w"> </span>got<span class="w"> </span><span class="m">500</span><span class="w"> </span><span class="s2">&quot;Internal Server Error&quot;</span>
+
+<span class="w">      </span><span class="m">21</span><span class="w"> </span><span class="p">|</span><span class="w">       </span>.get<span class="o">(</span><span class="s2">&quot;/resistance&quot;</span><span class="o">)</span>
+<span class="w">      </span><span class="m">22</span><span class="w"> </span><span class="p">|</span><span class="w">       </span>.query<span class="o">({</span><span class="w"> </span>bands:<span class="w"> </span><span class="o">[</span><span class="s2">&quot;blue&quot;</span><span class="o">]</span><span class="w"> </span><span class="o">})</span>
+<span class="w">    </span>&gt;<span class="w"> </span><span class="m">23</span><span class="w"> </span><span class="p">|</span><span class="w">       </span>.expect<span class="o">(</span><span class="m">422</span>,<span class="w"> </span><span class="s2">&quot;Unprocessable Entity&quot;</span><span class="o">)</span><span class="p">;</span>
+<span class="w">         </span><span class="p">|</span><span class="w">        </span>^
+<span class="w">      </span><span class="m">24</span><span class="w"> </span><span class="p">|</span><span class="w">   </span><span class="o">})</span><span class="p">;</span>
+<span class="w">      </span><span class="m">25</span><span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="o">})</span><span class="p">;</span>
+<span class="w">      </span><span class="m">26</span><span class="w"> </span><span class="p">|</span>
+
+<span class="w">      </span>at<span class="w"> </span>Object.expect<span class="w"> </span><span class="o">(</span>app.test.js:23:8<span class="o">)</span>
+<span class="w">      </span>----
+<span class="w">      </span>at<span class="w"> </span>Test._assertStatus<span class="w"> </span><span class="o">(</span>node_modules/supertest/lib/test.js:252:14<span class="o">)</span>
+<span class="w">      </span>at<span class="w"> </span>node_modules/supertest/lib/test.js:308:13
+<span class="w">      </span>at<span class="w"> </span>Test._assertFunction<span class="w"> </span><span class="o">(</span>node_modules/supertest/lib/test.js:285:13<span class="o">)</span>
+<span class="w">      </span>at<span class="w"> </span>Test.assert<span class="w"> </span><span class="o">(</span>node_modules/supertest/lib/test.js:164:23<span class="o">)</span>
+<span class="w">      </span>at<span class="w"> </span>Server.localAssert<span class="w"> </span><span class="o">(</span>node_modules/supertest/lib/test.js:120:14<span class="o">)</span>
+
+<span class="w"> </span>PASS<span class="w">  </span>./service.test.js
+
+Test<span class="w"> </span>Suites:<span class="w"> </span><span class="m">1</span><span class="w"> </span>failed,<span class="w"> </span><span class="m">1</span><span class="w"> </span>passed,<span class="w"> </span><span class="m">2</span><span class="w"> </span>total
+Tests:<span class="w">       </span><span class="m">2</span><span class="w"> </span>failed,<span class="w"> </span><span class="m">3</span><span class="w"> </span>passed,<span class="w"> </span><span class="m">5</span><span class="w"> </span>total
+Snapshots:<span class="w">   </span><span class="m">0</span><span class="w"> </span>total
+Time:<span class="w">        </span><span class="m">0</span>.384<span class="w"> </span>s,<span class="w"> </span>estimated<span class="w"> </span><span class="m">1</span><span class="w"> </span>s
+Ran<span class="w"> </span>all<span class="w"> </span><span class="nb">test</span><span class="w"> </span>suites.
+</code></pre></div>
+
+<p>I was expecting <code>Invalid bands: blue</code>, but <code>Invalid bands: black</code>? That's the one case we thought we'd handled! Try <em>debugging</em> to find out what's going on; put a breakpoint on the first line of the controller and then run the tests with a debugger attached (e.g. in Visual Studio Code run <code>npm test</code> in the <a href="https://code.visualstudio.com/docs/nodejs/nodejs-debugging#_javascript-debug-terminal">JavaScript Debug Terminal</a>, in WebStorm debug the test <a href="https://www.jetbrains.com/help/webstorm/running-unit-tests-on-jest.html#ws_jest_run_single_test_from_editor">from the editor</a>).</p>
+<p><strong>Note</strong>: another good motivation for writing tests, it gives you a really easy entrypoint for debugging small sections of your program.</p>
+<p>When you do so you should find out that <code>req.query</code> is <code>{ bands: "black" }</code> - <code>bands</code> is <strong>not</strong> an array. This happens because of the way Express deserialises query parameters, <code>?foo=bar</code> becomes <code>{ foo: "bar" }</code> whereas <code>?foo=bar&amp;foo=baz</code> gives <code>{ foo: ["bar", "baz"] }</code>.</p>
+<p>So where do we fix it? From a design perspective I would say that the interface to our service that our unit tests describe is correct - if we were calling that function from anywhere else (e.g. imagine we also had a CLI tool or a desktop app) we'd be passing in an array of strings. So this is something that the <em>transport</em> layer for our API should be handing:</p>
+<div class="highlight"><pre><span></span><code><span class="w"> </span>   }
+<span class="gd">-   res.send(resistance(bands));</span>
+<span class="gi">+   res.send(resistance(Array.isArray(bands) ? bands : [bands]));</span>
+<span class="w"> </span> });
+</code></pre></div>
+
+<p>This keeps a very neat split - the transport layer is all about converting between HTTP and our service representation, an array of strings, then the service is purely about resistors and their bands. Call the shot and run the tests again:</p>
+<div class="highlight"><pre><span></span><code>$<span class="w"> </span>npm<span class="w"> </span><span class="nb">test</span>
+
+&gt;<span class="w"> </span>resistance@1.0.0<span class="w"> </span><span class="nb">test</span>
+&gt;<span class="w"> </span>jest
+
+FAIL<span class="w"> </span>./app.test.js
+<span class="w">  </span>●<span class="w"> </span>Console
+
+<span class="w">    </span>console.error
+<span class="w">      </span>Error:<span class="w"> </span>Invalid<span class="w"> </span>bands:<span class="w"> </span>blue
+<span class="w">          </span>at<span class="w"> </span>Object.&lt;anonymous&gt;.module.exports.resistance<span class="w"> </span><span class="o">(</span>path/to/resistance/service.js:3:11<span class="o">)</span>
+<span class="w">          </span>at<span class="w"> </span>resistance<span class="w"> </span><span class="o">(</span>path/to/resistance/app.js:15:12<span class="o">)</span>
+<span class="w">          </span>...
+
+<span class="w">      </span><span class="m">18</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>app.use<span class="o">((</span>err,<span class="w"> </span>req,<span class="w"> </span>res,<span class="w"> </span>next<span class="o">)</span><span class="w"> </span><span class="o">=</span>&gt;<span class="w"> </span><span class="o">{</span>
+<span class="w">      </span><span class="m">19</span><span class="w"> </span><span class="p">|</span><span class="w">   </span><span class="k">if</span><span class="w"> </span><span class="o">(</span>!req.headersSent<span class="o">)</span><span class="w"> </span><span class="o">{</span>
+<span class="w">    </span>&gt;<span class="w"> </span><span class="m">20</span><span class="w"> </span><span class="p">|</span><span class="w">     </span>console.error<span class="o">(</span>err<span class="o">)</span><span class="p">;</span>
+<span class="w">         </span><span class="p">|</span><span class="w">             </span>^
+<span class="w">      </span><span class="m">21</span><span class="w"> </span><span class="p">|</span><span class="w">     </span>res.sendStatus<span class="o">(</span><span class="m">500</span><span class="o">)</span><span class="p">;</span>
+<span class="w">      </span><span class="m">22</span><span class="w"> </span><span class="p">|</span><span class="w">   </span><span class="o">}</span>
+<span class="w">      </span><span class="m">23</span><span class="w"> </span><span class="p">|</span><span class="w">   </span>next<span class="o">(</span>err<span class="o">)</span><span class="p">;</span>
+
+<span class="w">      </span>at<span class="w"> </span>error<span class="w"> </span><span class="o">(</span>app.js:20:13<span class="o">)</span>
+<span class="w">      </span>...
+
+<span class="w">  </span>●<span class="w"> </span>resistance<span class="w"> </span>API<span class="w"> </span>›<span class="w"> </span>returns<span class="w"> </span><span class="m">422</span><span class="w"> </span><span class="k">for</span><span class="w"> </span>a<span class="w"> </span>single<span class="w"> </span>non-black<span class="w"> </span>band
+
+<span class="w">    </span>expected<span class="w"> </span><span class="m">422</span><span class="w"> </span><span class="s2">&quot;Unprocessable Entity&quot;</span>,<span class="w"> </span>got<span class="w"> </span><span class="m">500</span><span class="w"> </span><span class="s2">&quot;Internal Server Error&quot;</span>
+
+<span class="w">      </span><span class="m">21</span><span class="w"> </span><span class="p">|</span><span class="w">       </span>.get<span class="o">(</span><span class="s2">&quot;/resistance&quot;</span><span class="o">)</span>
+<span class="w">      </span><span class="m">22</span><span class="w"> </span><span class="p">|</span><span class="w">       </span>.query<span class="o">({</span><span class="w"> </span>bands:<span class="w"> </span><span class="o">[</span><span class="s2">&quot;blue&quot;</span><span class="o">]</span><span class="w"> </span><span class="o">})</span>
+<span class="w">    </span>&gt;<span class="w"> </span><span class="m">23</span><span class="w"> </span><span class="p">|</span><span class="w">       </span>.expect<span class="o">(</span><span class="m">422</span>,<span class="w"> </span><span class="s2">&quot;Unprocessable Entity&quot;</span><span class="o">)</span><span class="p">;</span>
+<span class="w">         </span><span class="p">|</span><span class="w">        </span>^
+<span class="w">      </span><span class="m">24</span><span class="w"> </span><span class="p">|</span><span class="w">   </span><span class="o">})</span><span class="p">;</span>
+<span class="w">      </span><span class="m">25</span><span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="o">})</span><span class="p">;</span>
+<span class="w">      </span><span class="m">26</span><span class="w"> </span><span class="p">|</span>
+
+<span class="w">      </span>at<span class="w"> </span>Object.expect<span class="w"> </span><span class="o">(</span>app.test.js:23:8<span class="o">)</span>
+<span class="w">      </span>----
+<span class="w">      </span>at<span class="w"> </span>Test._assertStatus<span class="w"> </span><span class="o">(</span>node_modules/supertest/lib/test.js:252:14<span class="o">)</span>
+<span class="w">      </span>at<span class="w"> </span>node_modules/supertest/lib/test.js:308:13
+<span class="w">      </span>at<span class="w"> </span>Test._assertFunction<span class="w"> </span><span class="o">(</span>node_modules/supertest/lib/test.js:285:13<span class="o">)</span>
+<span class="w">      </span>at<span class="w"> </span>Test.assert<span class="w"> </span><span class="o">(</span>node_modules/supertest/lib/test.js:164:23<span class="o">)</span>
+<span class="w">      </span>at<span class="w"> </span>Server.localAssert<span class="w"> </span><span class="o">(</span>node_modules/supertest/lib/test.js:120:14<span class="o">)</span>
+
+PASS<span class="w"> </span>./service.test.js
+
+Test<span class="w"> </span>Suites:<span class="w"> </span><span class="m">1</span><span class="w"> </span>failed,<span class="w"> </span><span class="m">1</span><span class="w"> </span>passed,<span class="w"> </span><span class="m">2</span><span class="w"> </span>total
+Tests:<span class="w">       </span><span class="m">1</span><span class="w"> </span>failed,<span class="w"> </span><span class="m">4</span><span class="w"> </span>passed,<span class="w"> </span><span class="m">5</span><span class="w"> </span>total
+Snapshots:<span class="w">   </span><span class="m">0</span><span class="w"> </span>total
+Time:<span class="w">        </span><span class="m">0</span>.342<span class="w"> </span>s,<span class="w"> </span>estimated<span class="w"> </span><span class="m">1</span><span class="w"> </span>s
+Ran<span class="w"> </span>all<span class="w"> </span><span class="nb">test</span><span class="w"> </span>suites.
+</code></pre></div>
+
+<p>That's much better, we only have one failing test and can see the error at the <em>business</em> level, so we just need to catch it in <code>app.js</code> and respond appropriately to the request to get the tests passing:</p>
+<div class="highlight"><pre><span></span><code>$<span class="w"> </span>npm<span class="w"> </span><span class="nb">test</span>
+
+&gt;<span class="w"> </span>resistance@1.0.0<span class="w"> </span><span class="nb">test</span>
+&gt;<span class="w"> </span>jest
+
+PASS<span class="w"> </span>./app.test.js
+PASS<span class="w"> </span>./service.test.js
+
+Test<span class="w"> </span>Suites:<span class="w"> </span><span class="m">2</span><span class="w"> </span>passed,<span class="w"> </span><span class="m">2</span><span class="w"> </span>total
+Tests:<span class="w">       </span><span class="m">5</span><span class="w"> </span>passed,<span class="w"> </span><span class="m">5</span><span class="w"> </span>total
+Snapshots:<span class="w">   </span><span class="m">0</span><span class="w"> </span>total
+Time:<span class="w">        </span><span class="m">0</span>.353<span class="w"> </span>s,<span class="w"> </span>estimated<span class="w"> </span><span class="m">1</span><span class="w"> </span>s
+Ran<span class="w"> </span>all<span class="w"> </span><span class="nb">test</span><span class="w"> </span>suites.
+</code></pre></div>
+
+<p>Once you're there, make a commit:</p>
+<div class="highlight"><pre><span></span><code>$<span class="w"> </span>git<span class="w"> </span>status
+On<span class="w"> </span>branch<span class="w"> </span>main
+Changes<span class="w"> </span>not<span class="w"> </span>staged<span class="w"> </span><span class="k">for</span><span class="w"> </span>commit:
+<span class="w">  </span><span class="o">(</span>use<span class="w"> </span><span class="s2">&quot;git add &lt;file&gt;...&quot;</span><span class="w"> </span>to<span class="w"> </span>update<span class="w"> </span>what<span class="w"> </span>will<span class="w"> </span>be<span class="w"> </span>committed<span class="o">)</span>
+<span class="w">  </span><span class="o">(</span>use<span class="w"> </span><span class="s2">&quot;git restore &lt;file&gt;...&quot;</span><span class="w"> </span>to<span class="w"> </span>discard<span class="w"> </span>changes<span class="w"> </span><span class="k">in</span><span class="w"> </span>working<span class="w"> </span>directory<span class="o">)</span>
+<span class="w">        </span>modified:<span class="w">   </span>app.js
+<span class="w">        </span>modified:<span class="w">   </span>app.test.js
+
+Untracked<span class="w"> </span>files:
+<span class="w">  </span><span class="o">(</span>use<span class="w"> </span><span class="s2">&quot;git add &lt;file&gt;...&quot;</span><span class="w"> </span>to<span class="w"> </span>include<span class="w"> </span><span class="k">in</span><span class="w"> </span>what<span class="w"> </span>will<span class="w"> </span>be<span class="w"> </span>committed<span class="o">)</span>
+<span class="w">        </span>service.js
+<span class="w">        </span>service.test.js
+
+no<span class="w"> </span>changes<span class="w"> </span>added<span class="w"> </span>to<span class="w"> </span>commit<span class="w"> </span><span class="o">(</span>use<span class="w"> </span><span class="s2">&quot;git add&quot;</span><span class="w"> </span>and/or<span class="w"> </span><span class="s2">&quot;git commit -a&quot;</span><span class="o">)</span>
+$<span class="w"> </span>git<span class="w"> </span>add<span class="w"> </span>.
+$<span class="w"> </span>git<span class="w"> </span>commit<span class="w"> </span>--message<span class="w"> </span><span class="s1">&#39;Handle error cases&#39;</span>
+<span class="o">[</span>main<span class="w"> </span>0e5b121<span class="o">]</span><span class="w"> </span>Handle<span class="w"> </span>error<span class="w"> </span>cases
+<span class="w"> </span><span class="m">4</span><span class="w"> </span>files<span class="w"> </span>changed,<span class="w"> </span><span class="m">49</span><span class="w"> </span>insertions<span class="o">(</span>+<span class="o">)</span>,<span class="w"> </span><span class="m">1</span><span class="w"> </span>deletion<span class="o">(</span>-<span class="o">)</span>
+<span class="w"> </span>create<span class="w"> </span>mode<span class="w"> </span><span class="m">100644</span><span class="w"> </span>service.js
+<span class="w"> </span>create<span class="w"> </span>mode<span class="w"> </span><span class="m">100644</span><span class="w"> </span>service.test.js
+</code></pre></div>
+
+<h2>Double trouble [5/9]</h2>
+<p>An obvious next step at this point is to test what happens with <em>two</em> bands, which is also invalid according to our rules. Let's add a bit more structure to the low-level test cases and add one for two bands:</p>
+<div class="highlight"><pre><span></span><code><span class="kd">const</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">resistance</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">require</span><span class="p">(</span><span class="s2">&quot;./service&quot;</span><span class="p">);</span>
+
+<span class="nx">describe</span><span class="p">(</span><span class="s2">&quot;resistance&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">()</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="nx">describe</span><span class="p">(</span><span class="s2">&quot;one band&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">()</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nx">it</span><span class="p">(</span><span class="s2">&quot;returns 0R for a single black band&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">()</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="nx">expect</span><span class="p">(</span><span class="nx">resistance</span><span class="p">([</span><span class="s2">&quot;black&quot;</span><span class="p">])).</span><span class="nx">toBe</span><span class="p">(</span><span class="s2">&quot;0R&quot;</span><span class="p">);</span>
+<span class="w">    </span><span class="p">});</span>
+
+<span class="w">    </span><span class="nx">it</span><span class="p">(</span><span class="s2">&quot;throws an error for a single non-black band&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">()</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="nx">expect</span><span class="p">(()</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="nx">resistance</span><span class="p">([</span><span class="s2">&quot;blue&quot;</span><span class="p">])).</span><span class="nx">toThrow</span><span class="p">(</span><span class="s2">&quot;Invalid bands: blue&quot;</span><span class="p">);</span>
+<span class="w">    </span><span class="p">});</span>
+<span class="w">  </span><span class="p">});</span>
+
+<span class="w">  </span><span class="nx">describe</span><span class="p">(</span><span class="s2">&quot;two bands&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">()</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nx">it</span><span class="p">(</span><span class="s2">&quot;throws an error&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">()</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="nx">expect</span><span class="p">(()</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="nx">resistance</span><span class="p">([</span><span class="s2">&quot;black&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;blue&quot;</span><span class="p">])).</span><span class="nx">toThrow</span><span class="p">(</span><span class="s2">&quot;Invalid bands: black,blue&quot;</span><span class="p">);</span>
+<span class="w">    </span><span class="p">});</span>
+<span class="w">  </span><span class="p">})</span>
+<span class="p">});</span>
+</code></pre></div>
+
+<p>It's worth noting that I've chosen to have <code>"black"</code> as the first of two bands <em>specifically</em>; this <em>was</em> a valid first band for a 0Ω resistor, but isn't otherwise. Any two-band "resistor" is invalid, but using this test case rules out the possibility that we <em>only</em> check whether the first band is black (and not e.g. how many there are).</p>
+<p>Call the shot, run the test. If it fails (it may not, depending on how you've implemented the service so far!) then get it passing. We already know that the API will respond 422 if the service throws an error, so we're done; make a commit:</p>
+<div class="highlight"><pre><span></span><code>$<span class="w"> </span>git<span class="w"> </span>commit<span class="w"> </span>--message<span class="w"> </span><span class="s1">&#39;Error for two bands&#39;</span>
+<span class="o">[</span>main<span class="w"> </span>48863a8<span class="o">]</span><span class="w"> </span>Error<span class="w"> </span><span class="k">for</span><span class="w"> </span>two<span class="w"> </span>bands
+<span class="w"> </span><span class="m">1</span><span class="w"> </span>file<span class="w"> </span>changed,<span class="w"> </span><span class="m">13</span><span class="w"> </span>insertions<span class="o">(</span>+<span class="o">)</span>,<span class="w"> </span><span class="m">5</span><span class="w"> </span>deletions<span class="o">(</span>-<span class="o">)</span>
+</code></pre></div>
+
+<h2>Plotting a course [6/9]</h2>
+<p>Now we're in a nice position - we've designed and implemented an API, factored our app into <em>transport</em> and <em>business</em> domains, and are testing the integration across three cases:</p>
+<ul>
+<li>No bands - <em>structurally</em> invalid, service doesn't get called, 400 response;</li>
+<li>One black band - service gets called, 200 response with its return value; and</li>
+<li>One non-black band or two bands - <em>semantically</em> invalid, service gets called, 422 response on error.</li>
+</ul>
+<p>Sure, we're only dealing with a single, trivial valid case: a 0Ω resistor, with a single black band (which is basically just a wire in the packaging of a resistor!) Our code isn't going to help our end users much at this stage, but we've set the foundations to be able to confidently and rapidly iterate on the core functionality. And if the user <em>does</em> have a resistor with a single black band it gives them the correct answer!</p>
+<p>Now, how to approach the more useful cases and actually return some non-zero answers?</p>
+<p>In general, when I'm trying to work my way through a problem like this, I try to think about what the next <em>simplest</em> step is - not just in the implementation to get the test passing, but in the <em>logic</em> to write a failing test. </p>
+<p>Let's keep using the 22,000Ω/<code>"22K"</code> case we started with. Thinking about the three bands we are using, I'd propose that:</p>
+<ul>
+<li>The <strong>second</strong> band is the simplest to deal with, as it can represent any value 0-9 (<code>"20K"</code>, <code>"21K"</code>, ...); then</li>
+<li>The first band is the next simplest, as it can represent 1-9 (<code>"12K"</code>, <code>"22K"</code>, ...) but not 0 (throws an error leading to 422 response status); and finally</li>
+<li>The third is the most complex, as both the character and its <em>position</em> can change (<code>"22R"</code>, <code>"220R"</code>, ...).</li>
+</ul>
+<p>To keep us on track as we work towards the result, start with an integration-level test for a <em>different</em> example, one we're not actually going to reach until all three bands are handled. E.g. if the unit-level cases are based around the 22,000Ω example, use the 6,800,000Ω example for the integration-level case. That stops us getting overexcited and shipping once we've handled both value bands but not yet the multiplier. The alternative would be to ensure that cases that aren't yet supported explicitly throw an error, returning a 422 status, which means adding extra tests early on then deleting them as they become irrelevant (this is also an acceptable part of TDD).</p>
+<p>So work through the cases in that order, writing <em>parameterised tests</em> for each group. By the time you're finished the suite at the service level should look something like this:</p>
+<div class="highlight"><pre><span></span><code><span class="nx">describe</span><span class="p">(</span><span class="s2">&quot;resistance&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">()</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="nx">describe</span><span class="p">(</span><span class="s2">&quot;one band&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">()</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="c1">// ...</span>
+<span class="w">  </span><span class="p">});</span>
+
+<span class="w">  </span><span class="nx">describe</span><span class="p">(</span><span class="s2">&quot;two bands&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">()</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="c1">// ...</span>
+<span class="w">  </span><span class="p">});</span>
+
+<span class="w">  </span><span class="nx">describe</span><span class="p">(</span><span class="s2">&quot;three bands&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">()</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="p">[</span><span class="cm">/* ... */</span><span class="p">].</span><span class="nx">forEach</span><span class="p">(()</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="c1">// second band cases</span>
+<span class="w">    </span><span class="p">});</span>
+
+<span class="w">    </span><span class="nx">it</span><span class="p">(</span><span class="s2">&quot;throws an error for a leading black band&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">()</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="nx">expect</span><span class="p">(()</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="nx">resistance</span><span class="p">([</span><span class="s2">&quot;black&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;red&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;orange&quot;</span><span class="p">]))</span>
+<span class="w">        </span><span class="p">.</span><span class="nx">toThrow</span><span class="p">(</span><span class="s2">&quot;Invalid bands: black,red,orange&quot;</span><span class="p">);</span>
+<span class="w">    </span><span class="p">});</span>
+
+<span class="w">    </span><span class="p">[</span><span class="cm">/* ... */</span><span class="p">].</span><span class="nx">forEach</span><span class="p">(()</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="c1">// other first band cases</span>
+<span class="w">    </span><span class="p">});</span>
+
+<span class="w">    </span><span class="p">[</span><span class="cm">/* ... */</span><span class="p">].</span><span class="nx">forEach</span><span class="p">(()</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="c1">// third band cases</span>
+<span class="w">    </span><span class="p">});</span>
+<span class="w">  </span><span class="p">});</span>
+<span class="p">});</span>
+</code></pre></div>
+
+<p>Giving test outputs like:</p>
+<div class="highlight"><pre><span></span><code>$<span class="w"> </span>npm<span class="w"> </span><span class="nb">test</span><span class="w"> </span>--<span class="w"> </span>--verbose
+
+&gt;<span class="w"> </span>resistance@1.0.0<span class="w"> </span><span class="nb">test</span>
+&gt;<span class="w"> </span>jest<span class="w"> </span>--verbose
+
+<span class="w"> </span>PASS<span class="w">  </span>./app.test.js
+<span class="w">  </span>resistance<span class="w"> </span>API
+<span class="w">    </span>✓<span class="w"> </span>returns<span class="w"> </span>0R<span class="w"> </span><span class="k">for</span><span class="w"> </span>a<span class="w"> </span>single<span class="w"> </span>black<span class="w"> </span>band<span class="w"> </span><span class="o">(</span><span class="m">17</span><span class="w"> </span>ms<span class="o">)</span>
+<span class="w">    </span>✓<span class="w"> </span>returns<span class="w"> </span><span class="m">400</span><span class="w"> </span><span class="k">if</span><span class="w"> </span>query<span class="w"> </span>missing<span class="w"> </span><span class="o">(</span><span class="m">6</span><span class="w"> </span>ms<span class="o">)</span>
+<span class="w">    </span>✓<span class="w"> </span>returns<span class="w"> </span><span class="m">422</span><span class="w"> </span><span class="k">for</span><span class="w"> </span>a<span class="w"> </span>single<span class="w"> </span>non-black<span class="w"> </span>band<span class="w"> </span><span class="o">(</span><span class="m">4</span><span class="w"> </span>ms<span class="o">)</span>
+<span class="w">    </span>✓<span class="w"> </span>returns<span class="w"> </span>6K8<span class="w"> </span><span class="k">for</span><span class="w"> </span>blue,<span class="w"> </span>grey,<span class="w"> </span>red<span class="w"> </span><span class="o">(</span><span class="m">2</span><span class="w"> </span>ms<span class="o">)</span>
+
+<span class="w"> </span>PASS<span class="w">  </span>./service.test.js
+<span class="w">  </span>resistance
+<span class="w">    </span>one<span class="w"> </span>band
+<span class="w">      </span>✓<span class="w"> </span>returns<span class="w"> </span>0R<span class="w"> </span><span class="k">for</span><span class="w"> </span>a<span class="w"> </span>single<span class="w"> </span>black<span class="w"> </span>band<span class="w"> </span><span class="o">(</span><span class="m">1</span><span class="w"> </span>ms<span class="o">)</span>
+<span class="w">      </span>✓<span class="w"> </span>throws<span class="w"> </span>an<span class="w"> </span>error<span class="w"> </span><span class="k">for</span><span class="w"> </span>a<span class="w"> </span>single<span class="w"> </span>non-black<span class="w"> </span>band<span class="w"> </span><span class="o">(</span><span class="m">5</span><span class="w"> </span>ms<span class="o">)</span>
+<span class="w">    </span>two<span class="w"> </span>bands
+<span class="w">      </span>✓<span class="w"> </span>throws<span class="w"> </span>an<span class="w"> </span>error<span class="w"> </span><span class="o">(</span><span class="m">1</span><span class="w"> </span>ms<span class="o">)</span>
+<span class="w">    </span>three<span class="w"> </span>bands
+<span class="w">      </span>✓<span class="w"> </span>returns<span class="w"> </span>20K<span class="w"> </span><span class="k">for</span><span class="w"> </span>red,<span class="w"> </span>black,<span class="w"> </span>orange
+<span class="w">      </span>✓<span class="w"> </span>returns<span class="w"> </span>21K<span class="w"> </span><span class="k">for</span><span class="w"> </span>red,<span class="w"> </span>brown,<span class="w"> </span>orange
+<span class="w">      </span>✓<span class="w"> </span>returns<span class="w"> </span>22K<span class="w"> </span><span class="k">for</span><span class="w"> </span>red,<span class="w"> </span>red,<span class="w"> </span>orange
+<span class="w">      </span>✓<span class="w"> </span>returns<span class="w"> </span>23K<span class="w"> </span><span class="k">for</span><span class="w"> </span>red,<span class="w"> </span>orange,<span class="w"> </span>orange
+<span class="w">      </span>✓<span class="w"> </span>returns<span class="w"> </span>24K<span class="w"> </span><span class="k">for</span><span class="w"> </span>red,<span class="w"> </span>yellow,<span class="w"> </span>orange<span class="w"> </span><span class="o">(</span><span class="m">1</span><span class="w"> </span>ms<span class="o">)</span>
+<span class="w">      </span>✓<span class="w"> </span>returns<span class="w"> </span>25K<span class="w"> </span><span class="k">for</span><span class="w"> </span>red,<span class="w"> </span>green,<span class="w"> </span>orange
+<span class="w">      </span>✓<span class="w"> </span>returns<span class="w"> </span>26K<span class="w"> </span><span class="k">for</span><span class="w"> </span>red,<span class="w"> </span>blue,<span class="w"> </span>orange
+<span class="w">      </span>✓<span class="w"> </span>returns<span class="w"> </span>27K<span class="w"> </span><span class="k">for</span><span class="w"> </span>red,<span class="w"> </span>violet,<span class="w"> </span>orange
+<span class="w">      </span>✓<span class="w"> </span>returns<span class="w"> </span>28K<span class="w"> </span><span class="k">for</span><span class="w"> </span>red,<span class="w"> </span>grey,<span class="w"> </span>orange<span class="w"> </span><span class="o">(</span><span class="m">1</span><span class="w"> </span>ms<span class="o">)</span>
+<span class="w">      </span>✓<span class="w"> </span>returns<span class="w"> </span>29K<span class="w"> </span><span class="k">for</span><span class="w"> </span>red,<span class="w"> </span>white,<span class="w"> </span>orange
+<span class="w">      </span>✓<span class="w"> </span>throws<span class="w"> </span>an<span class="w"> </span>error<span class="w"> </span><span class="k">for</span><span class="w"> </span>a<span class="w"> </span>leading<span class="w"> </span>black<span class="w"> </span>band
+<span class="w">      </span>✓<span class="w"> </span>returns<span class="w"> </span>12K<span class="w"> </span><span class="k">for</span><span class="w"> </span>brown,<span class="w"> </span>red,<span class="w"> </span>orange
+<span class="w">      </span>✓<span class="w"> </span>returns<span class="w"> </span>32K<span class="w"> </span><span class="k">for</span><span class="w"> </span>orange,<span class="w"> </span>red,<span class="w"> </span>orange
+<span class="w">      </span>✓<span class="w"> </span>returns<span class="w"> </span>42K<span class="w"> </span><span class="k">for</span><span class="w"> </span>yellow,<span class="w"> </span>red,<span class="w"> </span>orange<span class="w"> </span><span class="o">(</span><span class="m">1</span><span class="w"> </span>ms<span class="o">)</span>
+<span class="w">      </span>✓<span class="w"> </span>returns<span class="w"> </span>52K<span class="w"> </span><span class="k">for</span><span class="w"> </span>green,<span class="w"> </span>red,<span class="w"> </span>orange
+<span class="w">      </span>✓<span class="w"> </span>returns<span class="w"> </span>62K<span class="w"> </span><span class="k">for</span><span class="w"> </span>blue,<span class="w"> </span>red,<span class="w"> </span>orange
+<span class="w">      </span>✓<span class="w"> </span>returns<span class="w"> </span>72K<span class="w"> </span><span class="k">for</span><span class="w"> </span>violet,<span class="w"> </span>red,<span class="w"> </span>orange
+<span class="w">      </span>✓<span class="w"> </span>returns<span class="w"> </span>82K<span class="w"> </span><span class="k">for</span><span class="w"> </span>grey,<span class="w"> </span>red,<span class="w"> </span>orange
+<span class="w">      </span>✓<span class="w"> </span>returns<span class="w"> </span>92K<span class="w"> </span><span class="k">for</span><span class="w"> </span>white,<span class="w"> </span>red,<span class="w"> </span>orange
+<span class="w">      </span>✓<span class="w"> </span>returns<span class="w"> </span>22R<span class="w"> </span><span class="k">for</span><span class="w"> </span>red,<span class="w"> </span>red,<span class="w"> </span>black
+<span class="w">      </span>✓<span class="w"> </span>returns<span class="w"> </span>220R<span class="w"> </span><span class="k">for</span><span class="w"> </span>red,<span class="w"> </span>red,<span class="w"> </span>brown
+<span class="w">      </span>✓<span class="w"> </span>returns<span class="w"> </span>2K2<span class="w"> </span><span class="k">for</span><span class="w"> </span>red,<span class="w"> </span>red,<span class="w"> </span>red
+<span class="w">      </span>✓<span class="w"> </span>returns<span class="w"> </span>220K<span class="w"> </span><span class="k">for</span><span class="w"> </span>red,<span class="w"> </span>red,<span class="w"> </span>yellow<span class="w"> </span><span class="o">(</span><span class="m">1</span><span class="w"> </span>ms<span class="o">)</span>
+<span class="w">      </span>✓<span class="w"> </span>returns<span class="w"> </span>2M2<span class="w"> </span><span class="k">for</span><span class="w"> </span>red,<span class="w"> </span>red,<span class="w"> </span>green
+<span class="w">      </span>✓<span class="w"> </span>returns<span class="w"> </span>22M<span class="w"> </span><span class="k">for</span><span class="w"> </span>red,<span class="w"> </span>red,<span class="w"> </span>blue
+<span class="w">      </span>✓<span class="w"> </span>returns<span class="w"> </span>220M<span class="w"> </span><span class="k">for</span><span class="w"> </span>red,<span class="w"> </span>red,<span class="w"> </span>violet
+
+Test<span class="w"> </span>Suites:<span class="w"> </span><span class="m">2</span><span class="w"> </span>passed,<span class="w"> </span><span class="m">2</span><span class="w"> </span>total
+Tests:<span class="w">       </span><span class="m">33</span><span class="w"> </span>passed,<span class="w"> </span><span class="m">33</span><span class="w"> </span>total
+Snapshots:<span class="w">   </span><span class="m">0</span><span class="w"> </span>total
+Time:<span class="w">        </span><span class="m">0</span>.363<span class="w"> </span>s,<span class="w"> </span>estimated<span class="w"> </span><span class="m">1</span><span class="w"> </span>s
+Ran<span class="w"> </span>all<span class="w"> </span><span class="nb">test</span><span class="w"> </span>suites.
+</code></pre></div>
+
+<p><strong>Note</strong>: most of the service-level tests take less than 1ms (so the time isn't reported), whereas all of the API-level tests take more. This is another reason it's useful to keep business logic independent of the transport layer (and others, e.g. a persistence layer for talking to a database) - testing the basic logical code is generally much faster than dealing with the frameworks and connections that come with those other layers.</p>
+<p>Once everything's passing, make a commit.</p>
+<h2>Four bands [8/9]</h2>
+<p>We can handle all valid one- and three-band resistors at this point, plus some invalid one- and two-band cases. So let's handle resistors with <em>three</em> value bands, adding an extra significant figure to the value.</p>
+<p>Again it's important to think about the cases we're going to choose to ensure our code works correctly. I would suggest at least three, based on the <em>structure</em> of the output:</p>
+<ul>
+<li>Where the multiplier is a multiple of 3 (0, 3, 6, 9), i.e. the band is black, orange, blue or white, we already showed three digits, e.g. <code>"120R"</code>;</li>
+<li>Otherwise, we only showed two digits before, e.g. <code>"12K"</code> or <code>"1M2"</code>, so we're adding a third digit;</li>
+<li>Unless the third value band is black, in which case we still shouldn't show a trailing zero.</li>
+</ul>
+<p>Here the cases we've selected have a meaning, so the name should clarify that meaning to the reader rather than just e.g. <code>"returns 123K for brown, red, orange, orange"</code>:</p>
+<div class="highlight"><pre><span></span><code><span class="w">  </span><span class="nx">describe</span><span class="p">(</span><span class="s2">&quot;four bands&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">()</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nx">it</span><span class="p">(</span><span class="s2">&quot;adds a third digit in the middle&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">()</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="nx">expect</span><span class="p">(</span><span class="nx">resistance</span><span class="p">([</span><span class="s2">&quot;brown&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;red&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;orange&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;orange&quot;</span><span class="p">])).</span><span class="nx">toBe</span><span class="p">(</span><span class="s2">&quot;123K&quot;</span><span class="p">);</span>
+<span class="w">    </span><span class="p">});</span>
+
+<span class="w">    </span><span class="nx">it</span><span class="p">(</span><span class="s2">&quot;adds a third digit at the end&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">()</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="nx">expect</span><span class="p">(</span><span class="nx">resistance</span><span class="p">([</span><span class="s2">&quot;brown&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;yellow&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;violet&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;brown&quot;</span><span class="p">])).</span><span class="nx">toBe</span><span class="p">(</span><span class="s2">&quot;1K47&quot;</span><span class="p">);</span>
+<span class="w">    </span><span class="p">});</span>
+
+<span class="w">    </span><span class="nx">it</span><span class="p">(</span><span class="s2">&quot;does not add a trailing zero&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">()</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="nx">expect</span><span class="p">(</span><span class="nx">resistance</span><span class="p">([</span><span class="s2">&quot;blue&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;grey&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;black&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;green&quot;</span><span class="p">])).</span><span class="nx">toBe</span><span class="p">(</span><span class="s2">&quot;68M&quot;</span><span class="p">);</span>
+<span class="w">    </span><span class="p">});</span>
+<span class="w">  </span><span class="p">});</span>
+</code></pre></div>
+
+<p>Introduce these tests (along with an API integration case, if you like), get everything passing and make a commit.</p>
+<h2>Paradox of tolerance [8/9]</h2>
+<p>Now we're going to add a fourth rule of resistors:</p>
+<ol start="4">
+  <li>A resistor may have a <em>tolerance</em> band (otherwise its tolerance is ±20%), unless it's a 0Ω resistor.
+</ol>
+
+<p>We'll cover five possible cases here, which include two new band colours and reuse two of the existing colours:</p>
+<table>
+<thead>
+<tr>
+<th>±20%</th>
+<th>±10%</th>
+<th>±5%</th>
+<th>±2%</th>
+<th>±1%</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><em>No band</em></td>
+<td><strong><span style="color: gold; background-color: black">&nbsp;gold&nbsp;</span></strong></td>
+<td><strong><span style="color: silver; background-color: black">&nbsp;silver&nbsp;</span></strong></td>
+<td><strong><span style="color: red">red</span></strong></td>
+<td><strong><span style="color: brown">brown</span></strong></td>
+</tr>
+</tbody>
+</table>
+<p>This is, as you may just have realised, a bit of a problem. If the tolerance band is optional, then what is e.g. <strong><span style="color: brown">brown</span></strong>, <strong><span style="color: green">green</span></strong>, <strong><span style="color: yellow; background-color: black">&nbsp;yellow&nbsp;</span></strong>, <strong><span style="color: red">red</span></strong> describing:</p>
+<ul>
+<li>15,400Ω ±20%; or</li>
+<li>150,000Ω ±2%?</li>
+</ul>
+<p>Obviously that's quite a big difference; the circuit probably isn't going to work correctly if you use the wrong one! On the physical packaging this is indicated by a gap - the value and multiplier bands are at one end of the resisistor, the tolerance band is at the other. Perhaps we could do something similar, adding a separate parameter at the service level and a separate query parameter to the HTTP API? For example, maybe something like:</p>
+<div class="highlight"><pre><span></span><code>$<span class="w"> </span>curl<span class="w"> </span><span class="s1">&#39;http://localhost:3000/resistance?bands=brown&amp;bands=green&amp;bands=yellow&amp;bands=red&#39;</span>
+15K4<span class="w"> </span>±20%
+$<span class="w"> </span>curl<span class="w"> </span><span class="s1">&#39;http://localhost:3000/resistance?bands=brown&amp;bands=green&amp;bands=yellow&amp;tolerance=red&#39;</span>
+150K<span class="w"> </span>±2%
+</code></pre></div>
+
+<p>Here we're changing the responses for existing requests - now rather than <code>"150K"</code>, we get <code>"150K ±20%"</code>. I'd suggest making this change first, as a separate commit, then moving on to include the actual tolerance bands. It's still <code>"0R"</code> for a single black band, a 0Ω resistor never has a tolerance band.</p>
+<p>Design the API and test-drive the implementation of your choice, starting with an integration test then driving out the full functionality through some unit tests.</p>
+<p>Once you're happy, make a final commit - we're done!</p>
+<h2>Exercises [9/9]</h2>
+<p>Here are some follow-up tasks for further practice (remember to <strong>test-drive</strong> anything you work on):</p>
+<ol>
+<li>Predict and then check happens if you make a request where the bands aren't recognised colours (e.g. <code>GET /resistance?bands=fuchsia&amp;bands=goldenrod&amp;bands=octarine</code>) and/or there are multiple tolerance bands. Did you predict correctly? Do you think it's the <em>right</em> behaviour - do you consider that request to be <em>semantically</em> or <em>structurally</em> invalid, and does the current implementation reflect that? If you think it should behave differently, update accordingly.</li>
+<li>Return to step 4 and try out some different orders for introducing the three-band cases - did I suggest the right route, how much difference does it make?</li>
+<li>Design and develop a different HTTP API (i.e. changing any or all of the request method, request path, use of query parameters or structure of the response body).</li>
+<li>As well as the <em>value</em>, <em>multiplier</em> and <em>tolerance</em> bands, resistors may have a <em>temperature coefficient</em> band - implement support for this.</li>
+<li>There's a set of <a href="https://en.wikipedia.org/wiki/E_series_of_preferred_numbers">preferred numbers</a> that resistors are generally designed to (e.g. for the default ±20% tolerance you'd get resistors only in multiples of 1.0, 1.5, 2.2, 3.3, 4.7 or 6.8) - introduce a "strict" mode in which non-preferred resistors are invalid inputs.</li>
+<li>Write a CLI to expose the core functionality on the command line (access any arguments via <code>process.argv</code>; you can use Node's built-in <a href="https://nodejs.org/dist/latest/docs/api/util.html#utilparseargsconfig"><code>parseArgs</code></a>, available from v16.17/v18.3, to help you out if you want to allow some non-positional arguments e.g. <code>node cli.js red green blue --strict</code>).</li>
+<li>Write a React app that consumes the HTTP API to allow a user to interactively determine the shorthand for a given set of bands - as you do so you may realise you need to change the API to support the UI, feel free to do so and read up on <em>consumer-driven</em> API development.</li>
+<li>Try writing the tests with a different HTTP client (e.g. Axios, fetch) instead of Supertest.</li>
+</ol>
+<p>I'd recommend creating a new git branch for each one you try (e.g. use <code>git checkout -b &lt;name&gt;</code>) and making commits as appropriate.</p></div>
+    <div class="comments">
+      <h2>Comments !</h2>
+      <div id="disqus_thread"></div>
+      <script type="text/javascript">
+        var disqus_shortname = 'textbook-dev';
+        var disqus_identifier = '2023/May/23/js-tdd-ohm.html';
+        var disqus_url = 'https://blog.jonrshar.pe/2023/May/23/js-tdd-ohm.html';
+        (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//textbook-dev.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+      </script>
+      <noscript>Please enable JavaScript to view the comments.</noscript>
+    </div>
+
+  </article>
+</section>
+
+<script type="application/ld+json">
+  {"articleSection": "development", "author": {"@type": "Person", "name": "Jonathan Sharpe"}, "datePublished": "2023-05-23T14:00:00+01:00", "headline": "JS TDD Ohm", "mainEntityOfPage": {"@type": "WebPage", "@id": "https://blog.jonrshar.pe/2023/May/23/js-tdd-ohm.html"}, "@context": "http://schema.org", "@type": "BlogPosting", "dateModified": "2023-05-26T10:30:00+01:00", "description": "Test-driven JavaScript development done right - part 4", "image": {"@type": "ImageObject", "url": "https://blog.jonrshar.pe/images/Electronic-Axial-Lead-Resistors-Array.png"}}
+</script>
+    </div>
+
+    <div class="column is-one-quarter-desktop is-one-third-tablet is-hidden-print">
+      <aside class="menu">
+<div id="mc_embed_signup">
+  <form
+      action="https://jonrshar.us15.list-manage.com/subscribe/post?u=7ada11180797f3af73228bf0b&amp;id=d172abcbd2"
+      method="post" id="mc-embedded-subscribe-form"
+      name="mc-embedded-subscribe-form" class="validate" target="_blank"
+      novalidate>
+
+    <h2 class="menu-label">Mailing List</h2>
+
+    <div id="mc_embed_signup_scroll">
+      <div class="field mc-field-group">
+        <label for="mce-EMAIL" class="label is-small">Email</label>
+        <div class="field-body">
+          <div class="field">
+            <p class="control has-icons-left">
+              <input type="email" name="EMAIL" class="input required email is-small"
+                     id="mce-EMAIL" placeholder="Email address">
+              <span class="icon is-small is-left">
+              <i class="fa fa-envelope"></i>
+            </span>
+            </p>
+          </div>
+        </div>
+      </div>
+      <div class="field">
+        <label for="mce-FNAME" class="label is-small">Name</label>
+        <div class="field-body">
+          <div class="field is-grouped">
+            <p class="control is-expanded">
+              <input class="input is-small" type="text" value="" name="FNAME"
+                     id="mce-FNAME" placeholder="First">
+            </p>
+            <p class="control is-expanded">
+              <input class="input is-small" type="text" value="" name="LNAME"
+                     id="mce-LNAME" placeholder="Last">
+            </p>
+          </div>
+        </div>
+      </div>
+      <div class="field is-grouped">
+        <p class="control">
+          <input type="submit" name="subscribe" value="Subscribe"
+                 class="button is-small is-success" id="mc-embedded-subscribe">
+        </p>
+          <p class="control">
+            <span class="help">
+              Powered by
+              <a href="http://eepurl.com/cNv6Rb"
+                 title="MailChimp - email marketing made easy and fun">
+                MailChimp
+              </a>
+            </span>
+          </p>
+      </div>
+
+      <div id="mce-responses" class="clear">
+        <div class="response help is-danger" id="mce-error-response"
+             style="display:none"></div>
+        <div class="response help is-success" id="mce-success-response"
+             style="display:none"></div>
+      </div>
+
+      <div style="position: absolute; left: -5000px;" aria-hidden="true">
+        <input type="text" name="b_7ada11180797f3af73228bf0b_d172abcbd2"
+               tabindex="-1" value="">
+      </div>
+    </div>
+  </form>
+</div>
+
+          <p class="menu-label">Other Pages</p>
+          <ul class="menu-list">
+                <li><a                        href="https://blog.jonrshar.pe/pages/about.html">
+                  <span class="icon is-small"><i class="fa fa-book"></i></span>
+                  <span class="link-text">About</span>
+                </a></li>
+          </ul>
+          <p class="menu-label">Links</p>
+          <ul class="menu-list">
+              <li><a href="http://engineering.pivotal.io/">
+                <span class="icon is-small"><i class="fa fa-globe fa-fw"></i></span>
+                <span class="link-text">Pivotal Engineering Journal</span>
+              </a></li>
+              <li><a href="http://blog.cleancoder.com/">
+                <span class="icon is-small"><i class="fa fa-globe fa-fw"></i></span>
+                <span class="link-text">The Clean Code Blog</span>
+              </a></li>
+              <li><a href="https://codeascraft.com/">
+                <span class="icon is-small"><i class="fa fa-globe fa-fw"></i></span>
+                <span class="link-text">Code as Craft</span>
+              </a></li>
+              <li><a href="http://corgibytes.com/blog/">
+                <span class="icon is-small"><i class="fa fa-globe fa-fw"></i></span>
+                <span class="link-text">Corgibytes Blog</span>
+              </a></li>
+          </ul>
+<p class="menu-label">Social</p>
+<ul class="menu-list">
+    <li><a href="https://github.com/textbook">
+      <span class="icon is-small">
+          <i class="fa fa-github fa-fw"></i>
+      </span>
+      <span class="link-text">GitHub</span>
+    </a></li>
+    <li><a href="http://stackoverflow.com/users/3001761/jonrsharpe">
+      <span class="icon is-small">
+          <i class="fa fa-stack-overflow fa-fw"></i>
+      </span>
+      <span class="link-text">Stack Overflow</span>
+    </a></li>
+    <li><a href="https://twitter.com/jonrsharpe">
+      <span class="icon is-small">
+          <i class="fa fa-twitter fa-fw"></i>
+      </span>
+      <span class="link-text">Twitter</span>
+    </a></li>
+    <li><a href="https://500px.com/jonrsharpe">
+      <span class="icon is-small">
+          <i class="fa fa-500px fa-fw"></i>
+      </span>
+      <span class="link-text">500px</span>
+    </a></li>
+
+    <li><a href="https://blog.jonrshar.pe/feeds/all.atom.xml"
+           type="application/atom+xml" rel="alternate">
+      <span class="icon is-small"><i class="fa fa-rss"></i></span>
+      <span class="link-text">Atom Feed</span>
+    </a></li>
+
+</ul>          <p class="menu-label">License</p>
+          
+<ul class="menu-list">
+  <li>
+    <a rel="license" href="http://creativecommons.org/licenses/by-sa/4.0/">
+      <span class="icon is-small">
+        <i class="fa fa-creative-commons fa-fw"></i>
+      </span>
+      <span>CC BY-SA 4.0</span>
+    </a>
+  </li>
+</ul>
+
+      </aside>
+    </div>
+  </div>
+</div>
+
+<footer class="footer">
+  <div class="container has-text-centered">
+ <p class="subtitle">These are my opinions - if you don't like them, I have others</p>    <div class="credits">
+      <span><a href="https://github.com/textbook/bulrush">Bulrush</a> theme for
+        <a href="https://blog.getpelican.com/">Pelican</a></span>
+      <span><span class="icon is-small"><i class="fa fa-html5"></i></span> HTML 5</span>
+      <span><span class="icon is-small"><i class="fa fa-css3"></i></span> CSS 3</span>
+      <span>Made with <a href="https://bulma.io">Bulma</a></span>
+    </div>
+  </div>
+  <div class="github-fork-ribbon-wrapper is-hidden-mobile is-hidden-print">
+    <div class="github-fork-ribbon">
+      <a href="https://github.com/textbook/textbook.github.io">
+        <i class="fa fa-github fa-fw"></i>
+        Fork me on GitHub
+      </a>
+    </div>
+  </div>
+</footer>
+
+    <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-64837080-1']);
+    _gaq.push(['_trackPageview']);
+    (function() {
+        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+        ga.src = 'https://ssl.google-analytics.com/ga.js';
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+    </script>
+<script type="text/javascript">
+    var disqus_shortname = 'textbook-dev';
+    (function () {
+        var s = document.createElement('script'); s.async = true;
+        s.type = 'text/javascript';
+        s.src = 'https://' + disqus_shortname + '.disqus.com/count.js';
+        (document.getElementsByTagName('HEAD')[0] || document.getElementsByTagName('BODY')[0]).appendChild(s);
+    }());
+</script>
+<script type="text/javascript">
+  document.getElementById('navToggle').addEventListener('click', function () {
+    var nav = document.getElementById('navMenu');
+    var className = nav.getAttribute('class');
+    if (className == 'navbar-menu') {
+      nav.className = 'navbar-menu is-active';
+    } else {
+      nav.className = 'navbar-menu';
+    }
+  });
+</script>
+</body>
+</html>
