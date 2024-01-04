@@ -1,6 +1,6 @@
 Title: JS TDD Vite
 Date: 2023-12-17 11:30
-Modified: 2023-12-17 13:10
+Modified: 2024-01-04 16:15
 Tags: javascript, tdd, xp
 Authors: Jonathan Sharpe
 Summary: Test-driven JavaScript development done right - supplement A
@@ -377,9 +377,7 @@ import '@testing-library/jest-dom/vitest'
 import { cleanup } from '@testing-library/react'
 import { afterEach } from 'vitest'
 
-afterEach(() => {
-  cleanup()
-})
+afterEach(cleanup)
 ```
 
 [cra]: https://create-react-app.dev/
