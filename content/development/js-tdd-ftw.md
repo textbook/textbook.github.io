@@ -5,6 +5,9 @@ Tags: javascript, tdd, xp
 Authors: Jonathan Sharpe
 Summary: Test-driven JavaScript development done right - part 1
 
+> **Note**: a [newer _"redux"_ version][redux] of this article, using the Node.js test runner, has been published.
+> You can continue to work through this version if you'd prefer to use Jest.
+
 One of the key Extreme Programming ([XP]) engineering practices is test-driven development (TDD), usually expressed as repeatedly following this simple, three-step process:
 
  1. **Red** - write a failing test that describes the behaviour you want;
@@ -830,7 +833,7 @@ That's it! We've just test-driven an implementation of RPS, the right way. Refle
 
 You can see my copy of this exercise at [https://github.com/textbook/rps-tdd][github].
 
-## Exercises [10/10]
+## Exercises [10/10] {#exercises}
 
 Practice makes perfect! Here are some additional exercises you can run through:
 
@@ -926,6 +929,7 @@ NPM checks whether there are any known vulnerabilities in the packages in your `
   [node-assert]: https://nodejs.org/api/assert.html
   [node-test]: https://nodejs.org/api/test.html
   [OCP]: https://en.wikipedia.org/wiki/Open%E2%80%93closed_principle
+  [redux]: {filename}/development/js-tdd-ftw-redux.md
   [RFC 0017]: https://github.com/npm/rfcs/blob/2d2f00457ab19b3003eb6ac5ab3d250259fd5a81/accepted/0017-add-funding-support.md
   [Rock Paper Scissors]: https://en.wikipedia.org/wiki/Rock_paper_scissors
   [Stryker]: https://stryker-mutator.io/
