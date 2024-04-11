@@ -1,6 +1,6 @@
 Title: JS TDD FTW
 Date: 2020-08-31 16:00
-Modified: 2023-07-19 11:30
+Modified: 2024-04-09 23:40
 Tags: javascript, tdd, xp
 Authors: Jonathan Sharpe
 Summary: Test-driven JavaScript development done right - part 1
