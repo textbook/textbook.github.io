@@ -1,6 +1,6 @@
 Title: JS TDD Ohm
 Date: 2023-05-23 14:00
-Modified: 2023-05-26 10:30
+Modified: 2024-08-08 09:30
 Tags: javascript, tdd, xp
 Authors: Jonathan Sharpe
 Summary: Test-driven JavaScript development done right - part 4
@@ -119,7 +119,7 @@ Using [cURL], this might look like (assuming an environment variable `URL` has b
 
 ```bash
 $ curl "$URL/resistance?bands=brown&bands=red&bands=violet&bands=red"
-8M2
+12K7
 ```
 
 ## None more black [3/9]
