@@ -1,6 +1,6 @@
 Title: JS TDD Ohm
 Date: 2023-05-23 14:00
-Modified: 2024-08-08 09:30
+Modified: 2024-08-17 11:30
 Tags: javascript, tdd, xp
 Authors: Jonathan Sharpe
 Summary: Test-driven JavaScript development done right - part 4
@@ -834,7 +834,7 @@ $ git commit --message 'Handle error cases'
  create mode 100644 service.test.js
 ``` 
 
-## Double trouble [5/9]
+## Double trouble [5/9]
 
 An obvious next step at this point is to test what happens with _two_ bands, which is also invalid according to our rules. Let's add a bit more structure to the low-level test cases and add one for two bands:
 
@@ -870,7 +870,7 @@ $ git commit --message 'Error for two bands'
  1 file changed, 13 insertions(+), 5 deletions(-)
 ```
 
-## Plotting a course [6/9]
+## Plotting a course [6/9]
 
 Now we're in a nice position - we've designed and implemented an API, factored our app into _transport_ and _business_ domains, and are testing the integration across three cases:
 
@@ -986,7 +986,7 @@ Ran all test suites.
 
 Once everything's passing, make a commit.
 
-## Four bands [8/9]
+## Four bands [7/9]
 
 We can handle all valid one- and three-band resistors at this point, plus some invalid one- and two-band cases. So let's handle resistors with _three_ value bands, adding an extra significant figure to the value.
 

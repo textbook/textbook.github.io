@@ -1,6 +1,6 @@
 Title: JS TDD FTW
 Date: 2020-08-31 16:00
-Modified: 2024-04-09 23:40
+Modified: 2024-08-17 11:30
 Tags: javascript, tdd, xp
 Authors: Jonathan Sharpe
 Summary: Test-driven JavaScript development done right - part 1
@@ -790,7 +790,7 @@ $ git commit -a -m 'Sixth test - rock vs. paper'
  1 file changed, 14 insertions(+), 1 deletion(-)
 ```
 
-## Draw! [9/10]
+## Draw! [9/10]
 
 So far we've assumed the two participants choose different values. If you've played RPS, you'll know that's not always the case in real life - sometimes it's a draw.
 
