@@ -811,7 +811,7 @@ The temptation here might be to do something like this:
 
 ```python
 @app.get("/resistance")
-def _(bands: Annotated[list[str], Query()] = None) -> ResistanceModel:
+def _(bands: Annotated[Optional[list[str]], Query()] = None) -> ResistanceModel:
     if bands is None:
         raise HTTPException(status_code=HTTPStatus.BAD_REQUEST)
     if bands != ["black"]:
