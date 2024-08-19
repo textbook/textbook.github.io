@@ -1,13 +1,11 @@
 on: push
+
 name: Deploy to GitHub pages
+
 jobs:
   build:
-    name: Build and publish
+    name: Build
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      id-token: write
-      pages: write
     steps:
     - name: Check out repository and submodules
       uses: actions/checkout@v4
@@ -26,5 +24,18 @@ jobs:
       uses: actions/upload-pages-artifact@v3
       with:
         path: output/
+  publish:
+    name: Publish
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/source'
+    needs: [ build ]
+    permissions:
+      contents: read
+      id-token: write
+      pages: write
+    environment:
+      name: github-pages
+      url: https://blog.jonrshar.pe/
+    steps:
     - name: Deploy to GitHub Pages
       uses: actions/deploy-pages@v4
