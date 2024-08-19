@@ -4,14 +4,27 @@ jobs:
   build:
     name: Build and publish
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+      pages: write
     steps:
-    - name: Checkout repository and submodules
-      uses: actions/checkout@v2
+    - name: Check out repository and submodules
+      uses: actions/checkout@v4
       with:
         submodules: recursive
-    - name: Publish to GitHub Pages
-      uses: nelsonjchen/gh-pages-pelican-action@0.1.6
-      env:
-        GH_PAGES_BRANCH: gh-pages
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        PELICAN_CONFIG_FILE: publishconf.py
+    - name: Install Python
+      uses: actions/setup-python@v5
+      with:
+        cache: 'pip'
+        python-version: '3.12'
+    - name: Install dependencies
+      run: pip install -r requirements.txt
+    - name: Build site
+      run: pelican content --settings publishconf.py
+    - name: Upload build artifacts
+      uses: actions/upload-pages-artifact@v3
+      with:
+        path: output/
+    - name: Deploy to GitHub Pages
+      uses: actions/deploy-pages@v4
