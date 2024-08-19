@@ -1,5 +1,6 @@
 Title: Python TDD Ohm
 Date: 2024-08-17 11:31
+Modified: 2024-08-18 11:30
 Tags: python, tdd, xp
 Authors: Jonathan Sharpe
 Summary: Test-driven Python development done right - part 2
@@ -595,11 +596,14 @@ So let's use a powerful pytest feature, [fixtures][pytest-fixtures], to solve th
 Create a `tests/conftest.py` containing the following:
 
 ```python
+from __future__ import annotations
+
 from collections.abc import Generator
 from socket import socket
 from threading import Thread
 
 import pytest
+from fastapi import FastAPI
 from httpx import Client
 from uvicorn import Config, Server
 
@@ -608,21 +612,39 @@ from app import app
 
 @pytest.fixture(scope="module")
 def client() -> Generator[Client, None, None]:
-    free_socket = _create_socket()
-    host, port = free_socket.getsockname()
-    server = Server(Config(app=app))
-    thread = Thread(target=server.run, kwargs=dict(sockets=[free_socket]))
-    thread.start()
-    with Client(base_url=f"http://{host}:{port}") as client:
-        yield client
-    server.should_exit = True
-    thread.join()
+    with TestServer.random_port(app) as server:
+        with Client(base_url=server.url) as client:
+            yield client
 
 
-def _create_socket(host: str = "", port: int = 0) -> socket:
-    socket_ = socket()
-    socket_.bind((host, port))
-    return socket_
+class TestServer:
+
+    @classmethod
+    def random_port(cls, application: FastAPI) -> TestServer:
+        socket_ = socket()
+        socket_.bind(("", 0))
+        return cls(application, socket_)
+
+    def __init__(self, application: FastAPI, socket_: socket):
+        self._server = Server(Config(app=application))
+        self._socket = socket_
+        self._thread = Thread(
+            target=self._server.run,
+            kwargs=dict(sockets=[self._socket]),
+        )
+
+    def __enter__(self) -> TestServer:
+        self._thread.start()
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self._server.should_exit = True
+        self._thread.join()
+
+    @property
+    def url(self) -> str:
+        host, port = self._socket.getsockname()
+        return f"http://{host}:{port}"
 ```
 
 If you want the detailed explanation of what's happening here, see the [bonus section](#bonus).
@@ -1232,12 +1254,17 @@ The content of `conftest.py` may look a little complicated, and uses some modera
 1. our tests to make requests to a real server instance, avoiding the issue of some errors not being turned into responses by the `TestClient` setup; and
 2. the setup and teardown to be handled outside of each individual test.
 
+**Note** the core logic for running the server on a separate thread was taken from [_"Starting and Stopping `uvicorn` in the Background"_][bugfactory-uvicorn] by Christoph Schiessl.
+
 ```python
+from __future__ import annotations
+
 from collections.abc import Generator
 from socket import socket
 from threading import Thread
 
 import pytest
+from fastapi import FastAPI
 from httpx import Client
 from uvicorn import Config, Server
 
@@ -1246,21 +1273,39 @@ from app import app
 
 @pytest.fixture(scope="module")
 def client() -> Generator[Client, None, None]:
-    free_socket = _create_socket()
-    host, port = free_socket.getsockname()
-    server = Server(Config(app=app))
-    thread = Thread(target=server.run, kwargs=dict(sockets=[free_socket]))
-    thread.start()
-    with Client(base_url=f"http://{host}:{port}") as client:
-        yield client
-    server.should_exit = True
-    thread.join()
+    with TestServer.random_port(app) as server:
+        with Client(base_url=server.url) as client:
+            return client
 
 
-def _create_socket(host: str = "", port: int = 0) -> socket:
-    socket_ = socket()
-    socket_.bind((host, port))
-    return socket_
+class TestServer:
+
+    @classmethod
+    def random_port(cls, application: FastAPI) -> TestServer:
+        socket_ = socket()
+        socket_.bind(("", 0))
+        return cls(application, socket_)
+
+    def __init__(self, application: FastAPI, socket_: socket):
+        self._server = Server(Config(app=application))
+        self._socket = socket_
+        self._thread = Thread(
+            target=self._server.run,
+            kwargs=dict(sockets=[self._socket]),
+        )
+
+    def __enter__(self) -> TestServer:
+        self._thread.start()
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self._server.should_exit = True
+        self._thread.join()
+
+    @property
+    def url(self) -> str:
+        host, port = self._socket.getsockname()
+        return f"http://{host}:{port}"
 ```
 
 In a bit more detail, focusing on the fixture function itself, here's what's happening:
@@ -1271,7 +1316,8 @@ In a bit more detail, focusing on the fixture function itself, here's what's hap
         @pytest.fixture(scope="module")
 
     is a _decorator_ registering the function as a pytest fixture, i.e. that its going to provide a value to be used in individual test cases.
-    The module scope means that the fixture will only be called once for any given module that it's used in, and all of the tests in the same module will receive the same value (in our case, all of the tests in `tests/api_test.py` will make requests to the same server thread).
+    The module scope means that the fixture will only be called once for any given module that it's used in, and all of the tests in the same module will receive the same value (so in our case, all of the tests in `tests/api_test.py` will make requests to the same server thread).
+     Without this, the default scope `"function"` would be used, and a separate server created for each test (if you try this you can see it takes much longer to run the suite).
 
 - On the next line:
 
@@ -1283,45 +1329,24 @@ In a bit more detail, focusing on the fixture function itself, here's what's hap
 
     In this case we only care about the type of value that's yielded, not what can be sent back to the generator or is eventually returned, so the other generics are just filled with `None`.
 
-- Next we get a free socket and determine its host and port:
+- Within the fixture, we first create a server that wraps our FastAPI application, listening on a random port:
 
         :::python
-        free_socket = _create_socket()
-        host, port = free_socket.getsockname()
+        with TestServer.random_port(app) as server:
 
-    This will bind a random port, so we can run the tests while the dev server is running without seeing any conflicts.
+    `TestServer` is a custom class written for this purpose; we'll go into a bit more detail on how this works below.
 
-- Then we create a new [Uvicorn] server wrapping the FastAPI application:
-
-        :::python
-        server = Server(Config(app=app))
-
-    This is the same server FastAPI uses for its `dev` and `run` CLI commands.
-
-- Next we create the [thread][python-threading] that allows the server to run in the background while our tests are executed:
+- The next step before the fixture value is ready to be injected into the tests is creating an [`httpx` client][httpx-client]:
 
         :::python
-        thread = Thread(target=server.run, kwargs=dict(sockets=[free_socket]))
-        thread.start()
-
-    The `target` argument is the callable that should be executed in the new thread.
-    The `kwargs` argument defines additional keyword arguments that should be passed to the target callable when it's invoked.
-    So when the thread starts, it will effectively run:
-
-        :::python
-        server.run(sockets=[free_socket])
-
-- The final step before the fixture value is ready to be injected into the tests is creating an [`httpx` client][httpx-client]:
-
-        :::python
-        with Client(base_url=f"http://{host}:{port}") as client:
+        with Client(base_url=server.url) as client:
 
     This uses a _context manager_, per the documentation:
 
     > The recommended way to use a `Client` is as a context manager.
     > This will ensure that connections are properly cleaned up when leaving the `with` block
 
-    The base URL is set to the host and port our server is listening on, allowing the tests to make _relative_ requests like `client.get("/resistance")`.
+    Setting the base URL allows the tests to make _relative_ requests like `client.get("/resistance")`.
 
 - Now the client object is yielded, providing the value of the fixture for the tests:
 
@@ -1330,19 +1355,65 @@ In a bit more detail, focusing on the fixture function itself, here's what's hap
 
     The fixture function pauses execution at this point, waiting while pytest runs the tests that require the value.
     Once all of the tests in the module have finished running, pytest _re-enters_ the fixture function, allowing execution to continue from the next line.
+    This allows the cleanup on exiting the two context managers to be deferred - if this was `return client` instead, the client would be closed and the server shut down _before_ sending the value to the tests, so they'd all fail with:
 
-- This leaves the context manager block, so `httpx` clears up any leftover connections, then runs:
+        RuntimeError: Cannot send a request, as the client has been closed.
+
+So how does the `TestServer` work?
+
+- A _class method_ is used to create a new instance, creating a new socket listening on a random port on the local host then instantiating the class with that socket and the app:
 
         :::python
-        server.should_exit = True
+        @classmethod
+        def random_port(cls, application: FastAPI) -> TestServer:
+            socket_ = socket()
+            socket_.bind(("", 0))
+            return cls(application, socket_)
+
+- When a new instance is created, it creates a Uvicorn server wrapping the application (this is the same server FastAPI uses for its `dev` and `run` CLI commands) and the [thread][python-threading] that allows the server to run in the background while our tests are executed.
+    Note the `_` prefix - this indicates to users of the class that these attributes should be considered _private_ and not accessed directly.
+
+        :::python
+        def __init__(self, application: FastAPI, socket_: socket):
+            self._server = Server(Config(app=application))
+            self._socket = socket_
+            self._thread = Thread(
+                target=self._server.run,
+                kwargs=dict(sockets=[self._socket]),
+            )
+
+    The `target` argument to the thread is the callable that should be executed in the new thread.
+    The `kwargs` argument defines additional keyword arguments that should be passed to the target callable when it's invoked.
+    So when the thread starts, it will effectively run:
+
+        :::python
+        self._server.run(sockets=[self._socket])
+
+- When the context manager `with` block is _entered_, the `__enter__` method is called, which starts the thread created in `__init__`:
+
+        :::python
+        def __enter__(self) -> TestServer:
+            self._thread.start()
+            return self
+
+    Returning `self` allows the `TestServer` instance to be accessed `as server` inside the `with` block.
+
+- Inside the `with` block, the client is created. This uses the `url` property from the test server, which is determined based on the host and port from the socket the underlying Uvicorn server is using:
+
+        :::python
+        @property
+        def url(self) -> str:
+            host, port = self._socket.getsockname()
+            return f"http://{host}:{port}"
+
+- Once the tests have all run and the client has been closed (by exiting its own context manager), the server `with` block is exited, so the `__exit__` method is called:
+
+        :::python
+        def __exit__(self, exc_type, exc_val, exc_tb):
+            self._server.should_exit = True
+            self._thread.join()
 
     This tells the Uvicorn server to stop accepting any new requests and prepare for shutdown.
-
-- Finally:
-
-        :::python
-        thread.join()
-
     Joining the thread means the fixture function will now wait for that thread (and hence the server process) to exit before allowing the test suite to complete.
 
 Fixtures are a powerful way to abstract setup and teardown out of your tests to keep them readable; here's an example of using them to test actual spacecraft 🚀:
@@ -1353,6 +1424,7 @@ Fixtures are a powerful way to abstract setup and teardown out of your tests to 
 
 <sup>1</sup> Actually, the proper [RKM code] uses trailing zeros to indicate a tighter tolerance, we will ignore that distinction for now.
 
+[bugfactory-uvicorn]: https://bugfactory.io/articles/starting-and-stopping-uvicorn-in-the-background/
 [curl]: https://en.wikipedia.org/wiki/CURL
 [electronic colour code]: https://en.wikipedia.org/wiki/Electronic_color_code
 [JS TDD Ohm]: {filename}/development/js-tdd-ohm.md
