@@ -1,6 +1,6 @@
 Title: Python TDD Ohm
 Date: 2024-08-17 11:31
-Modified: 2024-08-18 11:30
+Modified: 2024-08-19 11:00
 Tags: python, tdd, xp
 Authors: Jonathan Sharpe
 Summary: Test-driven Python development done right - part 2
