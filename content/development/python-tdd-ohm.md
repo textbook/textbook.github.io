@@ -1275,7 +1275,7 @@ from app import app
 def client() -> Generator[Client, None, None]:
     with TestServer.random_port(app) as server:
         with Client(base_url=server.url) as client:
-            return client
+            yield client
 
 
 class TestServer:
