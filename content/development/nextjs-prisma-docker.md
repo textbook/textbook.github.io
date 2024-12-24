@@ -1,10 +1,11 @@
 Title: Next.js and Prisma in Docker
 Date: 2024-12-24 11:30
+Modified: 2024-12-24 12:00
 Tags: javascript, docker, ci
 Authors: Jonathan Sharpe
 Summary: Containerisation patterns for a Next.js + Prisma full-stack application.
 
-For my work with [CodeYourFuture], earlier this year I helped one of the product teams I help mentor to put together a `Dockerfile` for their application, which was based on [Next.js][next] and [Prisma].
+For my work with [CodeYourFuture], earlier this year I helped one of the product teams I work with to put together a `Dockerfile` for their application, which was based on [Next.js][next] and [Prisma].
 This proved to be a little trickier than I'd anticipated, so I wanted to document what we figured out.
 
 This is going to focus on building a simple app, designed to be deployed as a single container to e.g. a Kubernetes cluster, but the commentary should help signpost where updates are needed for other deployment topologies.
@@ -25,7 +26,8 @@ But I would recommend using the [`src/` directory][next-src], as this simplifies
 For the sake of stable, reproducible builds, you can then add an explicit [`engines` field][npm-engines], e.g. by running:
 
 ```bash
-$ npm pkg set engines.node='^22.11'
+$ npm pkg set 'engines.node=^22.11'
+$ npm install --package-lock-only  # sync package-lock.json
 ```
 
 which will update `package.json` as follows:
@@ -68,12 +70,12 @@ To enable this mode, update `next.config.mjs` as follows:
 Now when you run the build:
 
 ```bash
-$ npm run build    
+$ npm run build
 
-> my-app@0.1.0 build
+> demo-app@0.1.0 build
 > next build
 
-  ▲ Next.js 14.2.3
+   ▲ Next.js 15.1.2
 
    Creating an optimized production build ...
  ✓ Compiled successfully
@@ -84,12 +86,12 @@ $ npm run build
  ✓ Finalizing page optimization    
 
 Route (app)                              Size     First Load JS
-┌ ○ /                                    5.46 kB        92.4 kB
-└ ○ /_not-found                          871 B          87.8 kB
-+ First Load JS shared by all            87 kB
-  ├ chunks/23-0627c91053ca9399.js        31.5 kB
-  ├ chunks/fd9d1056-2821b0f0cabcd8bd.js  53.6 kB
-  └ other shared chunks (total)          1.87 kB
+┌ ○ /                                    5.62 kB         111 kB
+└ ○ /_not-found                          979 B           106 kB
++ First Load JS shared by all            105 kB
+  ├ chunks/4bd1b696-20882bf820444624.js  52.9 kB
+  ├ chunks/517-cf5b1ec733e34704.js       50.5 kB
+  └ other shared chunks (total)          1.89 kB
 
 
 ○  (Static)  prerendered as static content
@@ -100,12 +102,12 @@ you can test out the standalone app by running its `server.js` entrypoint:
 
 ```bash
 $ node .next/standalone/server.js
-  ▲ Next.js 14.2.3
-  - Local:        http://localhost:3000
-  - Network:      http://0.0.0.0:3000
+   ▲ Next.js 15.1.2
+   - Local:        http://localhost:3000
+   - Network:      http://0.0.0.0:3000
 
  ✓ Starting...
- ✓ Ready in 60ms
+ ✓ Ready in 78ms
 ```
 
 If you _visit_ that site, though, it will look a little bit weird:
@@ -245,7 +247,6 @@ With our dependencies available, we can re-run the build, this time _inside_ the
 COPY public/ ./public
 COPY src/ ./src
 COPY next.config.mjs ./
-
 RUN NEXT_TELEMETRY_DISABLED=1 npm run build
 ```
 
@@ -324,7 +325,7 @@ $ docker build --tag 'nextjs-image' .
 $ docker run --publish 3000:3000 'nextjs-image'
 ```
 
-While the app is running with the default entrypoint, you can visit the app on localhost at port 3000; it should now appear with the correct styling.
+While the app is running with the default entrypoint, you can visit the app on localhost at port 3000; it should now appear with the correct styling and images.
 
 ## Prisma
 
@@ -376,8 +377,8 @@ To deal with this:
 
 ```bash
 $ mv .env{,.local}
-$ npm install --save-dev dotenv-cli
-$ npm pkg set scripts.prisma='dotenv -c -- prisma'
+$ npm install dotenv-cli
+$ npm pkg set 'scripts.prisma=dotenv -c -- prisma'
 ```
 
 Update `.env.local` to set up a valid connection string for whichever data source you've selected.
@@ -434,7 +435,7 @@ Your database is now in sync with your schema.
 Add a [`pre-` script][npm-pre-post-script] to ensure the Prisma client is always regenerated when the app is built, then re-run the Next.js build:
 
 ```bash
-$ npm pkg set scripts.prebuild='prisma generate'
+$ npm pkg set 'scripts.prebuild=prisma generate'
 $ npm run build
 ```
 
