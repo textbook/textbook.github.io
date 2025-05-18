@@ -1,5 +1,6 @@
 Title: A context manager-based case statement
 Date: 2015-07-06 12:00
+Modified: 2025-05-18 09:45
 Tags: code, python
 Authors: Jonathan Sharpe
 Summary: Use of Python's context manager syntax to ape a switch-case statement.
@@ -11,8 +12,7 @@ of the `switch` available in some other languages.
 
 Also available [as a Gist][2].
 
-```
-:::python
+```python
 class Switch(object):
 	"""A class for faking switch syntax with a context manager.
 

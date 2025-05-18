@@ -1,5 +1,6 @@
 Title: Switching Meadowlark to Less CSS
 Date: 2015-08-03 22:00
+Modified: 2025-05-18 09:45
 Tags: code, pelican, css
 Authors: Jonathan Sharpe
 Summary: In which I faff around with webassets and reduce duplication
@@ -26,8 +27,7 @@ installed. This entailed adding another Git submodule to the project, the
 [`pelican-plugins` repository][plugins], to get access to the `assets` plugin.
 Then I added:
 
-```
-:::python
+```python
 PLUGIN_PATHS = ['pelican-plugins']
 PLUGINS = ['assets']
 JINJA_EXTENSIONS = ['webassets.ext.jinja2.AssetsExtension']
@@ -36,8 +36,7 @@ JINJA_EXTENSIONS = ['webassets.ext.jinja2.AssetsExtension']
 to the `pelicanconf.py`. This enables use of the `{% assets %}` statement in
 templates, which will be used to process the `.less` files to `.css` as follows:
 
-```
-:::html
+```jinja
 {% assets filters="less", output="css/main.css", "css/main.less" %}
 <link rel="stylesheet" href="{{ SITEURL }}/{{ ASSET_URL }}">
 {% endassets %}

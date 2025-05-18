@@ -1,5 +1,6 @@
 Title: (Not) Much Ado About Nothing
 Date: 2015-11-21 13:00
+Modified: 2025-05-18 09:45
 Tags: blogging, writing
 Authors: Jonathan Sharpe
 Summary: Why did I start this blog, again?
@@ -7,8 +8,7 @@ Summary: Why did I start this blog, again?
 My last post to this blog was on the 15th of August, which `datetime` has just
 informed me is exactly 14 weeks ago:
 
-```
-:::python
+```pycon
 >>> import datetime
 >>> datetime.date.today() - datetime.date(2015, 8, 15)
 datetime.timedelta(98)

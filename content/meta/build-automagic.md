@@ -1,5 +1,6 @@
 Title: Setting up a Travis build
 Date: 2015-08-07 22:13
+Modified: 2025-05-18 09:45
 Tags: code, travis, pelican
 Authors: Jonathan Sharpe
 Summary: Making my own life easier, one shell script at a time
@@ -35,8 +36,7 @@ pushing, and a bit of research suggested that it isn't possible to modify the
 clone process, but you can add the correct origin back manually. Based on [this 
 (criminally underrated) SO post][1], I added the following to `deploy.sh`:
 
-```
-:::shell
+```bash
 git remote rm origin
 git remote add origin https://${GH_PAGES}@github.com/$TARGET_REPO
 ```
@@ -47,8 +47,7 @@ the changes weren't actually ending up in the `master` branch. To fix this took
 committing the changes then switching that back into `master` before the push,
 so I added:
 
-```
-:::shell
+```bash
 git checkout -b temp
 ...
 git checkout -B master temp
