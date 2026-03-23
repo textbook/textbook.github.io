@@ -1,6 +1,10 @@
-on: push
+on:
+  pull_request:
+    branches: [ source ]
+  push:
+    branches: [ source ]
 
-name: Deploy to GitHub pages
+name: Deploy to GitHub Pages
 
 jobs:
   build:
@@ -8,20 +12,17 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Check out repository and submodules
-      uses: actions/checkout@v4
+      uses: actions/checkout@v6
       with:
         submodules: recursive
-    - name: Install Python
-      uses: actions/setup-python@v5
-      with:
-        cache: 'pip'
-        python-version: '3.12'
+    - name: Install uv
+      uses: astral-sh/setup-uv@v7
     - name: Install dependencies
-      run: pip install -r requirements.txt
+      run: uv sync --locked
     - name: Build site
-      run: pelican content --settings publishconf.py
+      run: uv run pelican content --settings publishconf.py
     - name: Upload build artifacts
-      uses: actions/upload-pages-artifact@v3
+      uses: actions/upload-pages-artifact@v4
       with:
         path: output/
   publish:
