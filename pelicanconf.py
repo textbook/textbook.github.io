@@ -28,18 +28,16 @@ TRANSLATION_FEED_ATOM = None
 AUTHOR_FEED_ATOM = None
 AUTHOR_FEED_RSS = None
 
-# Blogroll
-LINKS = (
-    ('Pivotal Engineering Journal', 'http://engineering.pivotal.io/'),
-    ('The Clean Code Blog', 'http://blog.cleancoder.com/'),
-    ('Code as Craft', 'https://codeascraft.com/'),
-    ('Corgibytes Blog', 'http://corgibytes.com/blog/'),
-)
+LINKS = [
+    ('Ignition Works', 'https://ignition.works/'),
+    ('33 Teams', 'https://www.33teams.com/'),
+    ('CodeYourFuture', 'https://codeyourfuture.io/'),
+]
 
 # Social widget
 SOCIAL = (
     ('GitHub', 'https://github.com/textbook'),
-    ('Stack Overflow', 'http://stackoverflow.com/users/3001761/jonrsharpe'),
+    ('Stack Overflow', 'https://stackoverflow.com/users/3001761/jonrsharpe'),
     ('Twitter', 'https://twitter.com/jonrsharpe'),
     ('500px', 'https://500px.com/jonrsharpe'),
 )
@@ -51,7 +49,7 @@ MAILCHIMP = dict(
     domain='jonrshar.us15.list-manage.com',
     user_id='7ada11180797f3af73228bf0b',
     list_id='d172abcbd2',
-    rewards_url='http://eepurl.com/cNv6Rb',
+    rewards_url='https://eepurl.com/cNv6Rb',
 )
 LICENSE = 'CC BY-SA 4.0'
 
