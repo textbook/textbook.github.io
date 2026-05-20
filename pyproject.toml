@@ -6,4 +6,5 @@ dependencies = [
     "bulrush>=0.6.3",
     "markdown>=3.10.2",
     "pelican>=4.11.0.post0",
+    "pelican-webassets>=2.1.0",
 ]

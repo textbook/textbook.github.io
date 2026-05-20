@@ -160,6 +160,18 @@ wheels = [
 ]
 
 [[package]]
+name = "pelican-webassets"
+version = "2.1.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "pelican" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/a1/22/6241f976879780ec6f89bf45df36952169f305cdddbaabcba2ae797e699e/pelican_webassets-2.1.0.tar.gz", hash = "sha256:0a418b88ebd6d96efae4d666394552bcacc8d30d2f0abb5bb4db26064e8cfed0", size = 133756, upload-time = "2024-11-03T01:41:05.387Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/42/d6/844e251c8da875d6ff4a86715394f43f8ad2141d70577f7e77e4058576b2/pelican_webassets-2.1.0-py3-none-any.whl", hash = "sha256:9df6659ecb565af88df55df4aac27cafc948299ef3d4fc743f7385db2e274475", size = 149769, upload-time = "2024-11-03T01:41:03.253Z" },
+]
+
+[[package]]
 name = "pygments"
 version = "2.18.0"
 source = { registry = "https://pypi.org/simple" }
@@ -228,6 +240,7 @@ dependencies = [
     { name = "bulrush" },
     { name = "markdown" },
     { name = "pelican" },
+    { name = "pelican-webassets" },
 ]
 
 [package.metadata]
@@ -235,6 +248,7 @@ requires-dist = [
     { name = "bulrush", specifier = ">=0.6.3" },
     { name = "markdown", specifier = ">=3.10.2" },
     { name = "pelican", specifier = ">=4.11.0.post0" },
+    { name = "pelican-webassets", specifier = ">=2.1.0" },
 ]
 
 [[package]]

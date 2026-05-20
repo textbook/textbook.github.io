@@ -15,8 +15,7 @@ DEFAULT_LANG = 'en'
 
 # Appearance
 THEME = bulrush.PATH
-PLUGIN_PATHS = ['pelican-plugins']
-PLUGINS = ['assets']
+PLUGINS = ['pelican.plugins.webassets']
 JINJA_ENVIRONMENT = bulrush.ENVIRONMENT
 JINJA_FILTERS = bulrush.FILTERS
 BULRUSH_SHOW_SUMMARY = True
