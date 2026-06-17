@@ -1,5 +1,6 @@
 Title: Python TDD Ohm (redux)
 Date: 2026-06-17 22:10
+Modified: 2026-06-17 23:20
 Tags: python, tdd, xp
 Authors: Jonathan Sharpe
 Summary: Test-driven Python development done right - part 2, again
@@ -772,6 +773,15 @@ $ git commit --message 'Implement 0 Ohm resistor'
  create mode 100644 tests/api_test.py
  create mode 100644 tests/conftest.py
 ```
+
+> **Note**: if you find the websockets warnings annoying, you can disable them by [configuring pytest][pytest-warnings].
+> Add the following [warning filter][python-warning-filter] to the `pyproject.toml`:
+>
+>     :::toml
+>     [tool.pytest.ini_options]
+>     filterwarnings = [
+>         "ignore:websockets:DeprecationWarning",
+>     ]
 
 ## Unhappy path to design \[4/9]
 
@@ -1580,11 +1590,13 @@ Fixtures are a powerful way to abstract setup and teardown out of your tests to 
 [pytest-fixtures]: https://docs.pytest.org/en/stable/explanation/fixtures.html
 [pytest-parametrize]: https://docs.pytest.org/en/stable/example/parametrize.html
 [pytest-skip]: https://docs.pytest.org/en/stable/how-to/skipping.html
+[pytest-warnings]: https://docs.pytest.org/en/9.0.x/how-to/capture-warnings.html
 [pytest-yield-fixtures]: https://docs.pytest.org/en/stable/how-to/fixtures.html#yield-fixtures-recommended
 [python]: https://www.python.org/
 [python-argparse]: https://docs.python.org/3/library/argparse.html
 [python-generator]: https://wiki.python.org/moin/Generators
 [python-threading]: https://docs.python.org/3/library/threading.html
+[python-warning-filter]: https://docs.python.org/3/library/warnings.html#describing-warning-filters
 [Python TDD Ohm]: {filename}/development/python-tdd-ohm.md
 [resistors]: {static}/images/Electronic-Axial-Lead-Resistors-Array.png
 [rkm code]: https://en.wikipedia.org/wiki/RKM_code
