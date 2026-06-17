@@ -1,14 +1,10 @@
-Title: Python TDD Ohm
-Date: 2024-08-17 11:31
-Modified: 2026-06-17 22:10
+Title: Python TDD Ohm (redux)
+Date: 2026-06-17 22:10
 Tags: python, tdd, xp
 Authors: Jonathan Sharpe
-Summary: Test-driven Python development done right - part 2
+Summary: Test-driven Python development done right - part 2, again
 
-> **Note**: this was originally published as [JS TDD Ohm], using JavaScript with Express and Jest, but I've recently been working with a client using [Python] with [pytest] and [FastAPI], so this article is an updated version of the same example using the latter tech stack.
-
-> **Also note**: a [newer _"redux"_ version][redux] of this article, using the uv package manager, has been published.
-> You can continue to work through this version if you'd prefer to use pipenv.
+> **Note**: this was originally published as [Python TDD Ohm], using [pipenv], but has been rewritten to use [uv]. The principles and process are exactly the same.
 
 In [the previous article] in this series, I introduced some of the basics of test-driven development (TDD):
 
@@ -46,7 +42,7 @@ In this article we're going to dive into test-driving HTTP APIs and talk a bit m
 I've aimed this content at more junior developers, so there are more explanations than all readers will need, but anyone new to testing and TDD should find something to take from it. We'll need:
 
 - \*nix command line: already provided on macOS and Linux; if you're using Windows try WSL or Git BASH;
-- Python (FastAPI requires at least 3.8 - this is written using 3.12, so you may need to write slightly different code in earlier versions, but all of the examples in the FastAPI docs allow you to pick your version) and [pipenv]; and
+- Python (FastAPI requires at least 3.8 - this is written using 3.14, so you may need to write slightly different code in earlier versions, but all of the examples in the FastAPI docs allow you to pick your version) and [uv]; and
 - Familiarity with Python syntax (including type annotations, which FastAPI uses to automatically generate API documentation).
 
 In addition, given the domain for this post, you'll need:
@@ -158,157 +154,132 @@ $ curl "$URL/resistance?bands=brown&bands=red&bands=violet&bands=red"
 
 ## None more black [3/9]
 
-Let's get started by creating a new [pipenv] package to hold our API:
+Let's get started by creating a new [uv] package to hold our API:
 
 ```bash
 $ mkdir resistance
 $ cd $_
-$ git init
-Reinitialized existing Git repository in path/to/resistance/.git/
+$ uv init --package
+Initialized project `resistance`
 $ git commit --allow-empty --message 'Initial commit'
 [main (root-commit) 7c30cd9] Initial commit
-$ pipenv install
-Creating a Pipfile for this project...
-Pipfile.lock not found, creating...
-Locking [packages] dependencies...
-Locking [dev-packages] dependencies...
-Updated Pipfile.lock (702ad05de9bc9de99a4807c8dde1686f31e0041d7b5f6f6b74861195a52110f5)!
-To activate this project's virtualenv, run pipenv shell.
-Alternatively, run a command inside the virtualenv with pipenv run.
-To activate this project's virtualenv, run pipenv shell.
-Alternatively, run a command inside the virtualenv with pipenv run.
-Installing dependencies from Pipfile.lock (2110f5)...
+$ uv sync
+uv sync
+Using CPython 3.14.5+freethreaded
+Creating virtual environment at: .venv
+Resolved 1 package in 13ms
+      Built resistance @ file:///path/to/resista
+Prepared 1 package in 9ms
+Installed 1 package in 3ms
+ + resistance==0.1.0 (from file:///path/to/resistance)
 $ git add .
-$ git commit --message 'Create pipenv project'
-[main c56f9f2] Create pipenv project
- 2 files changed, 1 insertion(+), 3 deletions(-)
+$ git commit --message 'Create uv project'
+[main 9772970] Create uv project
+ 6 files changed, 38 insertions(+)
+ create mode 100644 .gitignore
+ create mode 100644 .python-version
+ create mode 100644 README.md
+ create mode 100644 pyproject.toml
+ create mode 100644 src/resistance/__init__.py
+ create mode 100644 uv.lock
 ```
-This will create a `Pipfile`, containing something like:
+This will create a `pyproject.toml`, containing something like:
 ```toml
-[[source]]
-url = "https://pypi.org/simple"
-verify_ssl = true
-name = "pypi"
+[project]
+name = "resistance"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+authors = [
+    { name = "Jonathan Sharpe", email = "mail@jonrshar.pe" }
+]
+requires-python = ">=3.14"
+dependencies = []
 
-[packages]
+[project.scripts]
+resistance = "resistance:main"
 
-[dev-packages]
-
-[requires]
-python_version = "3.12"
+[build-system]
+requires = ["uv_build>=0.11.21,<0.12.0"]
+build-backend = "uv_build"
 ```
-along with a `Pipfile.lock` which will be largely empty (until we start adding dependencies):
+along with a `uv.lock` which will be largely empty (until we start adding dependencies):
 
-```json
-{
-    "_meta": {
-        "hash": {
-            "sha256": "702ad05de9bc9de99a4807c8dde1686f31e0041d7b5f6f6b74861195a52110f5"
-        },
-        "pipfile-spec": 6,
-        "requires": {
-            "python_version": "3.12"
-        },
-        "sources": [
-            {
-                "name": "pypi",
-                "url": "https://pypi.org/simple",
-                "verify_ssl": true
-            }
-        ]
-    },
-    "default": {},
-    "develop": {}
-}
+```toml
+version = 1
+revision = 3
+requires-python = ">=3.14"
+
+[[package]]
+name = "resistance"
+version = "0.1.0"
+source = { editable = "." }
+
 ```
 
 Next, install [FastAPI], which we'll use to write and test our API endpoints, then [pytest] as the test runner:
 
 ```bash
-$ pipenv install 'fastapi[standard]'
-Installing fastapi...
-Resolving fastapi[standard]...
-Added fastapi to Pipfile's [packages] ...
-✔ Installation Succeeded
-Pipfile.lock (2110f5) out of date: run `pipfile lock` to update to (1a42bb)...
-Running $ pipenv lock then $ pipenv sync.
-Locking [packages] dependencies...
-Building requirements...
-Resolving dependencies...
-✔ Success!
-Locking [dev-packages] dependencies...
-Updated Pipfile.lock (32f3a7325583c6d7bc3d4a81bbe168b8f4e158e2f313d4e85675c20d3d1a42bb)!
-To activate this project's virtualenv, run pipenv shell.
-Alternatively, run a command inside the virtualenv with pipenv run.
-Installing dependencies from Pipfile.lock (1a42bb)...
-All dependencies are now up-to-date!
-To activate this project's virtualenv, run pipenv shell.
-Alternatively, run a command inside the virtualenv with pipenv run.
-Installing dependencies from Pipfile.lock (1a42bb)...
+$ uv add 'fastapi[standard]'
+Resolved 45 packages in 316ms
+      Built resistance @ file://path/to/resista
+Prepared 23 packages in 595ms
+Uninstalled 1 package in 0.93ms
+Installed 44 packages in 41ms
+ + annotated-doc==0.0.4
+# ...and a bunch of other packages...
+ + websockets==16.0
 ```
 ```bash
-$ pipenv install --dev pytest
-Installing pytest...
-Resolving pytest...
-Added pytest to Pipfile's [dev-packages] ...
-✔ Installation Succeeded
-Pipfile.lock (1a42bb) out of date: run `pipfile lock` to update to (cef74e)...
-Running $ pipenv lock then $ pipenv sync.
-Locking [packages] dependencies...
-Building requirements...
-Resolving dependencies...
-✔ Success!
-Locking [dev-packages] dependencies...
-Building requirements...
-Resolving dependencies...
-✔ Success!
-Updated Pipfile.lock (9207f36ec8d8c7e488e13ad84852aa51d32c08e7f3ead19ec0c91e8930cef74e)!
-To activate this project's virtualenv, run pipenv shell.
-Alternatively, run a command inside the virtualenv with pipenv run.
-Installing dependencies from Pipfile.lock (cef74e)...
-All dependencies are now up-to-date!
-To activate this project's virtualenv, run pipenv shell.
-Alternatively, run a command inside the virtualenv with pipenv run.
-Installing dependencies from Pipfile.lock (cef74e)...
-Installing dependencies from Pipfile.lock (cef74e)...
+$ uv add --dev pytest
+Resolved 49 packages in 125ms
+      Built resistance @ file://path/to/resista
+Prepared 2 packages in 58ms
+Uninstalled 1 package in 0.71ms
+Installed 5 packages in 3ms
+ + iniconfig==2.3.0
+ + packaging==26.2
+ + pluggy==1.6.0
+ + pytest==9.1.0
+ ~ resistance==0.1.0 (from file://path/to/resistance)
 ```
-This will add those packages to your `Pipfile`:
+This will add those packages to your `pyproject.toml`:
 ```diff
-  [packages]
-+ fastapi = {extras = ["standard"], version = "*"}
-  
-  [dev-packages]
-+ pytest = "*"
+-dependencies = []
++dependencies = [
++    "fastapi[standard]>=0.137.1",
++]
+```
+
+```diff
++
++[dependency-groups]
++dev = [
++    "pytest>=9.1.0",
++]
 ```
 and update the lock file accordingly, as well as installing the packages for use locally.
 Let's commit that:
 
 ```bash
+$ git add .
 $ git commit --message 'Install dependencies'
-[main a3e239e] Install dependencies
- 2 files changed, 715 insertions(+), 3 deletions(-)
+[main b3c2f56] Install dependencies
+ 2 files changed, 799 insertions(+), 1 deletion(-)
 ```
 
-To make it easy to run the tests, add the following to the end of the `Pipfile`:
-```diff
-+ 
-+ [scripts]
-+ test = "pytest"
-  
-```
-
-
-Now `pipenv run test` will invoke pytest.
+Now `uv run pytest` will invoke pytest.
 **Call the shot**, then run that command.
 
 ---
 
 ```bash
-$ pipenv run test
+$ uv run pytest
 ================================== test session starts ===================================
-platform darwin -- Python 3.12.0, pytest-8.3.2, pluggy-1.5.0
+platform darwin -- Python 3.14.5, pytest-9.1.0, pluggy-1.6.0
 rootdir: path/to/resistance
-plugins: anyio-4.4.0
+configfile: pyproject.toml
+plugins: anyio-4.14.0
 collected 0 items
 
 ================================= no tests ran in 0.00s ==================================
@@ -323,7 +294,7 @@ from http import HTTPStatus
 
 from fastapi.testclient import TestClient
 
-from app import app
+from resistance import app
 
 
 def test_single_black_band_returns_0R():
@@ -337,32 +308,40 @@ def test_single_black_band_returns_0R():
 ---
 
 ```bash
-$ pipenv run test
-======================================= test session starts ========================================
-platform darwin -- Python 3.12.0, pytest-8.3.2, pluggy-1.5.0
+$ uv run pytest
+================================== test session starts ===================================
+platform darwin -- Python 3.14.5, pytest-9.1.0, pluggy-1.6.0
 rootdir: path/to/resistance
-plugins: anyio-4.4.0
+configfile: pyproject.toml
+plugins: anyio-4.14.0
 collected 0 items / 1 error
 
-============================================== ERRORS ==============================================
-________________________________ ERROR collecting tests/api_test.py ________________________________
+========================================= ERRORS =========================================
+___________________________ ERROR collecting tests/api_test.py ___________________________
 ImportError while importing test module 'path/to/resistance/tests/api_test.py'.
 Hint: make sure your test modules/packages have valid Python names.
 Traceback:
-/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/importlib/__init__.py:90: in import_module
+../../.local/share/uv/python/cpython-3.14.5+freethreaded-macos-aarch64-none/lib/python3.14t/importlib/__init__.py:88: in import_module
     return _bootstrap._gcd_import(name[level:], package, level)
-tests/api_test.py:3: in <module>
-    from app import app
-E   ModuleNotFoundError: No module named 'app'
-===================================== short test summary info ======================================
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/api_test.py:5: in <module>
+    from resistance import app
+E   ImportError: cannot import name 'app' from 'resistance' (path/to/resistance/src/resistance/__init__.py)
+==================================== warnings summary ====================================
+.venv/lib/python3.14t/site-packages/fastapi/testclient.py:1
+  path/to/resistance/.venv/lib/python3.14t/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+================================ short test summary info =================================
 ERROR tests/api_test.py
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! Interrupted: 1 error during collection !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-========================================= 1 error in 0.35s =========================================
+!!!!!!!!!!!!!!!!!!!!!!!!! Interrupted: 1 error during collection !!!!!!!!!!!!!!!!!!!!!!!!!
+============================== 1 warning, 1 error in 0.14s ===============================
 ```
 
-Hopefully you predicted that: `app` wasn't defined, the test crashed before even getting the chance to fail.
+Hopefully you predicted that: `app` wasn't defined in `resistance`, the test crashed before even getting the chance to fail.
 So let's give it an app to test!
-Create `app/__init__.py` containing the following:
+Edit `src/resistance/__init__.py` to contain the following:
 
 ```python
 from fastapi import FastAPI
@@ -375,17 +354,18 @@ What will happen when we re-run the test now?
 ---
 
 ```bash
-$ pipenv run test
-======================================= test session starts ========================================
-platform darwin -- Python 3.12.0, pytest-8.3.2, pluggy-1.5.0
+$ uv run pytest
+================================== test session starts ===================================
+platform darwin -- Python 3.14.5, pytest-9.1.0, pluggy-1.6.0
 rootdir: path/to/resistance
-plugins: anyio-4.4.0
+configfile: pyproject.toml
+plugins: anyio-4.14.0
 collected 1 item
 
-tests/api_test.py F                                                                          [100%]
+tests/api_test.py F                                                                [100%]
 
-============================================= FAILURES =============================================
-________________________________ test_single_black_band_returns_0R _________________________________
+======================================== FAILURES ========================================
+___________________________ test_single_black_band_returns_0R ____________________________
 
     def test_single_black_band_returns_0R():
         response = TestClient(app).get("/resistance", params=dict(bands=["black"]))
@@ -395,13 +375,19 @@ E        +  where 404 = <Response [404 Not Found]>.status_code
 E        +  and   <HTTPStatus.OK: 200> = HTTPStatus.OK
 
 tests/api_test.py:10: AssertionError
-===================================== short test summary info ======================================
+==================================== warnings summary ====================================
+.venv/lib/python3.14t/site-packages/fastapi/testclient.py:1
+  path/to/resistance/.venv/lib/python3.14t/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+================================ short test summary info =================================
 FAILED tests/api_test.py::test_single_black_band_returns_0R - assert 404 == <HTTPStatus.OK: 200>
-======================================== 1 failed in 0.37s =========================================
+============================== 1 failed, 1 warning in 0.13s ==============================
 ```
 
 That's a bit more like it, the test is now _failing_ (rather than _crashing_) and we're getting feedback at the HTTP API level (404 Not Found status code instead of the expected 200 OK).
-Let's handle that endpoint and move the failure a bit further along; add the code to `app/__init__.py` to handle the GET request and immediately return 200 OK:
+Let's handle that endpoint and move the failure a bit further along; add the code to `src/resistance/__init__.py` to handle the GET request and immediately return 200 OK:
 
 ```diff
   from fastapi import FastAPI
@@ -418,17 +404,18 @@ Let's handle that endpoint and move the failure a bit further along; add the cod
 ---
 
 ```bash
-$ pipenv run test
-======================================= test session starts ========================================
-platform darwin -- Python 3.12.0, pytest-8.3.2, pluggy-1.5.0
+$ uv run pytest
+================================== test session starts ===================================
+platform darwin -- Python 3.14.5, pytest-9.1.0, pluggy-1.6.0
 rootdir: path/to/resistance
-plugins: anyio-4.4.0
+configfile: pyproject.toml
+plugins: anyio-4.14.0
 collected 1 item
 
-tests/api_test.py F                                                                          [100%]
+tests/api_test.py F                                                                [100%]
 
-============================================= FAILURES =============================================
-________________________________ test_single_black_band_returns_0R _________________________________
+======================================== FAILURES ========================================
+___________________________ test_single_black_band_returns_0R ____________________________
 
     def test_single_black_band_returns_0R():
         response = TestClient(app).get("/resistance", params=dict(bands=["black"]))
@@ -438,18 +425,24 @@ E       AssertionError: assert None == {'shorthand': '0R'}
 E        +  where None = json()
 E        +    where json = <Response [200 OK]>.json
 
-tests/api_test.py:9: AssertionError
-===================================== short test summary info ======================================
+tests/api_test.py:11: AssertionError
+==================================== warnings summary ====================================
+.venv/lib/python3.14t/site-packages/fastapi/testclient.py:1
+  path/to/resistance/.venv/lib/python3.14t/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+================================ short test summary info =================================
 FAILED tests/api_test.py::test_single_black_band_returns_0R - AssertionError: assert None == {'shorthand': '0R'}
-======================================== 1 failed in 0.36s =========================================
+============================== 1 failed, 1 warning in 0.12s ==============================
 ```
 
 Now we see a failure for the body of the response, rather than the status code.
-If not, you may be handling the wrong path or method; double-check that the code in `app/__init__.py` matches up with the request defined in `tests/api_test.py`.
+If not, you may be handling the wrong path or method; double-check that the code in `src/resistance/__init__.py` matches up with the request defined in `tests/api_test.py`.
 
 This makes sense - our _"path operation function"_ returns `None`, so the response content JSON will be `null`.
 One of FastAPI's features is the use of [models][fastapi-models] to document (in the code itself and in generated [OpenAPI] documentation) request and response bodies.
-Add a model describing the type of response body we're expecting to `app/__init__.py`:
+Add a model describing the type of response body we're expecting to `src/resistance/__init__.py`:
 
 ```diff
   from fastapi import FastAPI
@@ -473,96 +466,89 @@ Add a model describing the type of response body we're expecting to `app/__init_
 ---
 
 ```bash
-$ pipenv run test
-======================================= test session starts ========================================
-platform darwin -- Python 3.12.0, pytest-8.3.2, pluggy-1.5.0
+$ uv run pytest
+================================== test session starts ===================================
+platform darwin -- Python 3.14.5, pytest-9.1.0, pluggy-1.6.0
 rootdir: path/to/resistance
-plugins: anyio-4.4.0
+configfile: pyproject.toml
+plugins: anyio-4.14.0
 collected 1 item
 
-tests/api_test.py F                                                                          [100%]
+tests/api_test.py F                                                                [100%]
 
-============================================= FAILURES =============================================
-________________________________ test_single_black_band_returns_0R _________________________________
+======================================== FAILURES ========================================
+___________________________ test_single_black_band_returns_0R ____________________________
 
     def test_single_black_band_returns_0R():
 >       response = TestClient(app).get("/resistance", params=dict(bands=["black"]))
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 tests/api_test.py:9:
-_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 # ...
             if errors:
+                ctx = endpoint_ctx or EndpointContext()
 >               raise ResponseValidationError(
-                    errors=_normalize_errors(errors), body=response_content
+                    errors=errors,
+                    body=response_content,
+                    endpoint_ctx=ctx,
                 )
-E               fastapi.exceptions.ResponseValidationError: 1 validation errors:
+E               fastapi.exceptions.ResponseValidationError: 1 validation error:
 E                 {'type': 'model_attributes_type', 'loc': ('response',), 'msg': 'Input should be a valid dictionary or object to extract fields from', 'input': None}
+E
+E                 File "path/to/resistance/src/resistance/__init__.py", line 11, in _
+E                   GET /resistance
 
-../../../../.local/share/virtualenvs/resistance-UW3A4gHD/lib/python3.12/site-packages/fastapi/routing.py:155: ResponseValidationError
-===================================== short test summary info ======================================
-FAILED tests/api_test.py::test_single_black_band_returns_0R - fastapi.exceptions.ResponseValidationError: 1 validation errors:
-======================================== 1 failed in 0.18s =========================================
+.venv/lib/python3.14t/site-packages/fastapi/routing.py:309: ResponseValidationError
+==================================== warnings summary ====================================
+.venv/lib/python3.14t/site-packages/fastapi/testclient.py:1
+  path/to/resistance/.venv/lib/python3.14t/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+================================ short test summary info =================================
+FAILED tests/api_test.py::test_single_black_band_returns_0R - fastapi.exceptions.ResponseValidationError: 1 validation error:
+============================== 1 failed, 1 warning in 0.27s ==============================
 ```
 
 This one might be a bit surprising.
 Rather than seeing some kind of response at the HTTP API level, the test is actually receiving a `ResponseValidationError` at the Python level.
-Is this what would happen in real life, would our server crash and error without responding? 
-Let's add a new script in the `Pipfile`, to allow us to start up the application, and investigate what actually happens:
+Is this what would happen in real life, would our server crash and error without responding?
+The `pyproject.toml` already includes a script, calling `resistance:main`:
+```toml
+[project.scripts]
+resistance = "resistance:main"
+```
+We can configure that to allow us to start up the application and investigate what actually happens.
+Add the following imports to `src/resistance/__init__.py`:
 
 ```diff
-  [scripts]
-+ dev = "fastapi dev app"
-  test = "pytest"
++import os
++
+ from fastapi import FastAPI
+ from pydantic import BaseModel
++from uvicorn import Config, Server
 ```
+then define the `main` function at the end:
+```python
+def main() -> None:
+    port = int(os.getenv("PORT", "8000"))
+    server = Server(Config(app=app, port=port))
+    server.run()
+```
+Now run the script and the app should start up:
 ```bash
-$ pipenv run dev
-INFO     Using path app
-INFO     Resolved absolute path path/to/resistance/app
-INFO     Searching for package file structure from directories with __init__.py files
-INFO     Importing from path/to/resistance
-
- ╭─ Python package file structure ─╮
- │                                 │
- │  📁 app                         │
- │  └── 🐍 __init__.py             │
- │                                 │
- ╰─────────────────────────────────╯
-
-INFO     Importing module app
-INFO     Found importable FastAPI app
-
- ╭─ Importable FastAPI app ─╮
- │                          │
- │  from app import app     │
- │                          │
- ╰──────────────────────────╯
-
-INFO     Using import string app:app
-
- ╭────────── FastAPI CLI - Development mode ───────────╮
- │                                                     │
- │  Serving at: http://127.0.0.1:8000                  │
- │                                                     │
- │  API docs: http://127.0.0.1:8000/docs               │
- │                                                     │
- │  Running in development mode, for production use:   │
- │                                                     │
- │  fastapi run                                        │
- │                                                     │
- ╰─────────────────────────────────────────────────────╯
-
-INFO:     Will watch for changes in these directories: ['path/to/resistance']
-INFO:     Uvicorn running on http://127.0.0.1:8000 (Press CTRL+C to quit)
-INFO:     Started reloader process [64850] using WatchFiles
-INFO:     Started server process [64863]
+$ uv run resistance
+INFO:     Started server process [19558]
 INFO:     Waiting for application startup.
 INFO:     Application startup complete.
+INFO:     Uvicorn running on http://127.0.0.1:8080 (Press CTRL+C to quit)
 ```
 
 In another terminal session, run:
 
 ```bash
-$ curl -v http://127.0.0.1:8000/resistance?bands=black
+$ curl -v 'http://127.0.0.1:8000/resistance?bands=black'
 *   Trying 127.0.0.1:8000...
 * Connected to 127.0.0.1 (127.0.0.1) port 8000
 > GET /resistance?bands=black HTTP/1.1
@@ -572,7 +558,7 @@ $ curl -v http://127.0.0.1:8000/resistance?bands=black
 >
 * Request completely sent off
 < HTTP/1.1 500 Internal Server Error
-< date: Thu, 15 Aug 2024 17:00:40 GMT
+< date: Wed, 17 Jun 2026 20:37:58 GMT
 < server: uvicorn
 < content-length: 21
 < content-type: text/plain; charset=utf-8
@@ -581,16 +567,21 @@ $ curl -v http://127.0.0.1:8000/resistance?bands=black
 Internal Server Error
 ```
 
+Alternatively, visit http://localhost:8000/docs and use the Swagger UI to send a request and view the response.
+
 This is the expected behaviour - the server still sends a response, but with a 5xx (server-side) error.
-Back in the FastAPI logs, we see the details:
+Back in the Uvicorn logs, we see the details:
 
 ```bash
-INFO:     127.0.0.1:56075 - "GET /resistance?bands=black HTTP/1.1" 500 Internal Server Error
+INFO:     127.0.0.1:49571 - "GET /resistance?bands=black HTTP/1.1" 500 Internal Server Error
 ERROR:    Exception in ASGI application
 Traceback (most recent call last):
   # ...
-fastapi.exceptions.ResponseValidationError: 1 validation errors:
+fastapi.exceptions.ResponseValidationError: 1 validation error:
   {'type': 'model_attributes_type', 'loc': ('response',), 'msg': 'Input should be a valid dictionary or object to extract fields from', 'input': None}
+
+  File "path/to/resistance/src/resistance/__init__.py", line 14, in _
+    GET /resistance
 ```
 
 We do have a failing test, and could continue to get it passing, but the _diagnostics_ are important.
@@ -610,7 +601,7 @@ from fastapi import FastAPI
 from httpx import Client
 from uvicorn import Config, Server
 
-from app import app
+from resistance import app
 
 
 @pytest.fixture(scope="module")
@@ -661,7 +652,7 @@ Update `tests/api_test.py` to use the fixture, instead of making its own FastAPI
 - from fastapi.testclient import TestClient
 + from httpx import Client
 - 
-- from app import app
+- from resistance import app
   
   
 - def test_single_black_band_returns_0R():
@@ -675,19 +666,20 @@ Update `tests/api_test.py` to use the fixture, instead of making its own FastAPI
 Now run the test again:
 
 ```bash
-$ pipenv run test
-======================================= test session starts ========================================
-platform darwin -- Python 3.12.0, pytest-8.3.2, pluggy-1.5.0
+$ uv run pytest
+================================== test session starts ===================================
+platform darwin -- Python 3.14.5, pytest-9.1.0, pluggy-1.6.0
 rootdir: path/to/resistance
-plugins: anyio-4.4.0
+configfile: pyproject.toml
+plugins: anyio-4.14.0
 collected 1 item
 
-tests/api_test.py F                                                                          [100%]
+tests/api_test.py F                                                                [100%]
 
-============================================= FAILURES =============================================
-________________________________ test_single_black_band_returns_0R _________________________________
+======================================== FAILURES ========================================
+___________________________ test_single_black_band_returns_0R ____________________________
 
-client = <httpx.Client object at 0x104f4e570>
+client = <httpx.Client object at 0x5d6d7f80610>
 
     def test_single_black_band_returns_0R(client: Client):
         response = client.get("/resistance", params=dict(bands=["black"]))
@@ -697,48 +689,85 @@ E        +  where 500 = <Response [500 Internal Server Error]>.status_code
 E        +  and   <HTTPStatus.OK: 200> = HTTPStatus.OK
 
 tests/api_test.py:8: AssertionError
--------------------------------------- Captured stderr setup ---------------------------------------
-INFO:     Started server process [72231]
+--------------------------------- Captured stderr setup ----------------------------------
+INFO:     Started server process [22632]
 INFO:     Waiting for application startup.
 INFO:     Application startup complete.
---------------------------------------- Captured stdout call ---------------------------------------
-INFO:     127.0.0.1:57542 - "GET /resistance?bands=black HTTP/1.1" 500 Internal Server Error
---------------------------------------- Captured stderr call ---------------------------------------
+---------------------------------- Captured stdout call ----------------------------------
+INFO:     127.0.0.1:49682 - "GET /resistance?bands=black HTTP/1.1" 500 Internal Server Error
+---------------------------------- Captured stderr call ----------------------------------
 ERROR:    Exception in ASGI application
 Traceback (most recent call last):
-# ...
-    raise ResponseValidationError(
-fastapi.exceptions.ResponseValidationError: 1 validation errors:
+  # ...
+fastapi.exceptions.ResponseValidationError: 1 validation error:
   {'type': 'model_attributes_type', 'loc': ('response',), 'msg': 'Input should be a valid dictionary or object to extract fields from', 'input': None}
 
-------------------------------------- Captured stderr teardown -------------------------------------
+  File "path/to/resistance/src/resistance/__init__.py", line 14, in _
+    GET /resistance
+----------------------------------- Captured log call ------------------------------------
+INFO     uvicorn.access:httptools_impl.py:484 127.0.0.1:49682 - "GET /resistance?bands=black HTTP/1.1" 500
+ERROR    uvicorn.error:httptools_impl.py:426 Exception in ASGI application
+Traceback (most recent call last):
+  # ...
+fastapi.exceptions.ResponseValidationError: 1 validation error:
+  {'type': 'model_attributes_type', 'loc': ('response',), 'msg': 'Input should be a valid dictionary or object to extract fields from', 'input': None}
+
+  File "path/to/resistance/src/resistance/__init__.py", line 14, in _
+    GET /resistance
+-------------------------------- Captured stderr teardown --------------------------------
 INFO:     Shutting down
 INFO:     Waiting for application shutdown.
 INFO:     Application shutdown complete.
-INFO:     Finished server process [72231]
-===================================== short test summary info ======================================
+INFO:     Finished server process [22632]
+--------------------------------- Captured log teardown ----------------------------------
+INFO     uvicorn.error:server.py:272 Shutting down
+INFO     uvicorn.error:on.py:67 Waiting for application shutdown.
+INFO     uvicorn.error:on.py:76 Application shutdown complete.
+INFO     uvicorn.error:server.py:102 Finished server process [22632]
+==================================== warnings summary ====================================
+tests/api_test.py::test_single_black_band_returns_0R
+  path/to/resistance/.venv/lib/python3.14t/site-packages/websockets/legacy/__init__.py:6: DeprecationWarning: websockets.legacy is deprecated; see https://websockets.readthedocs.io/en/stable/howto/upgrade.html for upgrade instructions
+    warnings.warn(  # deprecated in 14.0 - 2024-11-09
+
+tests/api_test.py::test_single_black_band_returns_0R
+  path/to/resistance/.venv/lib/python3.14t/site-packages/uvicorn/protocols/websockets/websockets_impl.py:17: DeprecationWarning: websockets.server.WebSocketServerProtocol is deprecated
+    from websockets.server import WebSocketServerProtocol
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+================================ short test summary info =================================
 FAILED tests/api_test.py::test_single_black_band_returns_0R - assert 500 == <HTTPStatus.OK: 200>
-======================================== 1 failed in 0.27s =========================================
+============================= 1 failed, 2 warnings in 0.23s ==============================
 ```
 
 You can still see the details of _why_ the server responded 500, but now the actual failure is the status code mismatch rather than a low-level error.
 This is exactly what we're looking for, so update the implementation to get the test passing, then make a commit:
 
 ```bash
-$ pipenv run test
-======================================= test session starts ========================================
-platform darwin -- Python 3.12.0, pytest-8.3.2, pluggy-1.5.0
+$ uv run pytest
+================================================ test session starts =================================================
+platform darwin -- Python 3.14.5, pytest-9.1.0, pluggy-1.6.0
 rootdir: path/to/resistance
-plugins: anyio-4.4.0
-collected 1 item
+configfile: pyproject.toml
+plugins: anyio-4.14.0
+collected 1 item                                                                                                     
 
-tests/api_test.py .                                                                          [100%]
+tests/api_test.py .                                                                                            [100%]
 
-======================================== 1 passed in 0.36s =========================================
+================================================== warnings summary ==================================================
+tests/api_test.py::test_single_black_band_returns_0R
+  path/to/resistance/.venv/lib/python3.14t/site-packages/websockets/legacy/__init__.py:6: DeprecationWarning: websockets.legacy is deprecated; see https://websockets.readthedocs.io/en/stable/howto/upgrade.html for upgrade instructions
+    warnings.warn(  # deprecated in 14.0 - 2024-11-09
+
+tests/api_test.py::test_single_black_band_returns_0R
+  path/to/resistance/.venv/lib/python3.14t/site-packages/uvicorn/protocols/websockets/websockets_impl.py:17: DeprecationWarning: websockets.server.WebSocketServerProtocol is deprecated
+    from websockets.server import WebSocketServerProtocol
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================================== 1 passed, 2 warnings in 0.23s ============================================
+$ git add .
 $ git commit --message 'Implement 0 Ohm resistor'
-[main e062a7b] Implement 0 Ohm resistor
- 5 files changed, 55 insertions(+)
- create mode 100644 app/__init__.py
+[main 1f759b0] Implement 0 Ohm resistor
+ 4 files changed, 79 insertions(+), 1 deletion(-)
  create mode 100644 tests/__init__.py
  create mode 100644 tests/api_test.py
  create mode 100644 tests/conftest.py
@@ -796,11 +825,12 @@ def test_single_blue_band_responds_422(client: Client):
 ---
 
 ```bash
-$pipenv run test
+$ uv run pytest
 ================================== test session starts ===================================
-platform darwin -- Python 3.12.0, pytest-8.3.2, pluggy-1.5.0
+platform darwin -- Python 3.14.5, pytest-9.1.0, pluggy-1.6.0
 rootdir: path/to/resistance
-plugins: anyio-4.4.0
+configfile: pyproject.toml
+plugins: anyio-4.14.0
 collected 3 items
 
 tests/api_test.py ..F                                                              [100%]
@@ -808,26 +838,43 @@ tests/api_test.py ..F                                                           
 ======================================== FAILURES ========================================
 ___________________________ test_single_blue_band_responds_422 ___________________________
 
-client = <httpx.Client object at 0x11165aa50>
+client = <httpx.Client object at 0x5e479f70d90>
 
     def test_single_blue_band_responds_422(client: Client):
         response = client.get("/resistance", params=dict(bands=["blue"]))
 >       assert response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
-E       assert 200 == <HTTPStatus.UNPROCESSABLE_ENTITY: 422>
+E       assert 200 == <HTTPStatus.UNPROCESSABLE_CONTENT: 422>
 E        +  where 200 = <Response [200 OK]>.status_code
-E        +  and   <HTTPStatus.UNPROCESSABLE_ENTITY: 422> = HTTPStatus.UNPROCESSABLE_ENTITY
+E        +  and   <HTTPStatus.UNPROCESSABLE_CONTENT: 422> = HTTPStatus.UNPROCESSABLE_ENTITY
 
 tests/api_test.py:19: AssertionError
 ---------------------------------- Captured stdout call ----------------------------------
-INFO:     127.0.0.1:62543 - "GET /resistance?bands=blue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49896 - "GET /resistance?bands=blue HTTP/1.1" 200 OK
+----------------------------------- Captured log call ------------------------------------
+INFO     uvicorn.access:httptools_impl.py:484 127.0.0.1:49896 - "GET /resistance?bands=blue HTTP/1.1" 200
 -------------------------------- Captured stderr teardown --------------------------------
 INFO:     Shutting down
 INFO:     Waiting for application shutdown.
 INFO:     Application shutdown complete.
-INFO:     Finished server process [12134]
+INFO:     Finished server process [28927]
+--------------------------------- Captured log teardown ----------------------------------
+INFO     uvicorn.error:server.py:272 Shutting down
+INFO     uvicorn.error:on.py:67 Waiting for application shutdown.
+INFO     uvicorn.error:on.py:76 Application shutdown complete.
+INFO     uvicorn.error:server.py:102 Finished server process [28927]
+==================================== warnings summary ====================================
+tests/api_test.py::test_single_black_band_returns_0R
+  path/to/resistance/.venv/lib/python3.14t/site-packages/websockets/legacy/__init__.py:6: DeprecationWarning: websockets.legacy is deprecated; see https://websockets.readthedocs.io/en/stable/howto/upgrade.html for upgrade instructions
+    warnings.warn(  # deprecated in 14.0 - 2024-11-09
+
+tests/api_test.py::test_single_black_band_returns_0R
+  path/to/resistance/.venv/lib/python3.14t/site-packages/uvicorn/protocols/websockets/websockets_impl.py:17: DeprecationWarning: websockets.server.WebSocketServerProtocol is deprecated
+    from websockets.server import WebSocketServerProtocol
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
 ================================ short test summary info =================================
-FAILED tests/api_test.py::test_single_blue_band_responds_422 - assert 200 == <HTTPStatus.UNPROCESSABLE_ENTITY: 422>
-============================== 1 failed, 2 passed in 0.27s ===============================
+FAILED tests/api_test.py::test_single_blue_band_responds_422 - assert 200 == <HTTPStatus.UNPROCESSABLE_CONTENT: 422>
+======================== 1 failed, 2 passed, 2 warnings in 0.23s =========================
 ```
 
 Depending on which way you implemented the previous step, you might see either 200 != 422 or 400 != 422.
@@ -836,7 +883,7 @@ The temptation here might be to do something like this:
 
 ```python
 @app.get("/resistance")
-def _(bands: Annotated[Optional[list[str]], Query()] = None) -> ResistanceModel:
+def _(bands: Annotated[list[str] | None, Query()] = None) -> ResistanceModel:
     if bands is None:
         raise HTTPException(status_code=HTTPStatus.BAD_REQUEST)
     if bands != ["black"]:
@@ -856,20 +903,20 @@ Splitting this out into those two domains might look like:
 Here you can see the split described above - the left-hand side is about HTTP APIs, the right-hand side is about resistors.
 While handling a _structurally_ invalid request can be done entirely at the transport level, handling a _semantically_ invalid request is a business level question.
 
-So let's take this opportunity to split out a _service_ in `app/service.py` to handle the business domain:
+So let's take this opportunity to split out a _service_ in `src/resistance/service.py` to handle the business domain:
 
 ```python
 def resistance(bands: list[str]) -> str:
     return "0R"
 ```
 
-and use that in the `app/__init__.py` to create the `shorthand` attribute in the `ResistanceModel`.
+and use that in the `src/resistance/__init__.py` to create the `shorthand` attribute in the `ResistanceModel`.
 
 This is a simple _refactor_, the `200` and `400` tests should still pass, and the `422` test should still fail (you can comment it out or [skip it][pytest-skip] to double-check).
 It also gives us a new _boundary_ to test at, we can exercise the service code directly in `tests/service_test.py`:
 
 ```python
-from app import resistance
+from resistance import resistance
 
 
 def test_single_black_band_returns_0R():
@@ -879,20 +926,60 @@ def test_single_black_band_returns_0R():
 At this point everything should be passing except the new API test:
 
 ```bash
-$ pipenv run test
+$ uv run pytest
 ================================== test session starts ===================================
-platform darwin -- Python 3.12.0, pytest-8.3.2, pluggy-1.5.0
+platform darwin -- Python 3.14.5, pytest-9.1.0, pluggy-1.6.0
 rootdir: path/to/resistance
-plugins: anyio-4.4.0
+configfile: pyproject.toml
+plugins: anyio-4.14.0
 collected 4 items
 
-tests/api_test.py ..s                                                              [ 75%]
+tests/api_test.py ..F                                                              [ 75%]
 tests/service_test.py .                                                            [100%]
 
-============================== 3 passed, 1 skipped in 0.39s ==============================
+======================================== FAILURES ========================================
+___________________________ test_single_blue_band_responds_422 ___________________________
+
+client = <httpx.Client object at 0x2cfd5e11090>
+
+    def test_single_blue_band_responds_422(client: Client):
+        response = client.get("/resistance", params=dict(bands=["blue"]))
+>       assert response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
+E       assert 200 == <HTTPStatus.UNPROCESSABLE_CONTENT: 422>
+E        +  where 200 = <Response [200 OK]>.status_code
+E        +  and   <HTTPStatus.UNPROCESSABLE_CONTENT: 422> = HTTPStatus.UNPROCESSABLE_ENTITY
+
+tests/api_test.py:19: AssertionError
+---------------------------------- Captured stdout call ----------------------------------
+INFO:     127.0.0.1:49887 - "GET /resistance?bands=blue HTTP/1.1" 200 OK
+----------------------------------- Captured log call ------------------------------------
+INFO     uvicorn.access:httptools_impl.py:484 127.0.0.1:49887 - "GET /resistance?bands=blue HTTP/1.1" 200
+-------------------------------- Captured stderr teardown --------------------------------
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [28614]
+--------------------------------- Captured log teardown ----------------------------------
+INFO     uvicorn.error:server.py:272 Shutting down
+INFO     uvicorn.error:on.py:67 Waiting for application shutdown.
+INFO     uvicorn.error:on.py:76 Application shutdown complete.
+INFO     uvicorn.error:server.py:102 Finished server process [28614]
+==================================== warnings summary ====================================
+tests/api_test.py::test_single_black_band_returns_0R
+  path/to/resistance/.venv/lib/python3.14t/site-packages/websockets/legacy/__init__.py:6: DeprecationWarning: websockets.legacy is deprecated; see https://websockets.readthedocs.io/en/stable/howto/upgrade.html for upgrade instructions
+    warnings.warn(  # deprecated in 14.0 - 2024-11-09
+
+tests/api_test.py::test_single_black_band_returns_0R
+  path/to/resistance/.venv/lib/python3.14t/site-packages/uvicorn/protocols/websockets/websockets_impl.py:17: DeprecationWarning: websockets.server.WebSocketServerProtocol is deprecated
+    from websockets.server import WebSocketServerProtocol
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+================================ short test summary info =================================
+FAILED tests/api_test.py::test_single_blue_band_responds_422 - assert 200 == <HTTPStatus.UNPROCESSABLE_CONTENT: 422>
+======================== 1 failed, 3 passed, 2 warnings in 0.24s =========================
 ```
 
-You can run the low-level tests on their own by passing a test matching expression to pytest, e.g. `pipenv run test -k service`.
+You can run the low-level tests on their own by passing a test matching expression to pytest, e.g. `uv run pytest -k service`.
 So how should we handle an invalid band?
 Again this gives us a chance to do some design, think through how the function should behave by writing the test _before_ the implementation.
 For example:
@@ -910,16 +997,17 @@ def test_single_non_black_band_raises_error():
         resistance(["blue"])
 ```
 
-**Call the shot**, run the test, check the diagnostics.
+**Call the shot**, run the service tests, check the diagnostics.
 
 ---
 
 ```bash
-$ pipenv run test -k service
+$ uv run pytest -k service
 ================================== test session starts ===================================
-platform darwin -- Python 3.12.0, pytest-8.3.2, pluggy-1.5.0
+platform darwin -- Python 3.14.5, pytest-9.1.0, pluggy-1.6.0
 rootdir: path/to/resistance
-plugins: anyio-4.4.0
+configfile: pyproject.toml
+plugins: anyio-4.14.0
 collected 5 items / 3 deselected / 2 selected
 
 tests/service_test.py .F                                                           [100%]
@@ -929,23 +1017,25 @@ ________________________ test_single_non_black_band_raises_error _______________
 
     def test_single_non_black_band_raises_error():
 >       with pytest.raises(ValueError):
-E       Failed: DID NOT RAISE <class 'ValueError'>
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE ValueError
 
 tests/service_test.py:11: Failed
 ================================ short test summary info =================================
-FAILED tests/service_test.py::test_single_non_black_band_raises_error - Failed: DID NOT RAISE <class 'ValueError'>
-======================= 1 failed, 1 passed, 3 deselected in 0.06s ========================
+FAILED tests/service_test.py::test_single_non_black_band_raises_error - Failed: DID NOT RAISE ValueError
+======================= 1 failed, 1 passed, 3 deselected in 0.02s ========================
 ```
 Get that test passing at the service level, then run all of the tests to bring the integration tests back in (remember to **call the shot**).
 
 ---
 
 ```bash
-$ pipenv run test
+$ uv run pytest
 ================================== test session starts ===================================
-platform darwin -- Python 3.12.0, pytest-8.3.2, pluggy-1.5.0
+platform darwin -- Python 3.14.5, pytest-9.1.0, pluggy-1.6.0
 rootdir: path/to/resistance
-plugins: anyio-4.4.0
+configfile: pyproject.toml
+plugins: anyio-4.14.0
 collected 5 items
 
 tests/api_test.py ..F                                                              [ 60%]
@@ -954,58 +1044,96 @@ tests/service_test.py ..                                                        
 ======================================== FAILURES ========================================
 ___________________________ test_single_blue_band_responds_422 ___________________________
 
-client = <httpx.Client object at 0x1034c3020>
+client = <httpx.Client object at 0x318b9ea1390>
 
     def test_single_blue_band_responds_422(client: Client):
         response = client.get("/resistance", params=dict(bands=["blue"]))
 >       assert response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
-E       assert 500 == <HTTPStatus.UNPROCESSABLE_ENTITY: 422>
+E       assert 500 == <HTTPStatus.UNPROCESSABLE_CONTENT: 422>
 E        +  where 500 = <Response [500 Internal Server Error]>.status_code
-E        +  and   <HTTPStatus.UNPROCESSABLE_ENTITY: 422> = HTTPStatus.UNPROCESSABLE_ENTITY
+E        +  and   <HTTPStatus.UNPROCESSABLE_CONTENT: 422> = HTTPStatus.UNPROCESSABLE_ENTITY
 
 tests/api_test.py:19: AssertionError
 ---------------------------------- Captured stdout call ----------------------------------
-INFO:     127.0.0.1:64165 - "GET /resistance?bands=blue HTTP/1.1" 500 Internal Server Error
+INFO:     127.0.0.1:49936 - "GET /resistance?bands=blue HTTP/1.1" 500 Internal Server Error
 ---------------------------------- Captured stderr call ----------------------------------
 ERROR:    Exception in ASGI application
 Traceback (most recent call last):
   # ...
-  File "path/to/resistance/app/__init__.py", line 20, in _
+  File "path/to/resistance/src/resistance/__init__.py", line 22, in _
     return ResistanceModel(shorthand=resistance(bands))
-                                     ^^^^^^^^^^^^^^^^^
-  File "path/to/resistance/app/service.py", line 3, in resistance
+                                     ~~~~~~~~~~^^^^^^^
+  File "path/to/resistance/src/resistance/service.py", line 3, in resistance
+    raise ValueError
+ValueError
+----------------------------------- Captured log call ------------------------------------
+INFO     uvicorn.access:httptools_impl.py:484 127.0.0.1:49936 - "GET /resistance?bands=blue HTTP/1.1" 500
+ERROR    uvicorn.error:httptools_impl.py:426 Exception in ASGI application
+Traceback (most recent call last):
+  # ...
+  File "path/to/resistance/src/resistance/__init__.py", line 22, in _
+    return ResistanceModel(shorthand=resistance(bands))
+                                     ~~~~~~~~~~^^^^^^^
+  File "path/to/resistance/src/resistance/service.py", line 3, in resistance
     raise ValueError
 ValueError
 -------------------------------- Captured stderr teardown --------------------------------
 INFO:     Shutting down
 INFO:     Waiting for application shutdown.
 INFO:     Application shutdown complete.
-INFO:     Finished server process [19140]
+INFO:     Finished server process [30107]
+--------------------------------- Captured log teardown ----------------------------------
+INFO     uvicorn.error:server.py:272 Shutting down
+INFO     uvicorn.error:on.py:67 Waiting for application shutdown.
+INFO     uvicorn.error:on.py:76 Application shutdown complete.
+INFO     uvicorn.error:server.py:102 Finished server process [30107]
+==================================== warnings summary ====================================
+tests/api_test.py::test_single_black_band_returns_0R
+  path/to/resistance/.venv/lib/python3.14t/site-packages/websockets/legacy/__init__.py:6: DeprecationWarning: websockets.legacy is deprecated; see https://websockets.readthedocs.io/en/stable/howto/upgrade.html for upgrade instructions
+    warnings.warn(  # deprecated in 14.0 - 2024-11-09
+
+tests/api_test.py::test_single_black_band_returns_0R
+  path/to/resistance/.venv/lib/python3.14t/site-packages/uvicorn/protocols/websockets/websockets_impl.py:17: DeprecationWarning: websockets.server.WebSocketServerProtocol is deprecated
+    from websockets.server import WebSocketServerProtocol
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
 ================================ short test summary info =================================
-FAILED tests/api_test.py::test_single_blue_band_responds_422 - assert 500 == <HTTPStatus.UNPROCESSABLE_ENTITY: 422>
-============================== 1 failed, 4 passed in 0.28s ===============================
+FAILED tests/api_test.py::test_single_blue_band_responds_422 - assert 500 == <HTTPStatus.UNPROCESSABLE_CONTENT: 422>
+======================== 1 failed, 4 passed, 2 warnings in 0.24s =========================
 ```
 
 We only have one failing test and can see the error at the _business_ level, so we just need to catch it in the path operation function and respond appropriately to the request to get the tests passing.
 Once you're there, make a commit.
 
 ```bash
-$ pipenv run test
+$ uv run pytest
 ================================== test session starts ===================================
-platform darwin -- Python 3.12.0, pytest-8.3.2, pluggy-1.5.0
+platform darwin -- Python 3.14.5, pytest-9.1.0, pluggy-1.6.0
 rootdir: path/to/resistance
-plugins: anyio-4.4.0
+configfile: pyproject.toml
+plugins: anyio-4.14.0
 collected 5 items
 
 tests/api_test.py ...                                                              [ 60%]
 tests/service_test.py ..                                                           [100%]
 
-=================================== 5 passed in 0.24s ====================================
+==================================== warnings summary ====================================
+tests/api_test.py::test_single_black_band_returns_0R
+  path/to/resistance/.venv/lib/python3.14t/site-packages/websockets/legacy/__init__.py:6: DeprecationWarning: websockets.legacy is deprecated; see https://websockets.readthedocs.io/en/stable/howto/upgrade.html for upgrade instructions
+    warnings.warn(  # deprecated in 14.0 - 2024-11-09
+
+tests/api_test.py::test_single_black_band_returns_0R
+  path/to/resistance/.venv/lib/python3.14t/site-packages/uvicorn/protocols/websockets/websockets_impl.py:17: DeprecationWarning: websockets.server.WebSocketServerProtocol is deprecated
+    from websockets.server import WebSocketServerProtocol
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+============================= 5 passed, 2 warnings in 0.23s ==============================
 $ git add .
 $ git commit -m 'Handle single non-black band'
 [main 3cebb2c] Handle single non-black band
- 4 files changed, 28 insertions(+), 1 deletion(-)
- create mode 100644 app/service.py
+[main 4f90b92] Handle single non-black band
+ 4 files changed, 27 insertions(+), 1 deletion(-)
+ create mode 100644 src/resistance/service.py
  create mode 100644 tests/service_test.py
 ```
 
@@ -1028,20 +1156,31 @@ If it fails (it may not, depending on how you've implemented the service so far!
 We already know that the API will respond 422 if the service throws an error, so we're done; make a commit:
 
 ```bash
-$ pipenv run test
+$ uv run pytest
 ================================== test session starts ===================================
-platform darwin -- Python 3.12.0, pytest-8.3.2, pluggy-1.5.0
+platform darwin -- Python 3.14.5, pytest-9.1.0, pluggy-1.6.0
 rootdir: path/to/resistance
-plugins: anyio-4.4.0
+configfile: pyproject.toml
+plugins: anyio-4.14.0
 collected 6 items
 
 tests/api_test.py ...                                                              [ 50%]
 tests/service_test.py ...                                                          [100%]
 
-=================================== 6 passed in 0.36s ====================================
+==================================== warnings summary ====================================
+tests/api_test.py::test_single_black_band_returns_0R
+  path/to/resistance/.venv/lib/python3.14t/site-packages/websockets/legacy/__init__.py:6: DeprecationWarning: websockets.legacy is deprecated; see https://websockets.readthedocs.io/en/stable/howto/upgrade.html for upgrade instructions
+    warnings.warn(  # deprecated in 14.0 - 2024-11-09
+
+tests/api_test.py::test_single_black_band_returns_0R
+  path/to/resistance/.venv/lib/python3.14t/site-packages/uvicorn/protocols/websockets/websockets_impl.py:17: DeprecationWarning: websockets.server.WebSocketServerProtocol is deprecated
+    from websockets.server import WebSocketServerProtocol
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+============================= 6 passed, 2 warnings in 0.22s ==============================
 $ git add .
 $ git commit --message 'Error for two bands'
-[main 6dae036] Error for two bands
+[main a910bfe] Error for two bands
  1 file changed, 5 insertions(+)
 ```
 
@@ -1122,7 +1261,7 @@ def test_three_bands_third_band_returns_correct_result(third_band, shorthand):
 Giving test outputs like:
 
 ```bash
-$ pipenv run test --verbose
+$ uv run pytest --verbose
 ================================== test session starts ===================================
 platform darwin -- Python 3.12.0, pytest-8.3.2, pluggy-1.5.0 -- path/to/virtualenvs/resistance-UW3A4gHD/bin/python
 cachedir: .pytest_cache
@@ -1224,9 +1363,9 @@ Perhaps we could do something similar, adding a separate parameter at the servic
 For example, maybe something like:
 
 ```bash
-$ curl 'http://localhost:3000/resistance?bands=brown&bands=green&bands=yellow&bands=red'
+$ curl 'http://localhost:8000/resistance?bands=brown&bands=green&bands=yellow&bands=red'
 {"shorthand":"15K4","tolerance":0.2}
-$ curl 'http://localhost:3000/resistance?bands=brown&bands=green&bands=yellow&tolerance=red'
+$ curl 'http://localhost:8000/resistance?bands=brown&bands=green&bands=yellow&tolerance=red'
 {"shorthand":"150K","tolerance":0.02}
 ```
 
@@ -1246,7 +1385,7 @@ Here are some follow-up tasks for further practice (remember to **test-drive** a
 1. Design and develop a different HTTP API (i.e. changing any or all of the request method, request path, use of query parameters or structure of the response body).
 1. As well as the _value_, _multiplier_ and _tolerance_ bands, resistors may have a _temperature coefficient_ band - implement support for this.
 1. There's a set of [preferred numbers] that resistors are generally designed to (e.g. for the default ±20% tolerance you'd get resistors only in multiples of 1.0, 1.5, 2.2, 3.3, 4.7 or 6.8) - introduce a "strict" mode in which non-preferred resistors are invalid inputs.
-1. Write a CLI to expose the core functionality on the command line (you can use Python's built-in [`argparse`][python-argparse] to help you out) e.g. `pipenv run cli red green blue --tolerance silver`).
+1. Write a CLI to expose the core functionality on the command line (you can use Python's built-in [`argparse`][python-argparse] to help you out) e.g. `uv run cli red green blue --tolerance silver`).
 
 I'd recommend creating a new git branch for each one you try (e.g. use `git checkout -b <name>`) and making commits as appropriate.
 
@@ -1446,9 +1585,10 @@ Fixtures are a powerful way to abstract setup and teardown out of your tests to 
 [python-argparse]: https://docs.python.org/3/library/argparse.html
 [python-generator]: https://wiki.python.org/moin/Generators
 [python-threading]: https://docs.python.org/3/library/threading.html
-[redux]: {filename}/development/python-tdd-ohm-redux.md
+[Python TDD Ohm]: {filename}/development/python-tdd-ohm.md
 [resistors]: {static}/images/Electronic-Axial-Lead-Resistors-Array.png
 [rkm code]: https://en.wikipedia.org/wiki/RKM_code
 [status code flowchart]: https://www.codetinkerer.com/2015/12/04/choosing-an-http-status-code.html
 [the previous article]: {filename}/development/python-tdd-ftw.md
+[uv]: https://docs.astral.sh/uv/
 [uvicorn]: https://www.uvicorn.org/
